@@ -1,0 +1,4 @@
+interface:
+  display_name: "MedTriage RAG Evidence"
+  short_description: "Enforce clinical RAG evidence authority"
+  default_prompt: "Use $medtriage-rag-evidence to implement or audit MedTriage retrieval and evidence gates."

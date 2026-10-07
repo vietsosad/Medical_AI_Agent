@@ -1,0 +1,4 @@
+interface:
+  display_name: "MedTriage DeepAgent System"
+  short_description: "Build the gated MedTriage agent runtime"
+  default_prompt: "Use $medtriage-deepagent-system to implement or audit the MedTriage DeepAgent runtime."

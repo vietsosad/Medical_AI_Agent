@@ -1,0 +1,4 @@
+interface:
+  display_name: "MedTriage DeepAgent Router"
+  short_description: "Route safe adaptive triage conversations"
+  default_prompt: "Use $medtriage-deepagent-router to change the triage intake and routing workflow."

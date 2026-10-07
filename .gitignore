@@ -1,0 +1,99 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+.venv311/
+.venv312/
+env/
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+# OS
+.DS_Store
+Thumbs.db
+
+# Data (never commit large data, preserve core RAG ontology & tables)
+data/*
+!data/guard_rules/
+!data/extracted_tables/
+# Nội dung giáo dục sức khoẻ của trang chủ là dữ liệu nguồn có trích dẫn,
+# phải nằm trong version control để rà soát được như mọi nội dung y tế khác.
+!data/health_topics/
+!data/facilities/
+# Protocol ingestion manifests are governance records: they must be reviewable
+# in version control, including while they are still drafts awaiting sign-off.
+!data/protocols/
+*.db
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# Test coverage
+htmlcov/
+.coverage
+coverage.xml
+
+# Docker
+docker-compose.override.yml
+
+# Node (frontend)
+node_modules/
+.next/
+out/
+.nuxt/
+
+# Build
+*.pyc
+*.pyo
+scratch/
+.tmp/
+.tmp-*/
+
+# Build-phase and generated presentation artifacts
+docs/BAO_CAO_*.md
+docs/Gate_2/
+docs/Internship/
+docs/Presentation/
+docs/TeamWork/
+docs/guide/
+docs/JOURNAL.md
+docs/WORKLOG.md
+docs/PORTFOLIO_PROJECT_OVERVIEW.md
+docs/pitch-deck.pdf
+MedTriage_Portfolio.md
+presentation/
+
+# AI logs — tracked structure, ignored content
+.ai-log/*.jsonl
+.ai-log/archive/
+.env.production.local
+triage_db_backup.sql
+data_migration.sql
+SESSION_HANDOFF.md
+
+# Vercel
+.vercel/
+src/simple_agent1/
+# Impeccable design skill — machine-local (skill itself lives in ~/.claude/skills)
+.claude/settings.local.json
+.impeccable/config.local.json
+.impeccable/hook.cache.json

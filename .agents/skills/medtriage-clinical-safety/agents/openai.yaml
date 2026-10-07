@@ -1,0 +1,4 @@
+interface:
+  display_name: "MedTriage Clinical Safety"
+  short_description: "Protect red flags, ESI, and SBAR output"
+  default_prompt: "Use $medtriage-clinical-safety to implement or audit MedTriage clinical safety controls."
