@@ -1,0 +1,12 @@
+{
+  "run_id": "simple-eval-170af329-5574-4d9f-95d5-6b260265c48e",
+  "backend_url": "http://127.0.0.1:8000",
+  "git_sha": "9b74151d1e5b31d32b6d1f6ed3125708b0866b77",
+  "cases_path": "eval\\cases\\simple_agent_golden_30.jsonl",
+  "ragas_version": "0.4.3",
+  "ragas_llm_model": "gpt-4o-mini",
+  "ragas_embedding_model": "BAAI/bge-m3",
+  "ragas_embedding_revision": "5617a9f61b028005a4858fdac845db406aefb181",
+  "status": "COMPLETE",
+  "written_at": "2026-09-01T08:30:00+00:00"
+}

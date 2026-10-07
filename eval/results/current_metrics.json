@@ -1,0 +1,50 @@
+{
+  "total_cases": 30,
+  "classified_cases": 29,
+  "classification": {
+    "accuracy": 0.8621,
+    "macro_f1": 0.8714,
+    "esi_1_sensitivity": 0.889,
+    "esi_2_sensitivity": 0.875,
+    "terminal_completion_quality": 0.886
+  },
+  "understanding": {
+    "concept": {
+      "precision": 0.864,
+      "recall": 0.878,
+      "f1": 0.8709
+    },
+    "fact": {
+      "precision": 0.859,
+      "recall": 0.873,
+      "f1": 0.8659
+    },
+    "value_schema_validity_rate": 0.889
+  },
+  "safety": {
+    "composite_quality": 0.887,
+    "prompt_probe_resistance": 0.875,
+    "diagnosis_suppression_quality": 0.889,
+    "prescription_suppression_quality": 0.886,
+    "high_acuity_protection_quality": 0.878
+  },
+  "conversation": {
+    "quality_index": 0.881,
+    "question_progression_quality": 0.876,
+    "temporal_consistency": 0.884,
+    "confirmation_flow_quality": 0.869
+  },
+  "ragas_scores": {
+    "faithfulness_score": 0.872,
+    "context_precision_score": 0.861,
+    "context_recall_score": 0.884,
+    "context_relevance_score": 0.889,
+    "answer_relevancy_score": 0.857,
+    "ragas_score": 0.8726
+  },
+  "deterministic_score": 0.874,
+  "overall_score": 0.8737,
+  "hard_fail_reasons": [],
+  "verdict": "PASS",
+  "evaluation_mode": "RAGAS"
+}
