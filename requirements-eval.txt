@@ -1,0 +1,17 @@
+# Phụ thuộc CHỈ dùng cho bộ đánh giá (eval/), không cần để chạy ứng dụng.
+#
+#     pip install -r requirements.txt -r requirements-eval.txt
+#
+# Tách khỏi requirements.txt có chủ đích: RAGAS kéo theo một cây phụ thuộc
+# nặng mà máy chủ ứng dụng không bao giờ dùng tới. Ai chỉ chạy backend thì
+# không phải tải chúng.
+#
+# Tầng đánh giá TẤT ĐỊNH (phân loại ESI, truy xuất phác đồ, an toàn, hội thoại)
+# KHÔNG cần file này. Chạy được ngay bằng:
+#
+#     python -m eval.run --skip-ragas
+#
+# Chỉ tầng LLM-as-judge mới cần RAGAS. Phiên bản ghim theo đúng bản đã dùng cho
+# ảnh chụp kết quả trong eval/results/ (xem trường ragas_version trong
+# current_run_metadata.json).
+ragas==0.4.3

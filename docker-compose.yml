@@ -1,0 +1,72 @@
+services:
+  # ----------------------------------------------------
+  # 1. PostgreSQL Database Service (SQLModel / ACID Ledger)
+  # ----------------------------------------------------
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: triage_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-triage_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-triage_password}
+      POSTGRES_DB: ${POSTGRES_DB:-triage_db}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U triage_user -d triage_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ----------------------------------------------------
+  # 3. FastAPI Backend Service & Multi-Agent Engine
+  # ----------------------------------------------------
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: triage_backend
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://triage_user:triage_password@postgres:5432/triage_db
+      SYNC_DATABASE_URL: postgresql://triage_user:triage_password@postgres:5432/triage_db
+      APP_ENV: development
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
+    # Docker's embedded DNS proxy (127.0.0.11, the default resolv.conf inside
+    # the container) can get stuck failing every external lookup after the
+    # host's network changes (sleep/wake, VPN reconnect) without the daemon
+    # itself restarting -- observed live: raw IP connections to OpenAI's own
+    # IP worked fine from inside this container, but resolving api.openai.com
+    # itself failed 100% of the time (openai.APIConnectionError on every
+    # simple_agent turn). Pointing resolv.conf directly at public DNS servers
+    # bypasses that broken embedded proxy entirely.
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    volumes:
+      - ./data:/app/data
+      - ./src:/app/src
+      - ./scripts:/app/scripts
+      - ./eval:/app/eval
+      - ./tests:/app/tests
+      - ${HF_HOST_CACHE_DIR:-./data/huggingface-cache}:/home/appuser/.cache/huggingface:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+    driver: local

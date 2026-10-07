@@ -1,0 +1,51 @@
+.git
+.gitignore
+
+.ai-log/
+.claude/
+.codex/
+.cursor/
+.gemini/
+.github/
+
+# Secrets / local environments
+.env
+.env.*
+.venv
+.venv*/
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Frontend is deployed separately on Vercel
+frontend/
+
+# Development / offline artifacts
+tests/
+docs/
+presentation/
+eval/
+data/
+# Local databases / dumps
+*.sql
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+
+# Don't ship HF host cache; model is baked by Dockerfile
+data/huggingface-cache/
+
+# Markdown/docs not needed at runtime
+*.md
+
+# DeepAgent skills ARE needed at runtime
+!.agents/skills/**
+
+.dockerignore
+Dockerfile
+docker-compose.yml
