@@ -1,0 +1,67 @@
+# Dependency updates.
+#
+# Grouped on purpose. Ungrouped Dependabot on a tree this size opens a dozen
+# single-package pull requests a week, each one triggering its own CI run --
+# which, on an account where Actions minutes are the binding constraint, is a
+# way to spend the entire budget on patch bumps. One grouped PR per ecosystem
+# per week costs one run and is reviewable in a sitting.
+
+version: 2
+
+updates:
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '04:00'
+      timezone: Asia/Ho_Chi_Minh
+    open-pull-requests-limit: 3
+    groups:
+      python-minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Majors on the model stack change agent behaviour, not just APIs. They
+      # need a deliberate upgrade with an evaluation run behind it, never an
+      # automated PR.
+      - dependency-name: langchain*
+        update-types: [version-update:semver-major]
+      - dependency-name: langgraph*
+        update-types: [version-update:semver-major]
+      - dependency-name: openai
+        update-types: [version-update:semver-major]
+      - dependency-name: deepagents
+        update-types: [version-update:semver-major]
+      - dependency-name: torch
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+      day: monday
+      time: '04:00'
+      timezone: Asia/Ho_Chi_Minh
+    open-pull-requests-limit: 3
+    groups:
+      frontend-minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: next
+        update-types: [version-update:semver-major]
+      - dependency-name: react
+        update-types: [version-update:semver-major]
+      - dependency-name: react-dom
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '04:00'
+      timezone: Asia/Ho_Chi_Minh
+    open-pull-requests-limit: 2
+    groups:
+      actions:
+        patterns: ['*']

@@ -1,0 +1,79 @@
+name: Security Audit
+
+# ---------------------------------------------------------------------------
+# Deliberately on a schedule rather than on every pull request.
+#
+# A new CVE is published against a dependency you did not touch, so pinning
+# this to PRs would block unrelated work on somebody else's disclosure while
+# burning minutes on every push. Weekly is the right cadence: it still surfaces
+# a vulnerability within days, and because it never runs as a PR check, it is
+# free to fail hard when it finds one.
+#
+# This service handles patient-entered symptom data. A known-vulnerable
+# transitive dependency is a real finding here, not paperwork.
+# ---------------------------------------------------------------------------
+
+on:
+  schedule:
+    # Mondays, 03:00 UTC (10:00 Vietnam time) -- a finding is waiting at the
+    # start of the week rather than arriving mid-sprint.
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: Python dependencies
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install the full dependency set
+        # The *full* set, torch included -- unlike CI, which excludes the ML
+        # stack for speed. This job has to audit what production actually
+        # installs from the Dockerfile, not the trimmed set the tests need.
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pip-audit
+
+      - name: Audit installed packages
+        run: pip-audit --strict --desc
+
+  node:
+    name: Frontend dependencies
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit
+        # high and critical only. Auditing at `low` on a Next.js tree produces
+        # a permanent wall of transitive noise, and a signal nobody reads is
+        # the same as no signal.
+        run: npm audit --audit-level=high

@@ -1,0 +1,165 @@
+name: CI Backend
+
+# ---------------------------------------------------------------------------
+# Read this before changing anything here.
+#
+# Every CI run in this repository from 2026-08-05 to 2026-08-12 failed for one
+# reason, and it was never the code:
+#
+#   "The job was not started because recent account payments have failed or your
+#    spending limit needs to be increased."
+#
+# All eighteen report `steps: []` and `runner_id: 0` -- no runner was ever
+# assigned, so not one step executed. Re-confirmed live on 2026-08-27. No
+# workflow file can fix that; an organisation owner has to clear it under
+# Billing & plans.
+#
+# What it does mean is that **Actions minutes are the scarce resource here**,
+# and that shapes every choice below: backend and frontend are separate
+# workflows with native `paths` filters so a backend-only change never pays for
+# a frontend run, the checkout is shallow, pip is cached, superseded runs are
+# cancelled, and the ~2 GB ML stack is excluded from the install.
+#
+# The other rule: nothing is `|| true`. The previous version of this pipeline
+# ended every step that way, which is why commit 231ffe8 turned a batch of
+# clinical regression tests red and survived two further commits and a merge
+# without anyone noticing. A step that cannot fail is a log, not a gate.
+# ---------------------------------------------------------------------------
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'scripts/**'
+      - 'evaluation/**'
+      - 'requirements.txt'
+      - 'ruff.toml'
+      - '.github/workflows/ci-backend.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'scripts/**'
+      - 'evaluation/**'
+      - 'requirements.txt'
+      - 'ruff.toml'
+      - '.github/workflows/ci-backend.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ci-backend-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Invariants, lint and full suite
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 20
+
+    env:
+      APP_ENV: test
+      PYTHONIOENCODING: utf-8
+      OPENAI_API_KEY: test-key
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          # 3.11 is the floor -- src/agents/deepagent_runtime/schemas.py imports
+          # datetime.UTC, absent in 3.10. 3.12 is what the repo is developed
+          # against (.venv312), so CI now matches the desk instead of gating on
+          # a version nobody runs.
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # torch + transformers + sentence-transformers + langchain-huggingface
+          # is ~2 GB and several minutes of every run. Verified 2026-08-27: no
+          # .py file under src/ or tests/ imports any of them; the only
+          # surviving references are stale .pyc files. requirements.txt itself
+          # is deliberately NOT edited, so production and Docker installs are
+          # unchanged -- the exclusion lives here, in the CI budget.
+          # Delete this filter the day a test genuinely needs the ML stack.
+          echo '--- excluded from the CI install ---'
+          grep -E '^(torch|transformers|sentence-transformers|langchain-huggingface|--extra-index-url)' \
+            requirements.txt || echo '(nothing matched -- this filter is stale, review it)'
+          grep -vE '^(torch|transformers|sentence-transformers|langchain-huggingface|--extra-index-url)' \
+            requirements.txt > requirements-ci.txt
+          pip install -r requirements-ci.txt
+
+      - name: Write test configuration
+        # `.env` is gitignored, so a fresh runner has none and src/config.py
+        # falls back to library defaults. That is not a code failure but it
+        # reads exactly like one: six OAuth tests fail purely because
+        # 127.0.0.1:3000 is missing from the CORS allowlist they assert on.
+        #
+        # None of this is a credential. It is the non-secret configuration the
+        # suite needs to be hermetic, and it goes in .env rather than `env:`
+        # because GitHub reserves the GITHUB_ prefix for its own variables.
+        run: |
+          cat > .env <<'ENV'
+          APP_ENV=test
+          OPENAI_API_KEY=test-key
+          CORS_ORIGINS=http://127.0.0.1:3000,http://localhost:3000,http://localhost:5173
+          GOOGLE_CLIENT_ID=test-google-client-id
+          GOOGLE_CLIENT_SECRET=test-google-client-secret
+          GOOGLE_REDIRECT_URI=http://localhost:3000/auth/callback/google
+          GITHUB_CLIENT_ID=test-github-client-id
+          GITHUB_CLIENT_SECRET=test-github-client-secret
+          GITHUB_REDIRECT_URI=http://localhost:3000/auth/callback/github
+          ENV
+          mkdir -p data
+
+      - name: Safety invariants (hard gate)
+        # Runs before anything else. If a safety invariant is red, nothing else
+        # about this branch is worth knowing, and a full suite run would bury
+        # the one result that blocks the merge. The directory does not exist on
+        # every branch yet, so its absence is announced rather than passed over.
+        run: |
+          if [ -d tests/invariants ]; then
+            pytest tests/invariants/ -q --tb=short
+          else
+            echo '::notice::tests/invariants/ is not present on this ref -- no invariant gate ran'
+          fi
+
+      - name: Quarantine expiry gate
+        # Quarantined tests carry an owner and an expiry date. This fails the
+        # build once an expiry passes, so deferred work cannot become permanent
+        # by being forgotten.
+        run: |
+          if [ -f scripts/check_quarantine.py ]; then
+            python scripts/check_quarantine.py
+          else
+            echo '::notice::scripts/check_quarantine.py is not present on this ref'
+          fi
+
+      - name: Lint with ruff
+        # Scope matches what this workflow gated before it was disabled.
+        # scripts/ currently carries ~20 findings including a stray
+        # scripts/test.py scratch file; widening the scope is its own change,
+        # not something to smuggle into a CI repair.
+        run: ruff check src/ tests/ --output-format=github
+
+      - name: Run tests
+        run: pytest tests/ -q --tb=short --junitxml=pytest-report.xml
+
+      - name: Upload test report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pytest-report
+          path: pytest-report.xml
+          retention-days: 14
+          if-no-files-found: warn

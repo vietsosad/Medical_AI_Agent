@@ -1,0 +1,94 @@
+name: CI Frontend
+
+# ---------------------------------------------------------------------------
+# The frontend carries 19 vitest files and 124 tests and has never once been
+# checked by CI -- the old pipeline ran pytest and ruff only. A Next.js app that
+# renders clinical decisions to patients deserves the same gate as the service
+# that produces them.
+#
+# This is a separate workflow rather than a second job in ci-backend.yml so the
+# native `paths` filter can do its work: a change under src/ never pays for an
+# npm install, and a change under frontend/ never pays for a pip install.
+# On an account where Actions minutes are the binding constraint, that split is
+# most of the saving.
+# ---------------------------------------------------------------------------
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/ci-frontend.yml'
+  pull_request:
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/ci-frontend.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ci-frontend-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: frontend
+
+jobs:
+  frontend:
+    name: Lint, test, build and typecheck
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 20
+
+    env:
+      # next build reads these at compile time. Placeholders, not secrets: the
+      # build must be deterministic and must not depend on a live backend.
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_ACCESS_TOKEN_KEY: access_token
+      NEXT_PUBLIC_REFRESH_TOKEN_KEY: refresh_token
+      NEXT_TELEMETRY_DISABLED: '1'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          # Next 16 requires Node >= 20.9. 22 is the current LTS.
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        # `npm ci`, not `npm install`: it installs exactly the lockfile and
+        # fails if package.json and package-lock.json have drifted apart.
+        run: npm ci
+
+      - name: Lint
+        # ESLint exits non-zero on errors and ignores warnings, which is the
+        # behaviour we want: 46 warnings are live technical debt, but they do
+        # not block a merge. Add --max-warnings once that number is driven down,
+        # so it can never climb again.
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm run test
+
+      - name: Build
+        # next build also runs the TypeScript compiler and generates the route
+        # types under .next/types that tsconfig.json includes.
+        run: npm run build
+
+      - name: Typecheck
+        # Deliberately after the build. tsconfig.json includes
+        # .next/types/**/*.ts and .next/dev/types/**/*.ts, so running tsc on a
+        # tree that has never been built either skips those globs or -- on a
+        # developer machine with a stale .next/dev from `next dev` -- reports
+        # dozens of syntax errors inside generated files that no one wrote.
+        # Running it after a clean build is the only ordering that means
+        # anything.
+        run: npm run typecheck

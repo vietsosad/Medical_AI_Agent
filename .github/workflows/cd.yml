@@ -1,0 +1,143 @@
+name: CD
+
+# ---------------------------------------------------------------------------
+# The previous deploy workflow (deleted in 09f544f) fired on every push to main
+# and did one thing: POST to a Render hook. It ran in parallel with CI, so a
+# commit that broke the test suite deployed anyway -- there was no ordering
+# between "tests pass" and "ship to patients". For a clinical triage service
+# that is the wrong default.
+#
+# This one is chained on `workflow_run`, so it starts only after CI Backend
+# has finished *successfully* on main. That also inherits CI's `paths` filter
+# for free: if a commit did not touch the backend, CI Backend never ran, so
+# this never runs either.
+#
+# The image is built and actually started before anything is deployed. A
+# Dockerfile that no longer builds, or a container that cannot answer /health,
+# is caught here rather than by a patient.
+# ---------------------------------------------------------------------------
+
+on:
+  workflow_run:
+    workflows: ['CI Backend']
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  # Never let two deploys of the same service overlap. Unlike CI, this does not
+  # cancel in progress: killing a half-finished deploy is worse than queueing.
+  group: cd-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  image:
+    name: Build image and smoke test
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 30
+    env:
+      SMOKE_CONTAINER: smoke-${{ github.run_id }}-${{ github.run_attempt }}
+    # A manual dispatch is trusted; an automatic run is only trusted when the
+    # CI run that triggered it went green.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # workflow_run checks out the default branch by default, which is not
+          # necessarily the commit CI just validated. Pin to that exact commit.
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
+          fetch-depth: 1
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: triage-api:ci
+          # The Dockerfile installs the full requirements.txt, torch included,
+          # so a cold build is slow and expensive. The layer cache is what keeps
+          # this affordable on a metered account -- do not remove it.
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test the container
+        # Building is not the same as running. This starts the image exactly as
+        # a platform would and waits for the app's own /health endpoint, which
+        # only answers after the lifespan hook has run init_db_schema().
+        run: |
+          docker run -d --name "$SMOKE_CONTAINER" \
+            -e APP_ENV=test \
+            -e OPENAI_API_KEY=test-key \
+            triage-api:ci
+
+          for attempt in $(seq 1 30); do
+            if docker exec "$SMOKE_CONTAINER" \
+              python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"; then
+              echo
+              echo "container answered /health on attempt $attempt"
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo '::error::container never answered /health'
+          docker logs "$SMOKE_CONTAINER"
+          exit 1
+
+      - name: Container logs
+        if: always()
+        run: docker logs "$SMOKE_CONTAINER" || echo '(container was never started)'
+
+      - name: Remove smoke-test container
+        if: always()
+        run: docker rm -f "$SMOKE_CONTAINER" || echo '(container was already absent)'
+
+  deploy:
+    name: Deploy to production
+    needs: image
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 10
+    environment: production
+
+    steps:
+      - name: Is a deploy target configured?
+        id: target
+        # The secret is read through env rather than interpolated into the
+        # script, so it is never assembled into a command line. An absent
+        # target is a clean skip, not a red build: this repository has had no
+        # deploy hook since 09f544f, and a CD pipeline that fails every night
+        # because it was never given somewhere to go teaches people to ignore
+        # red.
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -n "$RENDER_DEPLOY_HOOK" ]; then
+            echo 'configured=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'configured=false' >> "$GITHUB_OUTPUT"
+            echo '::notice::No RENDER_DEPLOY_HOOK secret is set - image was built and smoke tested, nothing was deployed. Add the secret in Settings > Secrets and variables > Actions to enable deployment.'
+          fi
+
+      - name: Trigger deploy
+        if: steps.target.outputs.configured == 'true'
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        # --fail-with-body so an HTTP 4xx/5xx from the platform fails the step.
+        # The old workflow used a bare curl, which reported success even when
+        # the hook rejected the request.
+        run: |
+          curl --fail-with-body --silent --show-error --location \
+            --retry 3 --retry-delay 5 --max-time 60 \
+            -X POST "$RENDER_DEPLOY_HOOK"
+          echo
+          echo "deploy triggered for ${{ github.event.workflow_run.head_sha || github.sha }}"
