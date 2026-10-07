@@ -1,0 +1,729 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans, "Inter", system-ui, -apple-system, sans-serif);
+  --font-heading: var(--font-sans, "Inter", system-ui, -apple-system, sans-serif);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  /* 🏥 Clinical Trust Palette & Specialty Tokens */
+  --color-clinical-primary: var(--clinical-primary);
+  --color-clinical-primary-hover: var(--clinical-primary-hover);
+  --color-clinical-secondary: var(--clinical-secondary);
+  --color-clinical-surface: var(--clinical-surface);
+  --color-clinical-surface-muted: var(--clinical-surface-muted);
+  --color-clinical-border: var(--clinical-border);
+
+  /* 🚨 Clinical Alarm & ESI Priority Colors */
+  --color-esi-1: var(--esi-1);
+  --color-esi-2: var(--esi-2);
+  --color-esi-3: var(--esi-3);
+  --color-esi-4: var(--esi-4);
+  --color-esi-5: var(--esi-5);
+
+  --color-alarm-rose: var(--alarm-rose);
+  --color-alarm-amber: var(--alarm-amber);
+  --color-alarm-emerald: var(--alarm-emerald);
+  --color-alarm-sky: var(--alarm-sky);
+
+  /* ✨ Subtle Shadow Standards (Clinical Ambient & Glass Shadows) */
+  --shadow-subtle: 0 1px 2px 0 rgb(15 23 42 / 0.04);
+  --shadow-card: 0 1px 3px 0 rgb(15 23 42 / 0.05), 0 1px 2px -1px rgb(15 23 42 / 0.04);
+  --shadow-modal: 0 10px 15px -3px rgb(15 23 42 / 0.08), 0 4px 6px -4px rgb(15 23 42 / 0.03);
+  --shadow-floating: 0 20px 25px -5px rgb(15 23 42 / 0.1), 0 8px 10px -6px rgb(15 23 42 / 0.04);
+
+  /* Shadcn UI Variables */
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  /* Bo góc mượt mà từ rounded-xl đến rounded-2xl chuẩn y khoa */
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* 🌞 Pristine Light Mode (Clinical Trust Blue & Muted Slate Day Neutral) */
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  
+  --primary: #0284c7;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
+  --destructive: #e11d48;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #0f172a;
+
+  /* Clinical Specialty Palette */
+  --clinical-primary: #0f172a;
+  --clinical-primary-hover: #1e293b;
+  --clinical-secondary: #0284c7;
+  --clinical-surface: #ffffff;
+  --clinical-surface-muted: #f8fafc;
+  --clinical-border: #e2e8f0;
+
+  /* Clinical Alarm Colors */
+  --esi-1: #e11d48;
+  --esi-2: #d97706;
+  --esi-3: #2563eb;
+  --esi-4: #059669;
+  --esi-5: #64748b;
+  
+  --alarm-rose: #e11d48;
+  --alarm-amber: #d97706;
+  --alarm-emerald: #059669;
+  --alarm-sky: #0284c7;
+
+  /* Charts */
+  --chart-1: #0284c7;
+  --chart-2: #2563eb;
+  --chart-3: #10b981;
+  --chart-4: #d97706;
+  --chart-5: #e11d48;
+
+  --radius: 0.75rem;
+
+  /* Sidebar Tokens */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #0f172a;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f1f5f9;
+  --sidebar-accent-foreground: #0f172a;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #0f172a;
+}
+
+/* 🌙 Clinical Night Mode */
+.dark {
+  --background: #09090b;
+  --foreground: #f8fafc;
+  --card: #0f172a;
+  --card-foreground: #f8fafc;
+  --popover: #0f172a;
+  --popover-foreground: #f8fafc;
+  
+  --primary: #38bdf8;
+  --primary-foreground: #082f49;
+  --secondary: #1e293b;
+  --secondary-foreground: #f8fafc;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #1e293b;
+  --accent-foreground: #38bdf8;
+  --destructive: #f43f5e;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.12);
+  --ring: #38bdf8;
+
+  --clinical-primary: #38bdf8;
+  --clinical-primary-hover: #7dd3fc;
+  --clinical-secondary: #60a5fa;
+  --clinical-surface: #0f172a;
+  --clinical-surface-muted: #1e293b;
+  --clinical-border: rgba(255, 255, 255, 0.1);
+
+  --esi-1: #f43f5e;
+  --esi-2: #f59e0b;
+  --esi-3: #38bdf8;
+  --esi-4: #10b981;
+  --esi-5: #34d399;
+
+  --alarm-rose: #f43f5e;
+  --alarm-amber: #f59e0b;
+  --alarm-emerald: #10b981;
+  --alarm-sky: #38bdf8;
+
+  --chart-1: #38bdf8;
+  --chart-2: #60a5fa;
+  --chart-3: #34d399;
+  --chart-4: #f59e0b;
+  --chart-5: #f43f5e;
+
+  --sidebar: #0f172a;
+  --sidebar-foreground: #f8fafc;
+  --sidebar-primary: #38bdf8;
+  --sidebar-primary-foreground: #082f49;
+  --sidebar-accent: #1e293b;
+  --sidebar-accent-foreground: #f8fafc;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #38bdf8;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    @apply font-sans;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased text-sm md:text-base font-sans;
+    line-height: 1.5;
+  }
+
+  /* Chuẩn hóa hệ thống tiêu đề y tế trang nhã, nghiêm túc, không chói gắt */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-sans font-semibold tracking-tight text-slate-900 dark:text-slate-100;
+  }
+
+  h1 {
+    @apply text-2xl md:text-3xl font-bold;
+  }
+
+  h2 {
+    @apply text-xl md:text-2xl font-bold;
+  }
+
+  h3 {
+    @apply text-lg md:text-xl font-semibold;
+  }
+
+  h4, h5, h6 {
+    @apply text-base md:text-lg font-semibold;
+  }
+}
+
+@layer utilities {
+  /* 👆 CHUẨN NÚT CẢM ỨNG Y TẾ (WCAG AA Touch Target min-w-[44px] min-h-[44px] - Rule 6) */
+  .touch-target-clinical,
+  .btn-touch-target {
+    min-width: 2.75rem; /* 44px */
+    min-height: 2.75rem; /* 44px */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ✨ Chuẩn Bo Góc Mượt Mà & Shadow Mỏng Dịu (Subtle Shadow - Rule 4) */
+  .clinical-card {
+    @apply bg-card text-card-foreground rounded-xl border border-border transition-all duration-200;
+    box-shadow: var(--shadow-card);
+  }
+
+  .clinical-card-interactive {
+    @apply bg-card text-card-foreground rounded-xl border border-border transition-all duration-200 hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
+    box-shadow: var(--shadow-card);
+  }
+
+  .clinical-shadow-subtle {
+    box-shadow: var(--shadow-subtle);
+  }
+
+  .clinical-shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  .clinical-shadow-modal {
+    box-shadow: var(--shadow-modal);
+  }
+
+  /* ========================================================================
+     [NHỊP THEO DÕI] NGÔN NGỮ CHUYỂN ĐỘNG DÙNG CHUNG
+
+     Cả sản phẩm chạy trên một ý tưởng chuyển động duy nhất, mượn từ màn hình
+     theo dõi bệnh nhân: tín hiệu ĐẾN, GIỮ đủ lâu để đọc, rồi TẮT hẳn.
+
+     - Trang chủ chơi nhịp đó to: vòng tiêu điểm tự chạy qua từng chủ đề sức
+       khỏe, sáng lên rồi tắt đi trước khi chủ đề kế tiếp sáng.
+     - Trạm điều phối của điều dưỡng chơi đúng nhịp đó ở biên độ nhỏ, và chỉ ở
+       nơi có nghĩa lâm sàng: dải mức độ ESI 1-2, chấm kết nối thời gian thực.
+
+     Mọi hiệu ứng ở đây đều tắt hoặc giảm hẳn khi người dùng bật "giảm chuyển
+     động" trong hệ điều hành -- xem khối @media ở cuối tệp.
+     ======================================================================== */
+
+  /* Thanh cuộn ngang: giấu scrollbar hệ điều hành nhưng giữ nguyên khả năng
+     cuộn bằng chuột, trackpad, phím mũi tên và vuốt trên di động. */
+  .flow-rail {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .flow-rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .health-topic-stream {
+    overscroll-behavior-inline: contain;
+    -webkit-mask-image: linear-gradient(
+      90deg,
+      transparent 0,
+      #000 40px,
+      #000 calc(100% - 40px),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      90deg,
+      transparent 0,
+      #000 40px,
+      #000 calc(100% - 40px),
+      transparent 100%
+    );
+  }
+
+  .health-topic-stream[data-circular="true"] {
+    overflow-x: hidden;
+    touch-action: pan-y;
+  }
+
+  .health-topic-stream[data-flow-state="paused"] [data-flow-item="true"] {
+    will-change: auto;
+  }
+
+  /* ---------------------------------------------------------------------
+     VIỀN SÁNG
+
+     data-glow="on"  = trạng thái do chính người dùng mở (thẻ đang mở rộng).
+     data-spot="on"  = tiêu điểm tự chạy.
+
+     Tách làm hai thuộc tính để một vòng chạy tự động không bao giờ giả làm
+     thao tác của người dùng -- và để bài kiểm thử đọc đúng cái nó cần đọc.
+     --------------------------------------------------------------------- */
+  .glow-frame {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .glow-frame::before {
+    content: "";
+    position: absolute;
+    inset: -1.5px;
+    z-index: 0;
+    border-radius: inherit;
+    padding: 1.5px;
+    background: conic-gradient(
+      from var(--glow-angle, 0deg),
+      transparent 0deg,
+      var(--glow-accent, #14b8a6) 70deg,
+      var(--glow-accent-soft, #38bdf8) 140deg,
+      transparent 230deg,
+      transparent 360deg
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 260ms ease;
+    pointer-events: none;
+  }
+
+  .glow-frame:hover::before,
+  .glow-frame:focus-within::before,
+  .glow-frame[data-glow="on"]::before,
+  .glow-frame[data-spot="on"]::before {
+    opacity: 1;
+    animation: glow-frame-spin 5s linear infinite;
+  }
+
+  /* Vệt sáng dịu bám theo con trỏ chuột, nằm dưới lớp nội dung. */
+  .glow-spotlight::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    background: radial-gradient(
+      360px circle at var(--spot-x, 50%) var(--spot-y, 0%),
+      var(--glow-spot, rgb(20 184 166 / 0.13)),
+      transparent 62%
+    );
+    opacity: 0;
+    transition: opacity 260ms ease;
+    pointer-events: none;
+  }
+
+  .glow-spotlight:hover::after,
+  .glow-spotlight[data-glow="on"]::after,
+  .glow-spotlight[data-spot="on"]::after {
+    opacity: 1;
+  }
+
+  /* Vạch sáng mảnh chạy ngang mép trên thẻ khi tiêu điểm ghé qua. Nằm trong
+     vùng viền, không bao giờ phủ lên chữ nên không ăn vào độ tương phản. */
+  .spot-beam::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    z-index: 1;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--glow-accent, #14b8a6),
+      var(--glow-accent-soft, #38bdf8),
+      transparent
+    );
+    transform: scaleX(0);
+    transform-origin: left center;
+    opacity: 0;
+    transition:
+      transform 560ms cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 240ms ease;
+    pointer-events: none;
+  }
+
+  .spot-beam[data-spot="on"]::before {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+
+  /* Viền sáng nhẹ cho các thành phần nhỏ (nút, mục điều hướng, ô chỉ số):
+     rẻ hơn khung conic ở trên, dùng được ở những nơi lặp lại nhiều lần. */
+  .glow-soft {
+    transition:
+      box-shadow 220ms ease,
+      border-color 220ms ease,
+      background-color 200ms ease,
+      color 200ms ease,
+      transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .glow-soft:hover,
+  .glow-soft:focus-visible,
+  .glow-soft[data-spot="on"] {
+    border-color: var(--glow-accent-soft, rgb(56 189 248 / 0.7));
+    box-shadow:
+      0 0 0 1px var(--glow-accent-soft, rgb(56 189 248 / 0.55)),
+      0 14px 28px -18px var(--glow-accent, rgb(14 165 233 / 0.85));
+  }
+
+  /* Sắc độ của viền sáng, đặt theo ngữ cảnh dùng. */
+  .glow-teal {
+    --glow-accent: #0d9488;
+    --glow-accent-soft: #38bdf8;
+    --glow-spot: rgb(20 184 166 / 0.13);
+  }
+
+  .glow-sky {
+    --glow-accent: #0284c7;
+    --glow-accent-soft: #60a5fa;
+    --glow-spot: rgb(2 132 199 / 0.12);
+  }
+
+  .glow-rose {
+    --glow-accent: #e11d48;
+    --glow-accent-soft: #fb7185;
+    --glow-spot: rgb(225 29 72 / 0.12);
+  }
+
+  .glow-emerald {
+    --glow-accent: #059669;
+    --glow-accent-soft: #34d399;
+    --glow-spot: rgb(5 150 105 / 0.12);
+  }
+
+  /* ---------------------------------------------------------------------
+     TÍN HIỆU LÂM SÀNG
+     Chỉ dùng ở nơi chuyển động mang nghĩa, không dùng để trang trí.
+     --------------------------------------------------------------------- */
+
+  /* Ánh sáng chạy dọc dải mức độ. Dành riêng cho ca ưu tiên cao (ESI 1-2):
+     chuyển động ở đây là tín hiệu điều phối, nên mọi mức khác phải đứng yên
+     thì mức cao mới nổi bật lên được. */
+  .acuity-pulse {
+    overflow: hidden;
+  }
+
+  .acuity-pulse::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent, rgb(255 255 255 / 0.9), transparent);
+    animation: acuity-sweep 2.8s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  /* Chấm "kênh thời gian thực còn sống". Một hàng đợi đứng im vì mất kết nối
+     trông y hệt một hàng đợi rỗng -- vòng sáng lan ra là bằng chứng còn sống. */
+  .live-dot {
+    position: relative;
+  }
+
+  /* Sắc độ của vòng sáng. Mặc định là lục (kênh còn sống); đổi sang đỏ ở nơi
+     vòng sáng nghĩa là "có việc đang chờ bạn", không phải "hệ thống ổn". */
+  .live-rose {
+    --live-ring: rgb(225 29 72 / 0.55);
+  }
+
+  .live-teal {
+    --live-ring: rgb(13 148 136 / 0.55);
+  }
+
+  .live-dot::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    animation: live-dot-ring 2.6s ease-out infinite;
+    pointer-events: none;
+  }
+
+  /* Hàng / thẻ hiện lên theo thứ tự đọc. Đặt --rise-delay để xếp tầng. */
+  .rise-in {
+    animation: rise-in 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: var(--rise-delay, 0ms);
+  }
+
+  /* Khung chờ dữ liệu. Một khối xám nhấp nháy tại chỗ không nói được là hệ
+     thống đang tải hay đã treo; vệt sáng chạy ngang thì nói được. */
+  .skeleton-sweep::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      100deg,
+      transparent 20%,
+      rgb(255 255 255 / 0.75) 50%,
+      transparent 80%
+    );
+    animation: skeleton-sweep 1.9s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .dark .skeleton-sweep::after {
+    background: linear-gradient(
+      100deg,
+      transparent 20%,
+      rgb(148 163 184 / 0.16) 50%,
+      transparent 80%
+    );
+  }
+}
+
+/* Cho phép trình duyệt nội suy góc quay của conic-gradient. Trình duyệt cũ bỏ
+   qua khai báo này và chỉ hiển thị viền sáng tĩnh - vẫn đúng thiết kế, chỉ
+   không quay. */
+@property --glow-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes glow-frame-spin {
+  to {
+    --glow-angle: 360deg;
+  }
+}
+
+@keyframes acuity-sweep {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  65% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes live-dot-ring {
+  0% {
+    box-shadow: 0 0 0 0 var(--live-ring, rgb(16 185 129 / 0.5));
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 7px transparent;
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes skeleton-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes health-topic-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.health-topic-progress {
+  width: 100%;
+  transform-origin: left center;
+  animation: health-topic-progress 7s linear forwards;
+}
+
+/* ==========================================================================
+   BỀ MẶT DO TRÌNH DUYỆT VẼ
+   Vùng chọn chữ, con trỏ nhập liệu và thanh cuộn mặc định không thuộc bảng
+   màu nào cả. Kéo chúng về đúng bảng màu lâm sàng của sản phẩm.
+   ========================================================================== */
+@layer base {
+  ::selection {
+    background-color: rgb(2 132 199 / 0.18);
+    color: #0f172a;
+  }
+
+  .dark ::selection {
+    background-color: rgb(56 189 248 / 0.3);
+    color: #f8fafc;
+  }
+
+  input,
+  textarea,
+  [contenteditable] {
+    caret-color: var(--primary);
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(148 163 184 / 0.55) transparent;
+  }
+
+  .dark * {
+    scrollbar-color: rgb(100 116 139 / 0.6) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: rgb(148 163 184 / 0.55);
+    border: 2px solid transparent;
+    background-clip: content-box;
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(100 116 139 / 0.85);
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background-color: rgb(100 116 139 / 0.6);
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(148 163 184 / 0.8);
+  }
+}
+
+/* Tôn trọng người dùng đã tắt hiệu ứng chuyển động trong hệ điều hành. Viền
+   sáng và tín hiệu trạng thái vẫn hiện (chúng mang thông tin), chỉ phần
+   chuyển động trong không gian là dừng lại. */
+@media (prefers-reduced-motion: reduce) {
+  .glow-frame:hover::before,
+  .glow-frame:focus-within::before,
+  .glow-frame[data-glow="on"]::before,
+  .glow-frame[data-spot="on"]::before {
+    animation: none;
+  }
+
+  .acuity-pulse::after {
+    animation: none;
+    opacity: 0;
+  }
+
+  .live-dot::after {
+    animation: none;
+  }
+
+  .rise-in {
+    animation: none;
+  }
+
+  .skeleton-sweep::after {
+    animation: none;
+    opacity: 0;
+  }
+
+  .health-topic-progress {
+    animation: none;
+    transform: scaleX(1);
+  }
+
+  .spot-beam::before {
+    transition: opacity 200ms ease;
+  }
+
+  .flow-rail {
+    scroll-behavior: auto;
+  }
+}
