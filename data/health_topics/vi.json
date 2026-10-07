@@ -1,0 +1,534 @@
+{
+  "schema_version": "1.0",
+  "locale": "vi-VN",
+  "notice": "Nội dung giáo dục sức khỏe, biên soạn theo tài liệu của các tổ chức y tế được trích dẫn ở trường source_url. Đây KHÔNG phải dữ liệu dịch tễ và không chứa số ca, xu hướng dịch hay mức độ phổ biến. Trước khi đưa lên môi trường thật, toàn bộ nội dung cần được nhân viên y tế rà soát và ký duyệt.",
+  "topics": [
+    {
+      "slug": "sot-xuat-huyet-dengue",
+      "name": "Sốt xuất huyết Dengue",
+      "summary": "Bệnh do virus Dengue lây qua muỗi vằn Aedes aegypti. Phần lớn trường hợp tự hồi phục, nhưng một số ít có thể chuyển nặng trong giai đoạn hết sốt nên cần theo dõi sát.",
+      "symptoms": [
+        "Sốt cao đột ngột, thường kéo dài 2-7 ngày",
+        "Đau đầu dữ dội, đau sau hốc mắt",
+        "Đau cơ và đau khớp",
+        "Buồn nôn, nôn",
+        "Phát ban trên da",
+        "Mệt mỏi nhiều"
+      ],
+      "warning_signs": [
+        "Đau bụng dữ dội hoặc ấn đau vùng bụng",
+        "Nôn liên tục",
+        "Chảy máu chân răng, chảy máu mũi, xuất huyết dưới da",
+        "Nôn ra máu hoặc đi ngoài phân đen",
+        "Li bì, bứt rứt, vật vã",
+        "Chân tay lạnh, ẩm",
+        "Khó thở"
+      ],
+      "prevention": [
+        "Loại bỏ nơi muỗi đẻ trứng: đậy kín và thay nước các vật chứa nước quanh nhà",
+        "Ngủ màn kể cả ban ngày",
+        "Mặc quần áo dài tay, dùng kem hoặc bình xịt chống muỗi",
+        "Lắp lưới chống muỗi ở cửa sổ, cửa ra vào",
+        "Phối hợp với y tế địa phương trong các đợt phun hóa chất diệt muỗi"
+      ],
+      "when_to_seek_care": "Đến cơ sở y tế ngay khi xuất hiện bất kỳ dấu hiệu cảnh báo nào, đặc biệt trong giai đoạn nhiệt độ bắt đầu giảm (thường ngày thứ 3 đến ngày thứ 7) vì đây là lúc bệnh có thể trở nặng.",
+      "source": "WHO - Tổ chức Y tế Thế giới",
+      "source_url": "https://www.who.int/news-room/fact-sheets/detail/dengue-and-severe-dengue",
+      "last_updated": "2026-08-22",
+      "display_order": 1
+    },
+    {
+      "slug": "cum-mua",
+      "name": "Cúm mùa",
+      "summary": "Nhiễm trùng đường hô hấp do virus cúm, lây qua giọt bắn khi ho hoặc hắt hơi. Đa số người khỏe mạnh hồi phục trong khoảng một tuần, nhưng nhóm nguy cơ cao có thể gặp biến chứng.",
+      "symptoms": [
+        "Sốt và ớn lạnh",
+        "Ho khan",
+        "Đau họng",
+        "Đau đầu, đau mỏi cơ toàn thân",
+        "Sổ mũi hoặc nghẹt mũi",
+        "Mệt mỏi rõ rệt"
+      ],
+      "warning_signs": [
+        "Khó thở hoặc thở nhanh",
+        "Đau hoặc tức ngực",
+        "Môi hoặc đầu chi tím tái",
+        "Lú lẫn, khó đánh thức",
+        "Sốt cao không hạ sau vài ngày, hoặc đỡ rồi sốt lại kèm ho nặng hơn",
+        "Ở trẻ nhỏ: bỏ bú, bỏ ăn, không có nước mắt khi khóc, tiểu ít"
+      ],
+      "prevention": [
+        "Tiêm vắc xin cúm hằng năm, đặc biệt với nhóm nguy cơ cao",
+        "Rửa tay thường xuyên bằng xà phòng",
+        "Che miệng và mũi khi ho, hắt hơi",
+        "Tránh tiếp xúc gần với người đang có triệu chứng hô hấp",
+        "Ở nhà khi đang ốm để hạn chế lây cho người khác"
+      ],
+      "when_to_seek_care": "Đi khám sớm nếu thuộc nhóm nguy cơ cao (trẻ nhỏ, người từ 65 tuổi trở lên, phụ nữ mang thai, người có bệnh nền hoặc suy giảm miễn dịch), hoặc khi xuất hiện bất kỳ dấu hiệu cảnh báo nào ở trên.",
+      "source": "WHO - Tổ chức Y tế Thế giới",
+      "source_url": "https://www.who.int/news-room/fact-sheets/detail/influenza-(seasonal)",
+      "last_updated": "2026-08-22",
+      "display_order": 2
+    },
+    {
+      "slug": "tay-chan-mieng",
+      "name": "Tay chân miệng",
+      "summary": "Bệnh truyền nhiễm thường gặp ở trẻ dưới 5 tuổi, do các virus đường ruột gây ra. Phần lớn ca bệnh nhẹ và tự khỏi, nhưng một số chủng virus có thể gây biến chứng thần kinh nên cần theo dõi kỹ.",
+      "symptoms": [
+        "Sốt nhẹ",
+        "Đau họng, biếng ăn",
+        "Loét miệng gây đau khi ăn uống",
+        "Ban đỏ hoặc bọng nước ở lòng bàn tay, lòng bàn chân",
+        "Có thể có ban ở mông và đầu gối",
+        "Quấy khóc, mệt mỏi"
+      ],
+      "warning_signs": [
+        "Giật mình chới với, đặc biệt khi thiu thiu ngủ",
+        "Sốt cao liên tục khó hạ",
+        "Nôn nhiều",
+        "Run tay chân, đi loạng choạng, yếu chi",
+        "Thở nhanh, thở bất thường",
+        "Li bì, khó đánh thức",
+        "Dấu hiệu mất nước: tiểu ít, môi khô, khóc không có nước mắt"
+      ],
+      "prevention": [
+        "Rửa tay bằng xà phòng cho cả trẻ và người chăm sóc, nhất là sau khi thay tã và trước khi ăn",
+        "Vệ sinh đồ chơi, mặt bàn, tay nắm cửa thường xuyên",
+        "Không dùng chung cốc, thìa, khăn mặt",
+        "Cho trẻ nghỉ học khi đang có triệu chứng để tránh lây lan",
+        "Tránh cho trẻ tiếp xúc gần với trẻ đang mắc bệnh"
+      ],
+      "when_to_seek_care": "Đưa trẻ đi khám ngay khi có bất kỳ dấu hiệu cảnh báo nào, đặc biệt là giật mình chới với, sốt cao khó hạ hoặc trẻ li bì. Trẻ dưới 5 tuổi cần được theo dõi sát trong 3 ngày đầu.",
+      "source": "WHO Western Pacific - Tổ chức Y tế Thế giới khu vực Tây Thái Bình Dương",
+      "source_url": "https://www.who.int/westernpacific/health-topics/hand-foot-and-mouth-disease",
+      "last_updated": "2026-08-22",
+      "display_order": 3
+    },
+    {
+      "slug": "tang-huyet-ap",
+      "name": "Tăng huyết áp",
+      "summary": "Tình trạng áp lực máu trong lòng động mạch tăng cao kéo dài. Thường không gây triệu chứng rõ ràng nên nhiều người chỉ phát hiện khi đo huyết áp hoặc khi đã có biến chứng.",
+      "symptoms": [
+        "Thường không có triệu chứng, chỉ phát hiện khi đo huyết áp",
+        "Đau đầu, nhất là vào buổi sáng",
+        "Chóng mặt",
+        "Hồi hộp, đánh trống ngực",
+        "Chảy máu mũi",
+        "Nhìn mờ"
+      ],
+      "warning_signs": [
+        "Đau ngực",
+        "Khó thở",
+        "Yếu hoặc tê một bên mặt, tay hoặc chân",
+        "Nói khó, méo miệng",
+        "Đau đầu dữ dội đột ngột kèm nhìn mờ hoặc nôn",
+        "Lú lẫn đột ngột"
+      ],
+      "prevention": [
+        "Giảm muối trong khẩu phần ăn hằng ngày",
+        "Ăn nhiều rau xanh và trái cây",
+        "Vận động thể lực đều đặn",
+        "Duy trì cân nặng hợp lý",
+        "Hạn chế rượu bia, không hút thuốc lá",
+        "Đo huyết áp định kỳ và uống thuốc đúng theo chỉ định nếu đã được kê đơn"
+      ],
+      "when_to_seek_care": "Gọi cấp cứu ngay nếu có đau ngực, khó thở hoặc dấu hiệu nghi đột quỵ. Đi khám định kỳ nếu huyết áp đo được thường xuyên cao hoặc bạn đang dùng thuốc huyết áp.",
+      "source": "WHO - Tổ chức Y tế Thế giới",
+      "source_url": "https://www.who.int/news-room/fact-sheets/detail/hypertension",
+      "last_updated": "2026-08-22",
+      "display_order": 4
+    },
+    {
+      "slug": "dai-thao-duong-type-2",
+      "name": "Đái tháo đường type 2",
+      "summary": "Rối loạn chuyển hóa khiến đường huyết tăng cao kéo dài. Triệu chứng thường xuất hiện âm thầm trong nhiều năm, vì vậy tầm soát ở nhóm nguy cơ có vai trò quan trọng.",
+      "symptoms": [
+        "Khát nước nhiều, uống nhiều",
+        "Tiểu nhiều, nhất là về đêm",
+        "Sụt cân không rõ nguyên nhân",
+        "Mệt mỏi kéo dài",
+        "Nhìn mờ",
+        "Vết thương lâu lành, hay bị nhiễm trùng da"
+      ],
+      "warning_signs": [
+        "Vã mồ hôi, run tay, đói cồn cào, lú lẫn (nghi hạ đường huyết)",
+        "Thở nhanh sâu, hơi thở có mùi trái cây, buồn nôn và nôn",
+        "Lơ mơ hoặc rối loạn ý thức",
+        "Vết loét ở bàn chân sưng nóng đỏ hoặc có mủ",
+        "Đau ngực hoặc khó thở"
+      ],
+      "prevention": [
+        "Duy trì cân nặng hợp lý",
+        "Vận động thể lực đều đặn trong tuần",
+        "Ăn nhiều rau, hạn chế đồ uống có đường và tinh bột tinh chế",
+        "Không hút thuốc lá",
+        "Tầm soát đường huyết định kỳ nếu có yếu tố nguy cơ như thừa cân hoặc tiền sử gia đình"
+      ],
+      "when_to_seek_care": "Gọi cấp cứu nếu có rối loạn ý thức, thở nhanh sâu kèm nôn, hoặc dấu hiệu hạ đường huyết nặng. Đi khám nếu bạn có các triệu chứng kể trên hoặc thuộc nhóm nguy cơ nhưng chưa từng được tầm soát.",
+      "source": "WHO - Tổ chức Y tế Thế giới",
+      "source_url": "https://www.who.int/news-room/fact-sheets/detail/diabetes",
+      "last_updated": "2026-08-22",
+      "display_order": 5
+    },
+    {
+      "slug": "sot-ret",
+      "name": "Sốt rét",
+      "summary": "Bệnh do ký sinh trùng Plasmodium gây ra, lây sang người qua vết đốt của muỗi Anopheles. Bệnh chữa được, nhưng nếu xử trí muộn thì có thể diễn tiến nặng và đe dọa tính mạng.",
+      "symptoms": [
+        "Sốt, thường thành cơn kèm rét run",
+        "Ớn lạnh rồi vã mồ hôi",
+        "Đau đầu",
+        "Đau mỏi cơ toàn thân",
+        "Buồn nôn, nôn",
+        "Mệt mỏi nhiều"
+      ],
+      "warning_signs": [
+        "Lơ mơ, lú lẫn hoặc co giật",
+        "Thở nhanh, khó thở",
+        "Vàng da, vàng mắt",
+        "Tiểu rất ít hoặc nước tiểu sẫm màu",
+        "Chảy máu bất thường",
+        "Nôn liên tục, không ăn uống được"
+      ],
+      "prevention": [
+        "Ngủ màn tẩm hóa chất diệt muỗi khi ở vùng có sốt rét lưu hành",
+        "Mặc quần áo dài tay vào buổi tối và ban đêm",
+        "Dùng kem hoặc bình xịt chống muỗi",
+        "Lắp lưới chống muỗi ở cửa sổ, cửa ra vào",
+        "Đi khám sớm khi có sốt sau chuyến đi tới vùng có sốt rét lưu hành"
+      ],
+      "when_to_seek_care": "Đi khám ngay khi có sốt trong vòng ba tháng sau khi ở hoặc đi qua vùng có sốt rét lưu hành. Gọi cấp cứu nếu có rối loạn ý thức, co giật, khó thở hoặc vàng da.",
+      "source": "WHO - Tổ chức Y tế Thế giới",
+      "source_url": "https://www.who.int/news-room/fact-sheets/detail/malaria",
+      "last_updated": "2026-09-14",
+      "display_order": 6
+    },
+    {
+      "slug": "lao-phoi",
+      "name": "Lao phổi",
+      "summary": "Bệnh nhiễm khuẩn do vi khuẩn lao gây ra, thường ở phổi và lây qua không khí khi người bệnh ho hoặc hắt hơi. Bệnh chữa khỏi được nếu điều trị đúng và đủ thời gian.",
+      "symptoms": [
+        "Ho kéo dài trên hai tuần",
+        "Khạc đờm, đôi khi lẫn máu",
+        "Đau ngực",
+        "Sốt nhẹ về chiều",
+        "Ra mồ hôi ban đêm",
+        "Sụt cân, chán ăn, mệt mỏi kéo dài"
+      ],
+      "warning_signs": [
+        "Ho ra máu lượng nhiều",
+        "Khó thở nặng dần",
+        "Đau ngực dữ dội",
+        "Sốt cao liên tục",
+        "Sụt cân nhanh trong thời gian ngắn",
+        "Đau đầu dai dẳng kèm nôn hoặc lú lẫn"
+      ],
+      "prevention": [
+        "Tiêm vắc xin BCG cho trẻ theo lịch tiêm chủng",
+        "Che miệng khi ho, hắt hơi và giữ nơi ở thông thoáng",
+        "Đi khám sàng lọc khi sống hoặc làm việc cùng người đang điều trị lao",
+        "Điều trị đầy đủ theo hướng dẫn của nhân viên y tế, không tự ý bỏ dở",
+        "Không hút thuốc lá"
+      ],
+      "when_to_seek_care": "Đi khám khi ho kéo dài trên hai tuần, nhất là khi kèm sốt về chiều, ra mồ hôi ban đêm hoặc sụt cân. Đến cơ sở y tế ngay nếu ho ra máu hoặc khó thở nặng lên nhanh.",
+      "source": "WHO - Tổ chức Y tế Thế giới",
+      "source_url": "https://www.who.int/news-room/fact-sheets/detail/tuberculosis",
+      "last_updated": "2026-09-14",
+      "display_order": 7
+    },
+    {
+      "slug": "viem-gan-b",
+      "name": "Viêm gan B",
+      "summary": "Bệnh nhiễm virus gây tổn thương gan, lây qua máu, từ mẹ sang con và qua quan hệ tình dục không an toàn. Nhiều người mang virus trong thời gian dài mà không có biểu hiện rõ ràng.",
+      "symptoms": [
+        "Thường không có triệu chứng trong thời gian dài",
+        "Mệt mỏi kéo dài",
+        "Chán ăn, buồn nôn",
+        "Đau tức vùng hạ sườn phải",
+        "Vàng da, vàng mắt",
+        "Nước tiểu sẫm màu"
+      ],
+      "warning_signs": [
+        "Vàng da đậm lên nhanh",
+        "Bụng chướng to, phù hai chân",
+        "Nôn ra máu hoặc đi ngoài phân đen",
+        "Ngủ gà, lú lẫn, thay đổi hành vi",
+        "Chảy máu chân răng hoặc dễ bầm tím"
+      ],
+      "prevention": [
+        "Tiêm vắc xin viêm gan B theo lịch, gồm cả mũi cho trẻ sơ sinh",
+        "Xét nghiệm sàng lọc viêm gan B cho phụ nữ mang thai",
+        "Không dùng chung bơm kim tiêm, dao cạo, bàn chải đánh răng",
+        "Bảo đảm dụng cụ xăm và xỏ khuyên được tiệt trùng",
+        "Quan hệ tình dục an toàn"
+      ],
+      "when_to_seek_care": "Đi khám để được xét nghiệm nếu bạn có yếu tố nguy cơ hoặc người sống cùng nhà đã được chẩn đoán viêm gan B. Đến cơ sở y tế ngay khi vàng da đậm lên nhanh, bụng chướng, nôn ra máu hoặc rối loạn ý thức.",
+      "source": "WHO - Tổ chức Y tế Thế giới",
+      "source_url": "https://www.who.int/news-room/fact-sheets/detail/hepatitis-b",
+      "last_updated": "2026-09-14",
+      "display_order": 8
+    },
+    {
+      "slug": "dot-quy",
+      "name": "Đột quỵ",
+      "summary": "Tình trạng dòng máu nuôi một vùng não bị gián đoạn do tắc mạch hoặc vỡ mạch. Tế bào não tổn thương rất nhanh, nên thời gian đưa người bệnh tới bệnh viện quyết định kết quả điều trị.",
+      "symptoms": [
+        "Đột ngột yếu hoặc tê một bên mặt, tay, chân",
+        "Méo miệng, lệch một bên mặt",
+        "Nói khó, nói ngọng hoặc không hiểu lời người khác",
+        "Đột ngột nhìn mờ hoặc mất thị lực một bên",
+        "Chóng mặt, mất thăng bằng, đi loạng choạng",
+        "Đau đầu dữ dội đột ngột không rõ nguyên nhân"
+      ],
+      "warning_signs": [
+        "Bất kỳ biểu hiện nào ở trên xuất hiện đột ngột",
+        "Lú lẫn hoặc mất ý thức",
+        "Co giật",
+        "Nôn vọt kèm đau đầu dữ dội",
+        "Khó thở hoặc rối loạn nhịp thở"
+      ],
+      "prevention": [
+        "Kiểm soát huyết áp và đi khám định kỳ",
+        "Không hút thuốc lá, hạn chế rượu bia",
+        "Vận động thể lực đều đặn",
+        "Ăn giảm muối, nhiều rau xanh",
+        "Kiểm soát đường huyết và mỡ máu nếu đã được chẩn đoán"
+      ],
+      "when_to_seek_care": "Gọi cấp cứu 115 ngay khi thấy méo miệng, yếu một bên tay chân hoặc nói khó, kể cả khi biểu hiện tự hết sau vài phút. Ghi nhớ thời điểm triệu chứng bắt đầu để báo cho nhân viên y tế.",
+      "source": "WHO - Tổ chức Y tế Thế giới",
+      "source_url": "https://www.who.int/news-room/fact-sheets/detail/cardiovascular-diseases-(cvds)",
+      "last_updated": "2026-09-14",
+      "display_order": 9
+    },
+    {
+      "slug": "hen-phe-quan",
+      "name": "Hen phế quản",
+      "summary": "Bệnh mạn tính của đường thở khiến phế quản viêm và co thắt thành từng đợt. Bệnh kiểm soát được, và giữa các đợt người bệnh có thể sinh hoạt gần như bình thường.",
+      "symptoms": [
+        "Khò khè, thở rít",
+        "Ho, nhất là về đêm và gần sáng",
+        "Khó thở thành từng cơn",
+        "Nặng ngực",
+        "Biểu hiện nặng lên khi gắng sức, gặp lạnh hoặc tiếp xúc dị nguyên"
+      ],
+      "warning_signs": [
+        "Khó thở đến mức không nói hết được một câu",
+        "Môi hoặc đầu ngón tay tím tái",
+        "Thở nhanh, co kéo lồng ngực",
+        "Không đỡ sau khi đã dùng thuốc cắt cơn theo hướng dẫn",
+        "Lơ mơ, kiệt sức"
+      ],
+      "prevention": [
+        "Tránh khói thuốc lá, khói bếp và không khí ô nhiễm",
+        "Giữ nhà cửa sạch bụi, hạn chế nấm mốc và lông thú nuôi",
+        "Giữ ấm đường thở khi trời lạnh",
+        "Tiêm vắc xin cúm hằng năm theo tư vấn của nhân viên y tế",
+        "Dùng thuốc dự phòng đều đặn theo chỉ định và tái khám đúng hẹn"
+      ],
+      "when_to_seek_care": "Gọi cấp cứu khi cơn khó thở không đỡ sau khi đã dùng thuốc cắt cơn, khi nói không hết câu hoặc môi tím tái. Đi khám lại nếu bạn phải dùng thuốc cắt cơn thường xuyên hơn trước.",
+      "source": "WHO - Tổ chức Y tế Thế giới",
+      "source_url": "https://www.who.int/news-room/fact-sheets/detail/asthma",
+      "last_updated": "2026-09-14",
+      "display_order": 10
+    },
+    {
+      "slug": "benh-phoi-tac-nghen-man-tinh",
+      "name": "Bệnh phổi tắc nghẽn mạn tính (COPD)",
+      "summary": "Bệnh phổi mạn tính khiến luồng khí thở ra bị cản trở kéo dài, thường liên quan tới hút thuốc lá và tiếp xúc khói bụi lâu năm. Tổn thương không hồi phục hoàn toàn nhưng làm chậm lại được.",
+      "symptoms": [
+        "Khó thở, rõ nhất khi gắng sức",
+        "Ho kéo dài",
+        "Khạc đờm thường xuyên, nhất là buổi sáng",
+        "Khò khè",
+        "Nặng ngực",
+        "Dễ mệt khi làm việc nhẹ"
+      ],
+      "warning_signs": [
+        "Khó thở nặng lên đột ngột",
+        "Đờm đổi màu, đặc hơn hoặc nhiều hơn hẳn thường ngày",
+        "Sốt kèm khó thở",
+        "Môi và đầu chi tím tái",
+        "Ngủ gà hoặc lú lẫn",
+        "Phù hai chân"
+      ],
+      "prevention": [
+        "Bỏ thuốc lá và tránh hít khói thuốc thụ động",
+        "Dùng bếp thông thoáng, hạn chế khói than và khói củi",
+        "Đeo khẩu trang khi làm việc trong môi trường nhiều bụi",
+        "Tiêm vắc xin cúm và phế cầu theo tư vấn của nhân viên y tế",
+        "Tập thở và vận động vừa sức đều đặn"
+      ],
+      "when_to_seek_care": "Đi khám ngay khi khó thở nặng lên rõ rệt, đờm đổi màu kèm sốt hoặc phù chân tăng lên. Gọi cấp cứu nếu môi tím tái, ngủ gà hoặc không nói hết được một câu.",
+      "source": "WHO - Tổ chức Y tế Thế giới",
+      "source_url": "https://www.who.int/news-room/fact-sheets/detail/chronic-obstructive-pulmonary-disease-(copd)",
+      "last_updated": "2026-09-14",
+      "display_order": 11
+    },
+    {
+      "slug": "tieu-chay-cap",
+      "name": "Tiêu chảy cấp",
+      "summary": "Tình trạng đi ngoài phân lỏng nhiều lần trong ngày, thường do vi khuẩn, virus hoặc ký sinh trùng theo thức ăn và nước uống vào cơ thể. Nguy cơ chính là mất nước, nhất là ở trẻ nhỏ và người cao tuổi.",
+      "symptoms": [
+        "Đi ngoài phân lỏng nhiều lần trong ngày",
+        "Đau quặn bụng",
+        "Buồn nôn, nôn",
+        "Sốt nhẹ",
+        "Khát nước, khô miệng",
+        "Mệt mỏi"
+      ],
+      "warning_signs": [
+        "Mất nước: mắt trũng, tiểu rất ít, môi khô, khóc không có nước mắt",
+        "Li bì khó đánh thức hoặc kích thích vật vã",
+        "Phân có máu",
+        "Nôn liên tục, không uống được",
+        "Sốt cao khó hạ",
+        "Đau bụng dữ dội liên tục"
+      ],
+      "prevention": [
+        "Rửa tay bằng xà phòng trước khi ăn và sau khi đi vệ sinh",
+        "Ăn chín, uống nước đã đun sôi hoặc nước đóng chai an toàn",
+        "Rửa sạch rau quả trước khi ăn sống",
+        "Bảo quản thức ăn đúng cách, không để lâu ngoài môi trường",
+        "Tiêm vắc xin rota cho trẻ nhỏ theo lịch tiêm chủng"
+      ],
+      "when_to_seek_care": "Đưa người bệnh đi khám ngay khi có dấu hiệu mất nước, phân có máu, nôn liên tục hoặc sốt cao. Trẻ nhỏ và người cao tuổi cần được theo dõi sát vì mất nước diễn ra rất nhanh.",
+      "source": "WHO - Tổ chức Y tế Thế giới",
+      "source_url": "https://www.who.int/news-room/fact-sheets/detail/diarrhoeal-disease",
+      "last_updated": "2026-09-14",
+      "display_order": 12
+    },
+    {
+      "slug": "soi",
+      "name": "Sởi",
+      "summary": "Bệnh truyền nhiễm do virus sởi, lây rất nhanh qua đường hô hấp. Bệnh phòng được bằng vắc xin; biến chứng hay gặp hơn ở trẻ nhỏ, phụ nữ mang thai và người suy giảm miễn dịch.",
+      "symptoms": [
+        "Sốt cao",
+        "Ho khan",
+        "Chảy mũi",
+        "Mắt đỏ, chảy nước mắt, sợ ánh sáng",
+        "Đốm trắng nhỏ trong niêm mạc miệng",
+        "Ban đỏ mọc từ sau tai rồi lan xuống mặt và toàn thân"
+      ],
+      "warning_signs": [
+        "Thở nhanh, khó thở",
+        "Co giật",
+        "Li bì, lú lẫn",
+        "Tiêu chảy nặng kèm mất nước",
+        "Đau tai hoặc chảy mủ tai",
+        "Đau mắt nhiều, nhìn mờ"
+      ],
+      "prevention": [
+        "Tiêm vắc xin sởi đầy đủ theo lịch tiêm chủng",
+        "Cho người bệnh nghỉ tại nhà trong thời gian còn lây",
+        "Rửa tay thường xuyên, che miệng khi ho",
+        "Giữ nơi ở thông thoáng",
+        "Hạn chế đưa trẻ chưa tiêm vắc xin tới nơi đông người khi xung quanh đang có người mắc sởi"
+      ],
+      "when_to_seek_care": "Đưa người bệnh đi khám ngay khi khó thở, co giật, li bì hoặc có dấu hiệu mất nước. Phụ nữ mang thai, trẻ nhỏ và người suy giảm miễn dịch nên đi khám sớm ngay khi nghi ngờ mắc sởi.",
+      "source": "WHO - Tổ chức Y tế Thế giới",
+      "source_url": "https://www.who.int/news-room/fact-sheets/detail/measles",
+      "last_updated": "2026-09-14",
+      "display_order": 13
+    },
+    {
+      "slug": "benh-dai",
+      "name": "Bệnh dại",
+      "summary": "Bệnh do virus dại gây viêm não, lây sang người chủ yếu qua vết cắn hoặc vết cào của động vật nhiễm bệnh. Khi đã khởi phát thì gần như không cứu được, nhưng xử trí vết thương và tiêm phòng sớm thì ngăn được bệnh.",
+      "symptoms": [
+        "Đau, ngứa hoặc tê bất thường ngay tại vết cắn đã lành",
+        "Sốt",
+        "Đau đầu",
+        "Mệt mỏi, khó chịu trong người",
+        "Lo lắng, bồn chồn",
+        "Khó nuốt"
+      ],
+      "warning_signs": [
+        "Sợ nước, sợ gió",
+        "Co thắt họng khi cố uống nước",
+        "Kích động, hoảng loạn",
+        "Co giật",
+        "Yếu liệt tăng dần",
+        "Rối loạn ý thức"
+      ],
+      "prevention": [
+        "Tiêm phòng dại đầy đủ cho chó, mèo nuôi trong nhà",
+        "Không trêu chọc hoặc tiếp xúc với động vật lạ, động vật có biểu hiện bất thường",
+        "Rửa ngay vết cắn bằng xà phòng dưới vòi nước chảy trong nhiều phút",
+        "Tới cơ sở y tế để được tư vấn tiêm phòng sau phơi nhiễm càng sớm càng tốt",
+        "Dạy trẻ báo ngay cho người lớn khi bị động vật cắn hoặc cào"
+      ],
+      "when_to_seek_care": "Tới cơ sở y tế ngay trong ngày sau khi bị chó, mèo hoặc động vật hoang dã cắn, cào, hoặc liếm lên vết thương hở, kể cả khi vết thương trông rất nhỏ. Không chờ theo dõi con vật rồi mới đi khám.",
+      "source": "WHO - Tổ chức Y tế Thế giới",
+      "source_url": "https://www.who.int/news-room/fact-sheets/detail/rabies",
+      "last_updated": "2026-09-14",
+      "display_order": 14
+    },
+    {
+      "slug": "ngo-doc-thuc-pham",
+      "name": "Ngộ độc thực phẩm",
+      "summary": "Rối loạn xảy ra sau khi ăn phải thức ăn hoặc nước uống nhiễm vi sinh vật, độc tố hay hóa chất. Biểu hiện thường ở đường tiêu hóa và xuất hiện trong khoảng vài giờ đến vài ngày sau bữa ăn.",
+      "symptoms": [
+        "Buồn nôn, nôn",
+        "Đau quặn bụng",
+        "Đi ngoài phân lỏng",
+        "Sốt nhẹ",
+        "Đau đầu",
+        "Mệt mỏi, khát nước"
+      ],
+      "warning_signs": [
+        "Nôn liên tục, không giữ được nước uống",
+        "Phân có máu",
+        "Mất nước: tiểu rất ít, chóng mặt khi đứng dậy, môi khô",
+        "Nhìn đôi, sụp mi mắt, yếu cơ hoặc khó nuốt",
+        "Tê bì quanh miệng, nói khó",
+        "Sốt cao hoặc đau bụng dữ dội kéo dài"
+      ],
+      "prevention": [
+        "Rửa tay và rửa sạch dụng cụ trước khi chế biến",
+        "Để riêng thực phẩm sống và thức ăn đã nấu chín",
+        "Nấu chín kỹ, nhất là thịt, trứng và hải sản",
+        "Giữ thức ăn ở nhiệt độ an toàn, không để lâu ngoài môi trường",
+        "Dùng nước sạch và nguyên liệu còn hạn sử dụng"
+      ],
+      "when_to_seek_care": "Đi khám ngay khi nôn liên tục, phân có máu, có dấu hiệu mất nước hoặc sốt cao. Gọi cấp cứu nếu sau bữa ăn xuất hiện nhìn đôi, sụp mi, yếu cơ hay khó nuốt, vì đây là những biểu hiện cần xử trí khẩn cấp.",
+      "source": "WHO - Tổ chức Y tế Thế giới",
+      "source_url": "https://www.who.int/news-room/fact-sheets/detail/food-safety",
+      "last_updated": "2026-09-14",
+      "display_order": 15
+    },
+    {
+      "slug": "tram-cam",
+      "name": "Trầm cảm",
+      "summary": "Rối loạn sức khỏe tâm thần với khí sắc giảm và mất hứng thú kéo dài, ảnh hưởng tới sinh hoạt, học tập và công việc. Đây là một tình trạng y khoa điều trị được, không phải là sự yếu đuối của người mắc.",
+      "symptoms": [
+        "Buồn bã hoặc trống rỗng gần như cả ngày, kéo dài nhiều tuần",
+        "Mất hứng thú với những việc từng yêu thích",
+        "Mệt mỏi, giảm năng lượng",
+        "Khó ngủ hoặc ngủ quá nhiều",
+        "Ăn kém hoặc ăn nhiều bất thường, thay đổi cân nặng",
+        "Khó tập trung, hay quên",
+        "Cảm giác vô dụng hoặc luôn tự trách bản thân"
+      ],
+      "warning_signs": [
+        "Ý nghĩ muốn chết hoặc muốn tự làm hại bản thân",
+        "Lên kế hoạch hoặc chuẩn bị phương tiện để tự hại",
+        "Không còn tự chăm sóc được bản thân: bỏ ăn, bỏ vệ sinh cá nhân",
+        "Nghe hoặc nhìn thấy những điều người xung quanh không thấy",
+        "Kích động mạnh hoặc chậm chạp rõ rệt",
+        "Dùng rượu bia, chất kích thích để chịu đựng cảm xúc"
+      ],
+      "prevention": [
+        "Giữ nếp ngủ, vận động và ăn uống điều độ",
+        "Duy trì kết nối với gia đình và bạn bè thay vì thu mình lại",
+        "Chia sẻ sớm với người tin cậy khi thấy quá tải",
+        "Hạn chế rượu bia và chất kích thích",
+        "Tìm hỗ trợ chuyên môn sớm khi cảm xúc kéo dài làm ảnh hưởng sinh hoạt"
+      ],
+      "when_to_seek_care": "Đi khám chuyên khoa sức khỏe tâm thần khi các biểu hiện kéo dài trên hai tuần và ảnh hưởng tới sinh hoạt hằng ngày. Nếu xuất hiện ý nghĩ tự làm hại bản thân, hãy tìm trợ giúp ngay: nói với người thân và gọi cấp cứu 115.",
+      "source": "WHO - Tổ chức Y tế Thế giới",
+      "source_url": "https://www.who.int/news-room/fact-sheets/detail/depressive-disorder-(depression)",
+      "last_updated": "2026-09-14",
+      "display_order": 16
+    }
+  ]
+}

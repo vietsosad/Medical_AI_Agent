@@ -1,0 +1,342 @@
+{
+  "manifest_version": "validated-protocol-manifest-v1",
+  "clinical_owner": "REQUIRES_CLINICAL_OWNER",
+  "export_approved_at": "REQUIRES_CLINICAL_OWNER",
+  "_draft_status": "NOT_READY_FOR_INGESTION",
+  "_blocking_fields": {
+    "source_uri": 8,
+    "license_reference": 8,
+    "effective_date": 8,
+    "validation_status": 8,
+    "reviewed_by": 8,
+    "reviewed_at": 8,
+    "calibration_id": 8,
+    "calibration_profile": 8
+  },
+  "_generated_by": "ahrq-esi-md-parser-1.0.0",
+  "chunks": [
+    {
+      "citation_id": "AHRQ-ESI-V5:ph_n_1_thu_t_to_n_ph_n_lu_ng_esi_esi_triage_algorithm_logic",
+      "chunk_id": "ahrq_esi_v5-001",
+      "protocol_code": "AHRQ-ESI-V5",
+      "title": "PHẦN 1: THUẬT TOÁN PHÂN LUỒNG ESI (ESI TRIAGE ALGORITHM LOGIC)",
+      "issuing_body": "Agency for Healthcare Research and Quality",
+      "source": "ahrq_esi_v5",
+      "version": "5",
+      "section": "ph_n_1_thu_t_to_n_ph_n_lu_ng_esi_esi_triage_algorithm_logic",
+      "document_type": "validated_protocol",
+      "clinical_scope": [
+        "general",
+        "all_populations"
+      ],
+      "keywords": [
+        "lifesaving_intervention",
+        "high_risk",
+        "altered_mental_status",
+        "severe_pain",
+        "resource_prediction",
+        "vital_signs",
+        "esi_1",
+        "esi_2",
+        "esi_3",
+        "esi_4",
+        "esi_5",
+        "triage_algorithm"
+      ],
+      "page_content": "*(Trích xuất và chuẩn hóa từ Figure 2-1, 2-2 và các Text blocks)*\n\n*   **Decision Point A:** Requires immediate lifesaving intervention?\n    *   **Yes** ➔ **ESI 1**\n    *   **No** ➔ Move to B\n*   **Decision Point B:** High-risk situation? OR Confused/lethargic/disoriented? OR Severe pain/distress?\n    *   **Yes** ➔ **ESI 2**\n    *   **No** ➔ Move to C\n*   **Decision Point C:** How many different resources are needed?\n    *   **None** ➔ **ESI 5**\n    *   **One** ➔ **ESI 4**\n    *   **Many** ➔ Move to D\n*   **Decision Point D:** High-risk vital signs? (Reassess acuity)\n    *   **Yes** ➔ Upgrade/Consider **ESI 2**\n    *   **No** ➔ **ESI 3**\n\n---",
+      "decision_criteria": [
+        "Decision Point A: Requires immediate lifesaving intervention?",
+        "Yes ➔ ESI 1",
+        "No ➔ Move to B",
+        "Decision Point B: High-risk situation? OR Confused/lethargic/disoriented? OR Severe pain/distress?",
+        "Yes ➔ ESI 2",
+        "No ➔ Move to C",
+        "Decision Point C: How many different resources are needed?",
+        "None ➔ ESI 5",
+        "One ➔ ESI 4",
+        "Many ➔ Move to D",
+        "Decision Point D: High-risk vital signs? (Reassess acuity)",
+        "Yes ➔ Upgrade/Consider ESI 2",
+        "No ➔ ESI 3"
+      ],
+      "parser_version": "ahrq-esi-md-parser-1.0.0",
+      "content_hash": "f2d73172c17d0474a50ffb4f7bb70ce72723182ed81ede3250d5634c17a59554",
+      "source_uri": "REQUIRES_CLINICAL_OWNER",
+      "license_reference": "REQUIRES_CLINICAL_OWNER",
+      "effective_date": "REQUIRES_CLINICAL_OWNER",
+      "expires_at": null,
+      "validation_status": "REQUIRES_CLINICAL_OWNER",
+      "reviewed_by": "REQUIRES_CLINICAL_OWNER",
+      "reviewed_at": "REQUIRES_CLINICAL_OWNER",
+      "calibration_id": "REQUIRES_CLINICAL_OWNER",
+      "calibration_profile": "REQUIRES_CLINICAL_OWNER"
+    },
+    {
+      "citation_id": "AHRQ-ESI-V5:ph_n_2_gi_i_th_ch_chi_ti_t_c_c_i_m_quy_t_nh_decision_points",
+      "chunk_id": "ahrq_esi_v5-002",
+      "protocol_code": "AHRQ-ESI-V5",
+      "title": "PHẦN 2: GIẢI THÍCH CHI TIẾT CÁC ĐIỂM QUYẾT ĐỊNH (DECISION POINTS)",
+      "issuing_body": "Agency for Healthcare Research and Quality",
+      "source": "ahrq_esi_v5",
+      "version": "5",
+      "section": "ph_n_2_gi_i_th_ch_chi_ti_t_c_c_i_m_quy_t_nh_decision_points",
+      "document_type": "validated_protocol",
+      "clinical_scope": [
+        "general",
+        "all_populations"
+      ],
+      "keywords": [
+        "lifesaving_intervention",
+        "airway",
+        "high_risk",
+        "altered_mental_status",
+        "severe_pain",
+        "resource_prediction",
+        "vital_signs"
+      ],
+      "page_content": "**A. Immediate lifesaving intervention required:** \nAirway or respiratory support, emergency medications, hemodynamic interventions such as fluid resuscitation or blood products. Clinical presentations requiring lifesaving interventions include the following: intubated, unresponsive, pulselessness, apneic, severe respiratory distress, profound hypotension or hypoglycemia. \n*Unresponsiveness is defined as a patient who either:*\n1. Is nonverbal and not following commands (acutely) OR \n2. Requires noxious stimulus (P or U on AVPU scale).\n\n**B. High-risk situation:** \nMay become unstable, have high risk for deterioration, or exhibit newly altered mental status. Severe pain or distress is determined by patient report, corroborated with clinical observation.\n\n**C. Resources:** \nCount the number of *different types* of resources, not the individual tests or radiographs. *(For example: complete blood count, electrolytes, and coagulant studies = 1 resource because they are all lab tests. CBC + chest radiograph = 2 resources).*\n\n**D. High-risk vital signs:** \nReassess to determine whether the patient warrants a higher acuity level if a patient has one or more vital signs outside the normal parameters for the patient.\n\n---",
+      "decision_criteria": [],
+      "parser_version": "ahrq-esi-md-parser-1.0.0",
+      "content_hash": "f2b0d20d69032f1e4c308f7f0116420d2409aac2424b2b9ac4e477600d1690e9",
+      "source_uri": "REQUIRES_CLINICAL_OWNER",
+      "license_reference": "REQUIRES_CLINICAL_OWNER",
+      "effective_date": "REQUIRES_CLINICAL_OWNER",
+      "expires_at": null,
+      "validation_status": "REQUIRES_CLINICAL_OWNER",
+      "reviewed_by": "REQUIRES_CLINICAL_OWNER",
+      "reviewed_at": "REQUIRES_CLINICAL_OWNER",
+      "calibration_id": "REQUIRES_CLINICAL_OWNER",
+      "calibration_profile": "REQUIRES_CLINICAL_OWNER"
+    },
+    {
+      "citation_id": "AHRQ-ESI-V5:b_ng_1_examples_of_lifesaving_interventions_table_3_1",
+      "chunk_id": "ahrq_esi_v5-003",
+      "protocol_code": "AHRQ-ESI-V5",
+      "title": "Bảng 1: Examples of Lifesaving Interventions (Table 3-1)",
+      "issuing_body": "Agency for Healthcare Research and Quality",
+      "source": "ahrq_esi_v5",
+      "version": "5",
+      "section": "b_ng_1_examples_of_lifesaving_interventions_table_3_1",
+      "document_type": "validated_protocol",
+      "clinical_scope": [
+        "general",
+        "all_populations"
+      ],
+      "keywords": [
+        "lifesaving_intervention",
+        "airway"
+      ],
+      "page_content": "| Intervention Type | Lifesaving Interventions |\n| :--- | :--- |\n| **Airway/breathing** | Assisted ventilation, Intubation, Surgical airway, Emergent non-invasive positive pressure ventilation |\n| **Electrical Therapy** | Defibrillation, Emergent cardioversion, External pacing |\n| **Procedures** | Chest needle decompression, Pericardiocentesis, Open thoracotomy |\n| **Hemodynamics** | Significant intravenous fluid resuscitation, Blood administration, Control of external hemorrhage |\n| **Medications** | Adenosine, Atropine, Dextrose, Dopamine, Epinephrine (including IM for anaphylaxis), Naloxone |",
+      "decision_criteria": [
+        "Intervention Type | Lifesaving Interventions",
+        "Airway/breathing | Assisted ventilation, Intubation, Surgical airway, Emergent non-invasive positive pressure ventilation",
+        "Electrical Therapy | Defibrillation, Emergent cardioversion, External pacing",
+        "Procedures | Chest needle decompression, Pericardiocentesis, Open thoracotomy",
+        "Hemodynamics | Significant intravenous fluid resuscitation, Blood administration, Control of external hemorrhage",
+        "Medications | Adenosine, Atropine, Dextrose, Dopamine, Epinephrine (including IM for anaphylaxis), Naloxone"
+      ],
+      "parser_version": "ahrq-esi-md-parser-1.0.0",
+      "content_hash": "f43632fa98f8beb426fcf9c77a850dafe6fe4e3efc553645311b0ff30d0c9015",
+      "source_uri": "REQUIRES_CLINICAL_OWNER",
+      "license_reference": "REQUIRES_CLINICAL_OWNER",
+      "effective_date": "REQUIRES_CLINICAL_OWNER",
+      "expires_at": null,
+      "validation_status": "REQUIRES_CLINICAL_OWNER",
+      "reviewed_by": "REQUIRES_CLINICAL_OWNER",
+      "reviewed_at": "REQUIRES_CLINICAL_OWNER",
+      "calibration_id": "REQUIRES_CLINICAL_OWNER",
+      "calibration_profile": "REQUIRES_CLINICAL_OWNER"
+    },
+    {
+      "citation_id": "AHRQ-ESI-V5:b_ng_2_predicted_esi_resources_table_5_1_figure_2_2",
+      "chunk_id": "ahrq_esi_v5-004",
+      "protocol_code": "AHRQ-ESI-V5",
+      "title": "Bảng 2: Predicted ESI Resources (Table 5-1 & Figure 2-2)",
+      "issuing_body": "Agency for Healthcare Research and Quality",
+      "source": "ahrq_esi_v5",
+      "version": "5",
+      "section": "b_ng_2_predicted_esi_resources_table_5_1_figure_2_2",
+      "document_type": "validated_protocol",
+      "clinical_scope": [
+        "general",
+        "all_populations"
+      ],
+      "keywords": [
+        "resource_prediction"
+      ],
+      "page_content": "| ESI Resources (Counted) | NOT ESI Resources (Not Counted) |\n| :--- | :--- |\n| • Labs (blood, urine)<br>• Electrocardiogram, radiographs<br>• CT, MRI, ultrasound, angiography<br>• Intravenous fluids (hydration)<br>• IV, IM, or nebulized medications<br>• Specialty consultation<br>• Simple procedure = 1 (laceration repair, urinary catheter)<br>• Complex procedure = 2 (procedural sedation) | • History and physical exam (including pelvic)<br>• Point-of-care testing<br>• Saline or heparin lock<br>• Oral medications<br>• Tetanus immunization<br>• Prescription refills<br>• Phone call to primary care physician<br>• Simple wound care (dressings, recheck)<br>• Crutches, splints, slings |",
+      "decision_criteria": [
+        "ESI Resources (Counted) | NOT ESI Resources (Not Counted)"
+      ],
+      "parser_version": "ahrq-esi-md-parser-1.0.0",
+      "content_hash": "b4581e79d19d301b78d44dc6d6d87430e2cef05d41cd601e53b69bd916df57d7",
+      "source_uri": "REQUIRES_CLINICAL_OWNER",
+      "license_reference": "REQUIRES_CLINICAL_OWNER",
+      "effective_date": "REQUIRES_CLINICAL_OWNER",
+      "expires_at": null,
+      "validation_status": "REQUIRES_CLINICAL_OWNER",
+      "reviewed_by": "REQUIRES_CLINICAL_OWNER",
+      "reviewed_at": "REQUIRES_CLINICAL_OWNER",
+      "calibration_id": "REQUIRES_CLINICAL_OWNER",
+      "calibration_profile": "REQUIRES_CLINICAL_OWNER"
+    },
+    {
+      "citation_id": "AHRQ-ESI-V5:b_ng_3_patient_presentations_and_predicting_resources_table_",
+      "chunk_id": "ahrq_esi_v5-005",
+      "protocol_code": "AHRQ-ESI-V5",
+      "title": "Bảng 3: Patient Presentations and Predicting Resources (Table 5-2)",
+      "issuing_body": "Agency for Healthcare Research and Quality",
+      "source": "ahrq_esi_v5",
+      "version": "5",
+      "section": "b_ng_3_patient_presentations_and_predicting_resources_table_",
+      "document_type": "validated_protocol",
+      "clinical_scope": [
+        "general",
+        "all_populations"
+      ],
+      "keywords": [
+        "resource_prediction"
+      ],
+      "page_content": "| ESI Level | Patient Presentation | Interventions | Resources |\n| :--- | :--- | :--- | :--- |\n| **5** | Healthy 3-year-old with right ear pain, up to date on immunizations. Vitals WNL. | Needs an exam and prescription | None |\n| **5** | 42-year-old who lost rescue inhaler, needs new prescription. Asymptomatic, vitals WNL. | Needs an exam and prescription | None |\n| **4** | Healthy 19-year-old with a sore throat. Vitals WNL. | Needs an exam, culture(s), prescriptions | One |\n| **4** | Healthy 29-year-old assigned female at birth with dysuria. Vitals WNL. | Needs an exam, urine, urine culture, maybe urine pregnancy, and prescriptions | One |\n| **3** | 22-year-old assigned male at birth with RLQ abdominal pain since morning. Vitals WNL. | Needs exam, labs, IV fluid, abdominal CT scan, perhaps surgical consult | Two or more |\n| **3** | 45-year-old with left lower leg pain and swelling after 12-hr car trip. Vitals WNL. | Needs exam, labs, lower extremity non-invasive vascular studies | Two or more |\n*(Lưu ý: WNL = Within Normal Limits)*",
+      "decision_criteria": [
+        "ESI Level | Patient Presentation | Interventions | Resources",
+        "5 | Healthy 3-year-old with right ear pain, up to date on immunizations. Vitals WNL. | Needs an exam and prescription | None",
+        "5 | 42-year-old who lost rescue inhaler, needs new prescription. Asymptomatic, vitals WNL. | Needs an exam and prescription | None",
+        "4 | Healthy 19-year-old with a sore throat. Vitals WNL. | Needs an exam, culture(s), prescriptions | One",
+        "4 | Healthy 29-year-old assigned female at birth with dysuria. Vitals WNL. | Needs an exam, urine, urine culture, maybe urine pregnancy, and prescriptions | One",
+        "3 | 22-year-old assigned male at birth with RLQ abdominal pain since morning. Vitals WNL. | Needs exam, labs, IV fluid, abdominal CT scan, perhaps surgical consult | Two or more",
+        "3 | 45-year-old with left lower leg pain and swelling after 12-hr car trip. Vitals WNL. | Needs exam, labs, lower extremity non-invasive vascular studies | Two or more"
+      ],
+      "parser_version": "ahrq-esi-md-parser-1.0.0",
+      "content_hash": "c3de704b8f5772f7712f29c63b5ff3f4d132df6b7dfb4c006139b83918c221cc",
+      "source_uri": "REQUIRES_CLINICAL_OWNER",
+      "license_reference": "REQUIRES_CLINICAL_OWNER",
+      "effective_date": "REQUIRES_CLINICAL_OWNER",
+      "expires_at": null,
+      "validation_status": "REQUIRES_CLINICAL_OWNER",
+      "reviewed_by": "REQUIRES_CLINICAL_OWNER",
+      "reviewed_at": "REQUIRES_CLINICAL_OWNER",
+      "calibration_id": "REQUIRES_CLINICAL_OWNER",
+      "calibration_profile": "REQUIRES_CLINICAL_OWNER"
+    },
+    {
+      "citation_id": "AHRQ-ESI-V5:b_ng_4_normal_vital_signs_for_pediatric_patients_by_age_grou",
+      "chunk_id": "ahrq_esi_v5-006",
+      "protocol_code": "AHRQ-ESI-V5",
+      "title": "Bảng 4: Normal Vital Signs for Pediatric Patients by Age Groups (Table 6-1)",
+      "issuing_body": "Agency for Healthcare Research and Quality",
+      "source": "ahrq_esi_v5",
+      "version": "5",
+      "section": "b_ng_4_normal_vital_signs_for_pediatric_patients_by_age_grou",
+      "document_type": "validated_protocol",
+      "clinical_scope": [
+        "general",
+        "all_populations",
+        "pediatric"
+      ],
+      "keywords": [
+        "pediatric"
+      ],
+      "page_content": "| Age | Heart Rate (beats/min) | Respiratory Rate (breaths/min) | Systolic Blood Pressure (mm Hg) |\n| :--- | :--- | :--- | :--- |\n| Term neonate to <1 month | 90–190 | 35–60 | 67–84 |\n| Infant, 1–12 months | 90–180 | 30–55 | 72–104 |\n| Toddler, 1–3 years | 80–140 | 22–40 | 86–104 |\n| Preschooler, 3–5 years | 65–120 | 18–35 | 89–112 |\n| School age, 5–12 years | 70–120 | 16–30 | 90–115 |\n| Adolescent, 12–18 years | 60–100 | 12–20 | 100–130 |",
+      "decision_criteria": [
+        "Age | Heart Rate (beats/min) | Respiratory Rate (breaths/min) | Systolic Blood Pressure (mm Hg)",
+        "Term neonate to <1 month | 90–190 | 35–60 | 67–84",
+        "Infant, 1–12 months | 90–180 | 30–55 | 72–104",
+        "Toddler, 1–3 years | 80–140 | 22–40 | 86–104",
+        "Preschooler, 3–5 years | 65–120 | 18–35 | 89–112",
+        "School age, 5–12 years | 70–120 | 16–30 | 90–115",
+        "Adolescent, 12–18 years | 60–100 | 12–20 | 100–130"
+      ],
+      "parser_version": "ahrq-esi-md-parser-1.0.0",
+      "content_hash": "ada78218cbbcd0d00538cb7305952f2d6de1e0f10e460948d7331cffee0c0365",
+      "source_uri": "REQUIRES_CLINICAL_OWNER",
+      "license_reference": "REQUIRES_CLINICAL_OWNER",
+      "effective_date": "REQUIRES_CLINICAL_OWNER",
+      "expires_at": null,
+      "validation_status": "REQUIRES_CLINICAL_OWNER",
+      "reviewed_by": "REQUIRES_CLINICAL_OWNER",
+      "reviewed_at": "REQUIRES_CLINICAL_OWNER",
+      "calibration_id": "REQUIRES_CLINICAL_OWNER",
+      "calibration_profile": "REQUIRES_CLINICAL_OWNER"
+    },
+    {
+      "citation_id": "AHRQ-ESI-V5:b_ng_5_high_risk_vital_signs_thresholds_decision_point_d",
+      "chunk_id": "ahrq_esi_v5-007",
+      "protocol_code": "AHRQ-ESI-V5",
+      "title": "Bảng 5: High-Risk Vital Signs Thresholds (Decision Point D)",
+      "issuing_body": "Agency for Healthcare Research and Quality",
+      "source": "ahrq_esi_v5",
+      "version": "5",
+      "section": "b_ng_5_high_risk_vital_signs_thresholds_decision_point_d",
+      "document_type": "validated_protocol",
+      "clinical_scope": [
+        "general",
+        "all_populations"
+      ],
+      "keywords": [
+        "triage_algorithm"
+      ],
+      "page_content": "*Bảng này được phục hồi từ lỗi OCR lưu đồ.*\n\n| Age | Heart Rate (HR) | Respiratory Rate (RR) | SpO2 |\n| :--- | :--- | :--- | :--- |\n| **< 1 mo** | > 190 | > 60 | < 92% |\n| **1–12 mo** | > 180 | > 55 | < 92% |\n| **1–3 y** | > 140 | > 40 | < 92% |\n| **3–5 y** | > 120 | > 35 | < 92% |\n| **5–12 y** | > 120 | > 30 | < 92% |\n| **12–18 y** | > 100 | > 20 | < 92% |\n| **> 18 y** | > 100 | > 20 | < 92% |",
+      "decision_criteria": [
+        "Age | Heart Rate (HR) | Respiratory Rate (RR) | SpO2",
+        "< 1 mo | > 190 | > 60 | < 92%",
+        "1–12 mo | > 180 | > 55 | < 92%",
+        "1–3 y | > 140 | > 40 | < 92%",
+        "3–5 y | > 120 | > 35 | < 92%",
+        "5–12 y | > 120 | > 30 | < 92%",
+        "12–18 y | > 100 | > 20 | < 92%",
+        "> 18 y | > 100 | > 20 | < 92%"
+      ],
+      "parser_version": "ahrq-esi-md-parser-1.0.0",
+      "content_hash": "964ba6acf9d16ace11e3a347c0c2c8f149cd92a7c7f4ff53c3ebfa067a01e91d",
+      "source_uri": "REQUIRES_CLINICAL_OWNER",
+      "license_reference": "REQUIRES_CLINICAL_OWNER",
+      "effective_date": "REQUIRES_CLINICAL_OWNER",
+      "expires_at": null,
+      "validation_status": "REQUIRES_CLINICAL_OWNER",
+      "reviewed_by": "REQUIRES_CLINICAL_OWNER",
+      "reviewed_at": "REQUIRES_CLINICAL_OWNER",
+      "calibration_id": "REQUIRES_CLINICAL_OWNER",
+      "calibration_profile": "REQUIRES_CLINICAL_OWNER"
+    },
+    {
+      "citation_id": "AHRQ-ESI-V5:b_ng_6_pediatric_fever_considerations_red_flags_table_6_2_no",
+      "chunk_id": "ahrq_esi_v5-008",
+      "protocol_code": "AHRQ-ESI-V5",
+      "title": "Bảng 6: Pediatric Fever Considerations & Red Flags (Table 6-2 & Notes)",
+      "issuing_body": "Agency for Healthcare Research and Quality",
+      "source": "ahrq_esi_v5",
+      "version": "5",
+      "section": "b_ng_6_pediatric_fever_considerations_red_flags_table_6_2_no",
+      "document_type": "validated_protocol",
+      "clinical_scope": [
+        "general",
+        "all_populations"
+      ],
+      "keywords": [
+        "high_risk",
+        "esi_2"
+      ],
+      "page_content": "| Age | Temperature Criteria | ESI Level Action |\n| :--- | :--- | :--- |\n| **1 - 28 days (< 1 month)** | T > 38.0°C (100.4°F) | Assign at least **ESI 2** |\n| **1 - 3 months** | T > 38.0°C (100.4°F) | Consider assigning **ESI 2** |\n| **3 months and older** | 1. T > 39.0°C (102.2°F) or < 36.0°C (96.8°F)<br>2. OR Incomplete immunizations<br>3. OR No obvious source of fever | Consider assigning **ESI 2 or 3** |\n| **< 90 days (Red Flag Table)** | T > 38.0°C (100.4°F) or < 36.0°C (96.8°F) | High Risk Indicator |\n| **> 3 months (Red Flag Table)**| T > 38.5°C (101.3°F) or < 36.0°C (96.8°F) | High Risk Indicator |",
+      "decision_criteria": [
+        "Age | Temperature Criteria | ESI Level Action",
+        "1 - 28 days (< 1 month) | T > 38.0°C (100.4°F) | Assign at least ESI 2",
+        "1 - 3 months | T > 38.0°C (100.4°F) | Consider assigning ESI 2",
+        "3 months and older | 1. T > 39.0°C (102.2°F) or < 36.0°C (96.8°F)<br>2. OR Incomplete immunizations<br>3. OR No obvious source of fever | Consider assigning ESI 2 or 3",
+        "< 90 days (Red Flag Table) | T > 38.0°C (100.4°F) or < 36.0°C (96.8°F) | High Risk Indicator",
+        "> 3 months (Red Flag Table)| T > 38.5°C (101.3°F) or < 36.0°C (96.8°F) | High Risk Indicator"
+      ],
+      "parser_version": "ahrq-esi-md-parser-1.0.0",
+      "content_hash": "28823e816ac865829068926bda726bec94dd27d5fa31d462ba06638a0ccf18f8",
+      "source_uri": "REQUIRES_CLINICAL_OWNER",
+      "license_reference": "REQUIRES_CLINICAL_OWNER",
+      "effective_date": "REQUIRES_CLINICAL_OWNER",
+      "expires_at": null,
+      "validation_status": "REQUIRES_CLINICAL_OWNER",
+      "reviewed_by": "REQUIRES_CLINICAL_OWNER",
+      "reviewed_at": "REQUIRES_CLINICAL_OWNER",
+      "calibration_id": "REQUIRES_CLINICAL_OWNER",
+      "calibration_profile": "REQUIRES_CLINICAL_OWNER"
+    }
+  ]
+}

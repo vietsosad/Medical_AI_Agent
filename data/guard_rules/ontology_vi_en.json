@@ -1,0 +1,1159 @@
+{
+  "cardiac_chest_pain": {
+    "protocol_code": "PRO_CARD_001",
+    "body_system": "1. Cardiac & Circulation (Tim mạch)",
+    "clinical_name": "Đau Ngực & Hội Chứng Vành Cấp (Acute Coronary Syndrome - ACS)",
+    "esi_baseline_acuity": "ESI Level 2 (Khẩn Cấp - High Risk Situation)",
+    "standard_en_terms": [
+      "chest pain",
+      "acute coronary syndrome",
+      "substernal pain",
+      "diaphoresis",
+      "radiation to jaw",
+      "radiation to left arm",
+      "myocardial ischemia",
+      "troponin alteration"
+    ],
+    "standard_vi_terms": [
+      "đau thắt ngực",
+      "hội chứng mạch vành cấp",
+      "cơn đau sau xương ức",
+      "vã mồ hôi lạnh",
+      "đau lan ra cằm hoặc tay trái",
+      "thiếu máu cơ tim"
+    ],
+    "patient_slang_dialect": [
+      "tim đập bùm bụp trong ngực",
+      "nhói buốt tim như kim châm thấu lén",
+      "tưng tức lồng ngực như đá đè phở tim",
+      "ép chặt lồng ngực thở nghẹt thấu gan",
+      "ngực buốt vã mồ hôi hột muốn xỉu lả",
+      "đau bóp thát cõi ngực bên trái"
+    ],
+    "mandatory_red_flags": [
+      "SpO2 < 90% điều kiện khí trời",
+      "Huyết áp tâm thu (Systolic BP) < 90 mmHg",
+      "Nhịp tim < 40 hoặc > 140 lần/phút (Ngộ độc nhịp)",
+      "Mất ý thức / Ngất lịm (AVPU = P hoặc U)"
+    ],
+    "triage_probing_questions": [
+      "Cơn đau của bác có kéo dài trên 15 phút và lan ra tay trái, lưng hoặc hàm dưới không?",
+      "Ngay lúc này, bác có thấy lạnh toát mồ hôi hột hay hoa mắt sắp ngắt lịm không?"
+    ]
+  },
+  "cardiac_arrhythmia_palpitations": {
+    "protocol_code": "PRO_CARD_002",
+    "body_system": "1. Cardiac & Circulation (Tim mạch)",
+    "clinical_name": "Rối Loạn Nhịp Tim & Trực Nhịp Kịch Phát (Arrhythmia & Tachycardia / Bradycardia)",
+    "esi_baseline_acuity": "ESI Level 2 hoặc 3 (Tùy thuộc sự ổn định huyết động)",
+    "standard_en_terms": [
+      "tachycardia",
+      "bradycardia",
+      "palpitations",
+      "atrial fibrillation",
+      "supraventricular tachycardia",
+      "irregular heart rhythm"
+    ],
+    "standard_vi_terms": [
+      "tăng nhịp tim kịch phát",
+      "nhịp tim chậm nghiêm trọng",
+      "trống ngực rồn rập",
+      "rung nhĩ",
+      "rối loạn nhịp buồng tim"
+    ],
+    "patient_slang_dialect": [
+      "tim đập loạn cào cào như muốn văng ra ngoài",
+      "cảm giác tim rợt rớt hẫng một nhịp",
+      "ngực đánh trống ngực đùng đùng",
+      "nhịp tim phập phồng lửng lơ hoa váng đầu",
+      "mệt rã rời nhịp tim đập hụt hơi"
+    ],
+    "mandatory_red_flags": [
+      "Nhịp tim nghỉ ngơi > 140 lần/phút hoặc < 40 lần/phút",
+      "Huyết áp tâm thu < 90 mmHg kèm choáng ngất",
+      "Trợt nhịp tim kèm khó thở rút lõm sườn"
+    ],
+    "triage_probing_questions": [
+      "Nhịp tim của anh/chị lúc này đập quá nhanh nhói ngực hay lờm nọ hụt hẫng từng nhịp?",
+      "Bạn có cảm thấy chóng mặt xoay gối hoặc nhói buốt ngực khi đi lại nhẹ nhàng không?"
+    ]
+  },
+  "cardiac_hypertensive_crisis": {
+    "protocol_code": "PRO_CARD_003",
+    "body_system": "1. Cardiac & Circulation (Tim mạch)",
+    "clinical_name": "Cơn Tăng Huyết Áp Khẩn Cấp (Hypertensive Urgency / Emergency)",
+    "esi_baseline_acuity": "ESI Level 2 (Khẩn Cấp khi kèm triệu chứng cơ quan đích)",
+    "standard_en_terms": [
+      "hypertensive emergency",
+      "blood pressure crisis",
+      "encephalopathy",
+      "severe epistaxis",
+      "systolic over 180"
+    ],
+    "standard_vi_terms": [
+      "tăng huyết áp khẩn cấp",
+      "cơn vọt huyết áp kịch phát",
+      "bệnh cảnh não do tăng huyết áp",
+      "hạ gục mạch huyết áp cao"
+    ],
+    "patient_slang_dialect": [
+      "huyết áp rần rần leo lên ngọn 190",
+      "nóng bừng hầm hập hai bên thái dương",
+      "nhức búa tạ đỉnh sọ nứt óc do huyết áp cao",
+      "chóng mặt chao đảo máu cam nhỏ giọt ròng ròng",
+      "nặng bựt cơ mặt choáng váng muốn sụm"
+    ],
+    "mandatory_red_flags": [
+      "Huyết áp đo được >= 180/110 mmHg kèm nhức đầu nứt óc hoặc yếu chi (Nghi vỡ mạch não)",
+      "Thất điều / Nhìn đôi nhòe mắt kịch phát",
+      "Đau buốt ngực hoặc nón ói tháo ngược"
+    ],
+    "triage_probing_questions": [
+      "Huyết áp bác vừa đo được con số chính xác là bao nhiêu mmHg (cả trên và dưới)?",
+      "Bác có kèm theo triệu chứng nhìn mờ mắt, đau bú rần sọ hay tê lỏng tay chân bên nào không?"
+    ]
+  },
+  "neurology_stroke_fast": {
+    "protocol_code": "PRO_NEURO_001",
+    "body_system": "2. Neurology & Cerebrovascular (Thần kinh & Đột quỵ)",
+    "clinical_name": "Đột Quỵ Não & Tiêu Chuẩn Vàng FAST (Acute Stroke / TIA / Cerebrovascular Accident)",
+    "esi_baseline_acuity": "ESI Level 2 (Khẩn Cấp trong Thời gian vàng 4.5 giờ) -> ESI 1 nếu GCS < 9",
+    "standard_en_terms": [
+      "acute ischemic stroke",
+      "cerebrovascular accident",
+      "facial droop",
+      "arm drift",
+      "slurred speech",
+      "transient ischemic attack",
+      "FAST criteria"
+    ],
+    "standard_vi_terms": [
+      "đột quỵ thiếu máu não",
+      "tai biến mạch máu não",
+      "méo miệng lách mặt",
+      "yếu liệt chi nửa người",
+      "thất ngôn nói khó",
+      "cơn thiếu máu não thoảng qua"
+    ],
+    "patient_slang_dialect": [
+      "nói thọt thét đớ lưỡi không ra chữ",
+      "miệng bị méo xệch lệch nhăn bên mắt",
+      "cánh tay dở rũ rớt bụp xuống chăn",
+      "đang đứng bỗng đơ đờ lửng lơ rớt nhịp",
+      "tự dưng tê nửa người nhấc chân lên không nổi",
+      "choáng ngút mắt xỉu xỉu đớ ngần ngại"
+    ],
+    "mandatory_red_flags": [
+      "Dấu hiệu dương tính theo FAST (Face, Arm, Speech) xảy ra trong vòng 4.5 giờ qua",
+      "Điểm tri giác Glasgow (GCS) < 9 hoặc AVPU = P / U",
+      "Huyết áp tâm thu >= 200 mmHg trên nền đột quỵ",
+      "Co giật ngầm thô kịch"
+    ],
+    "triage_probing_questions": [
+      "Thời điểm chính xác bệnh nhân còn tỉnh táo bình thường lần cuối cùng là vào lúc mấy giờ?",
+      "Bệnh nhân hiện tại có bị nói đớ, mỉm cười bị lệch mép hay rớt một cánh tay bên nào không?"
+    ]
+  },
+  "neurology_severe_headache_meningo": {
+    "protocol_code": "PRO_NEURO_002",
+    "body_system": "2. Neurology & Cerebrovascular (Thần kinh & Đột quỵ)",
+    "clinical_name": "Đau Đầu Dữ Dội & Hội Chứng Màng Không Bò (Severe Headache / Meningism / Subarachnoid Hemorrhage)",
+    "esi_baseline_acuity": "ESI Level 2 (Khẩn Cấp - High Risk Situation)",
+    "standard_en_terms": [
+      "thunderclap headache",
+      "subarachnoid hemorrhage",
+      "meningeal signs",
+      "nuchal rigidity",
+      "photophobia",
+      "worst headache of life"
+    ],
+    "standard_vi_terms": [
+      "đau đầu thắt sét đánh",
+      "xuất huyết dưới nhện",
+      "hội chứng màng não",
+      "cứng gáy",
+      "sợ ánh sáng",
+      "cơn đau nhức sọ kịch liệt nhất đời"
+    ],
+    "patient_slang_dialect": [
+      "đau búa tạ phán rằm rằm nứt vỡ sọ",
+      "cổ gáy cứng ngắc gập ngoái ngó nhức buốt",
+      "nhìn ánh đèn nhức nhói chói muốn vỡ tim",
+      "nhức đầu kinh khủng khiếp từ trước tới nay chưa từng bị",
+      "sức nhức nhối làm nón tháo ói dội gục"
+    ],
+    "mandatory_red_flags": [
+      "Đau đầu sét đánh (Thunderclap) đạt cực đỉnh trong vòng vài phút ngắn ngủi",
+      "Đau đầu kèm sốt cao tháp phòng và Cứng cổ (Nghi viêm màng não cấp)",
+      "Đau đầu sau chấn thương ngã va đập có lơ mơ"
+    ],
+    "triage_probing_questions": [
+      "Cơn đau đầu này có phải là cơn đau dữ dội nhất trong đời bùng phát đột ngột không?",
+      "Bạn có bị kèm theo triệu chứng cổ cứng đau khi cúi đầu hoặc nhìn chói nhức mắt dưới ánh đèn không?"
+    ]
+  },
+  "neurology_seizure_epilepsy": {
+    "protocol_code": "PRO_NEURO_003",
+    "body_system": "2. Neurology & Cerebrovascular (Thần kinh & Đột quỵ)",
+    "clinical_name": "Co Giật Kịch Phát & Động Kinh (Seizure / Status Epilepticus)",
+    "esi_baseline_acuity": "ESI Level 2 (Khẩn Cấp) -> ESI 1 nếu co giật liên tục không phục hồi",
+    "standard_en_terms": [
+      "seizure",
+      "status epilepticus",
+      "tonic-clonic convulsion",
+      "postictal state",
+      "focal motor seizure"
+    ],
+    "standard_vi_terms": [
+      "co giật toàn thể",
+      "trạng thái động kinh kịch phát",
+      "cơn co cứng co giật",
+      "trạng thái hôn mê lơ mơ sau cơn",
+      "sùi bọt mép nhai cắn rách lưỡi"
+    ],
+    "patient_slang_dialect": [
+      "lên cơn động kinh giật bần bật như giật điện",
+      "lờ đờ sùi bọt mép trợt mắt tráng đã chéo hụt",
+      "co quắp gồng giật hai chân hai tay mất trí",
+      "giật liên hồi nín bóp ngạt tím ngời",
+      "nằm liệt mê man ngẩn ngơ sau lúc cắm giật"
+    ],
+    "mandatory_red_flags": [
+      "Cơn co giật kéo dài liên tục trên 5 phút không ngừng (Status Epilepticus -> ESI 1)",
+      "Co giật liên tiếp nhau mà bệnh nhân không kịp hồi tỉnh giữa các cơn",
+      "Bị chấn thương ngã sập sọ sau khi co giật ngất gục"
+    ],
+    "triage_probing_questions": [
+      "Cơn giật vừa xảy ra kéo dài bao nhiêu phút và hiện giờ người bệnh đã tự nhận diện được người xung quanh chưa?",
+      "Bệnh nhân có tiền sử bệnh động kinh và có quên uống thuốc chống co giật ngày hôm nay không?"
+    ]
+  },
+  "neurology_syncope_vertigo": {
+    "protocol_code": "PRO_NEURO_004",
+    "body_system": "2. Neurology & Cerebrovascular (Thần kinh & Đột quỵ)",
+    "clinical_name": "Ngất Lịm, Chóng Mặt Kịch Chao & Thay Đổi Tri Giác (Syncope, Vertigo & Altered Mental Status)",
+    "esi_baseline_acuity": "ESI Level 2 hoặc 3 (Phụ thuộc nguyên nhân tim mạch hay tiền đình)",
+    "standard_en_terms": [
+      "syncope",
+      "vertigo",
+      "orthostatic hypotension",
+      "presyncope",
+      "altered mental status"
+    ],
+    "standard_vi_terms": [
+      "ngất xỉu mất ý thức tạm thời",
+      "chóng mặt tiền đình kịch phát",
+      "tụt huyết áp tư thế",
+      "tiền ngất",
+      "thay đổi tri giác cấp tính"
+    ],
+    "patient_slang_dialect": [
+      "đang đứng bỗng đen rạp nghẹt thót xỉu lịm ngã sập xuống đồi",
+      "trần nhà xoay vòng vòng chao gục chót buốt như chong chóng",
+      "hoa mắt tối sầm nghẹn hẫng kiệt sức",
+      "lơ ngơ không nhớ mình đang đứng ở chỗ nào",
+      "nằm rũ ngất ngửng rã rời muốn ọe nón"
+    ],
+    "mandatory_red_flags": [
+      "Ngất xỉu trong lúc đang bạo động thể thao hoặc ngất trên nền bệnh lý tim mạch thong thít",
+      "Mạch chậm < 40 hoặc tụt huyết áp tâm thu < 90 mmHg ngay khi ngất tỉnh dậy",
+      "Chóng mặt xoay tít kèm nói khàn ngớt lười bùi hoặc méo mặt (Nghi đột quỵ tuần hoàn não sau)"
+    ],
+    "triage_probing_questions": [
+      "Lúc ngất xỉu lịm đi, bệnh nhân mất ý thức trong bao lâu và có ngã đập đầu vào vật cứng nào không?",
+      "Trước khi tối sầm ngất đi, anh/chị có ngực nhối đập loạn hay hoa mắt thay đổi tư thế ngổn ngang?"
+    ]
+  },
+  "respiratory_failure_dysphagia": {
+    "protocol_code": "PRO_RESP_001",
+    "body_system": "3. Respiratory System (Hô hấp & Phổi)",
+    "clinical_name": "Khó Thở Cấp Tính & Suy Hô Hấp Khẩn Cấp (Acute Dyspnea / Respiratory Failure)",
+    "esi_baseline_acuity": "ESI Level 1 (Nếu suy thở kịch liệt/Tím tím) hoặc ESI 2 (Nguy cơ cơ quan)",
+    "standard_en_terms": [
+      "acute respiratory failure",
+      "dyspnea",
+      "tachypnea",
+      "cyanosis",
+      "intercostal retractions",
+      "stridor",
+      "hypoxemic danger"
+    ],
+    "standard_vi_terms": [
+      "suy hô hấp cấp tính",
+      "khó thở kịch phát",
+      "thở nhanh dồn dập",
+      "tím tái da ngoại biên",
+      "co kéo cơ gian sườn nhịp thở rách",
+      "thở rít thanh quản"
+    ],
+    "patient_slang_dialect": [
+      "thở hụt hơi ngộp không khí như đứt hơi thừng",
+      "mắt hoa nghẹt chìm kiệt sức thở dốc ồng ộc",
+      "lồng ngực ép ngặt nghẹo lười không hút đủ gió",
+      "môi bầm tím tái bầm móng tay nghẹt chớp",
+      "thở khọt khẹt cổ rên gào lả hụt bắp ngực"
+    ],
+    "mandatory_red_flags": [
+      "SpO2 đo khí trời < 90% (Hoặc < 92% theo ESI V5 AHRQ)",
+      "Nhịp thở dồn dập > 30 lần/phút hoặc chậm lịm < 10 lần/phút ở người lớn",
+      "Tím môi ngón tay, thở khèn khẹt lơ mơ li bì kiệt nghẹt bóp họng"
+    ],
+    "triage_probing_questions": [
+      "Bạn có phải ngồi dốc vươn người lên mới ngáp được tí không khí hay đang thọt thở dồn dập rát không?",
+      "Độ bão hòa oxy (SpO2) nếu có máy xé tay kẹp đo lúc này hiện con số chính xác là bao nhiêu %?"
+    ]
+  },
+  "respiratory_asthma_copd_attack": {
+    "protocol_code": "PRO_RESP_002",
+    "body_system": "3. Respiratory System (Hô hấp & Phổi)",
+    "clinical_name": "Hen Suyễn & Đợt Cấp Bệnh Phổi Mạn Tính (Severe Asthma Attack & COPD Exacerbation)",
+    "esi_baseline_acuity": "ESI Level 2 (Khẩn Cấp nếu đáp ứng kém với thuốc xịt tại nhà)",
+    "standard_en_terms": [
+      "asthma exacerbation",
+      "copd flare",
+      "wheezing",
+      "bronchospasm",
+      "silent chest",
+      "refectory asthma"
+    ],
+    "standard_vi_terms": [
+      "cơn hen phế quản kịch phát",
+      "đợt cấp phổi tắc nghẽn mạn tính COPD",
+      "thở khò khè tiếng rít",
+      "co thắt phế quản ngột ngạt",
+      "phổi im lặng chí nguy"
+    ],
+    "patient_slang_dialect": [
+      "phế quản co cuồn cuộn rít rèn rẹt trong nồng họng",
+      "xịt thuốc giãn khí quản hai bao nấc vẫn nghẹn thắt không nhả",
+      "ho lòi phèo rít hụt hơi ngực nhốt kịch liệt",
+      "lên cơn ngạt thở vì hen suyễn thóp hụt",
+      "nghẹt thở tới mức ngồi co cắp gập ngực thở nốc"
+    ],
+    "mandatory_red_flags": [
+      "Đã xịt thuốc Ventolin/Salbutamol cứu nguy tại nhà > 2-3 lần nhưng nhịp thở vẫn thắt rết nghẹn thét",
+      "Tình trạng Phổi Im Lặng (Silent chest - co thắt nghẹn rách tới mức nghe câm lì tiếng thở)",
+      "SpO2 < 92% kèm mạch đập nhanh dập dềnh > 120 lần/phút"
+    ],
+    "triage_probing_questions": [
+      "Bạn đã xịt thuốc giãn phế quản (như Ventolin) mấy lần rồi và sau khi xịt có cảm nhận được đỡ khò khè chưa?",
+      "Cơn hen nghẹt này bùng lên là do thay đổi thời tiết, tiếp xúc khói bụi hay sau khi hít/ăn chất lạ nào đó?"
+    ]
+  },
+  "respiratory_hemoptysis_pneumo": {
+    "protocol_code": "PRO_RESP_003",
+    "body_system": "3. Respiratory System (Hô hấp & Phổi)",
+    "clinical_name": "Ho Ra Máu & Tràn Khí Màng Phổi (Hemoptysis & Spontaneous Pneumothorax / Embolism)",
+    "esi_baseline_acuity": "ESI Level 2 (Khẩn Cấp - Nguy cơ tắc ngạt mạch máu phổi)",
+    "standard_en_terms": [
+      "hemoptysis",
+      "massive hemoptysis",
+      "spontaneous pneumothorax",
+      "pulmonary embolism",
+      "pleuritic chest pain"
+    ],
+    "standard_vi_terms": [
+      "ho ra máu tươi lượng lớn",
+      "tràn khí màng phổi tự phát",
+      "thuyên tắc phổi",
+      "đau kiểu màng phổi xót nghẹn",
+      "nôn ói lẫn máu đông khí quản"
+    ],
+    "patient_slang_dialect": [
+      "ho ục ra cả cốc máu tươi bầm bọt hồng lởn vởn",
+      "ho khạc rào rão nhót ra mảng máu đông đỏ ngập",
+      "tự dưng nhói chói thót một ngách phổi sau lưng nghẹn rút rã thở không trôi",
+      "lưng phọt tức rát mỗi nhịp hít sâu thắt thớt",
+      "máu bục ra từ cổ họng ho nghẹt lịm"
+    ],
+    "mandatory_red_flags": [
+      "Ho ra lượng máu tươi vượt quá 100ml (tương đương 1 chén trà đầy -> Ngạt thở bục ESI 1)",
+      "Đau chối lồng ngực tự phát kèm nhịp thở > 30 lần/phút và tụt huyết áp < 90 mmHg (Nghi tràn khí chèn ép tim)",
+      "Vã mồ hôi hột lạnh toát ngất lịm sau cú ho ra máu"
+    ],
+    "triage_probing_questions": [
+      "Lượng máu bác ho khạc ra ước lượng khoảng bao nhiêu (vài tia sợi, một muỗng canh hay ngập cả bát to)?",
+      "Máu khạc ra có bọt khí hồng sủi hay kèm thức ăn nôn ói và bác có cảm giác thở tức nghẹt ngách phổi nào không?"
+    ]
+  },
+  "gastro_acute_abdomen_appendicitis": {
+    "protocol_code": "PRO_GASTRO_001",
+    "body_system": "4. Gastrointestinal & Abdominal (Tiêu hóa & Bụng)",
+    "clinical_name": "Đau Bụng Cấp Tính & Viêm Ruột Thừa / Tắc Ruột (Acute Abdomen / Appendicitis / Obstruction)",
+    "esi_baseline_acuity": "ESI Level 2 hoặc 3 (Phục hồi theo 2 tài liệu chuẩn ESI resources)",
+    "standard_en_terms": [
+      "acute abdominal pain",
+      "appendicitis",
+      "right lower quadrant pain",
+      "intestinal obstruction",
+      "peritonitis",
+      "guarding and rebound tenderness"
+    ],
+    "standard_vi_terms": [
+      "đau bụng cấp cứu ngoại khoa",
+      "viêm ruột thừa cấp tính",
+      "đau hố chậu phải",
+      "tắc ruột cơ học",
+      "viêm phúc mạc toàn thể",
+      "bụng cứng như gỗ đề kháng"
+    ],
+    "patient_slang_dialect": [
+      "đau quặn nhức rễ hố ngách bụng dưới bên phải",
+      "bụng sưng trướng căng cứng như pháo không đánh rắm đi tiêu được",
+      "nón ói thốc tháo tháo cả dịch xanh mọc chát buốt",
+      "đau nhăn nhục bò giãy không dám sờ vào thắt bụng",
+      "quặn ê gập thót ruột rã lả bên chéo phải"
+    ],
+    "mandatory_red_flags": [
+      "Bụng gồng cứng như đá (Đề kháng phúc mạc) kèm sốt cao hầm hập > 39 độ",
+      "Đau bụng dữ dội kịch phát ở người cao tuổi (> 65 tuổi - Nghi vỡ phình mạch chủ hoặc tắc mạch mạc treo)",
+      "Nôn ra dịch phân hoặc dịch mật ngợp nhót kèm huyết áp hạ < 90 mmHg"
+    ],
+    "triage_probing_questions": [
+      "Cơn đau của bác tập trung ở chính giữa rỗ ngách bụng nhói về hố chậu bên phải hay quặn khắp ổ bụng?",
+      "Trong 24 giờ qua bác có xì hơi (trung tiện) hoặc đi đại tiện được bình thường không hay nón ói ra dịch mật xanh lềnh?"
+    ]
+  },
+  "gastro_gi_bleed_hematemesis": {
+    "protocol_code": "PRO_GASTRO_002",
+    "body_system": "4. Gastrointestinal & Abdominal (Tiêu hóa & Bụng)",
+    "clinical_name": "Xuất Huyết Tiêu Hóa Cấp Tính (Gastrointestinal Bleeding / Hematemesis / Hematochezia)",
+    "esi_baseline_acuity": "ESI Level 2 (Khẩn Cấp - Nguy cơ sốc mất máu)",
+    "standard_en_terms": [
+      "gastrointestinal bleeding",
+      "hematemesis",
+      "hematochezia",
+      "melena",
+      "peptic ulcer bleed",
+      "esophageal varices rupture"
+    ],
+    "standard_vi_terms": [
+      "xuất huyết tiêu hóa trên hoặc dưới",
+      "nôn ra máu bầm đỏ",
+      "tiêu ra máu tươi rầm rộ",
+      "đi cầu phân đen mùi khẳm như nhựa đường",
+      "vỡ tĩnh mạch thực quản"
+    ],
+    "patient_slang_dialect": [
+      "ói ục ra bãi máu đỏ lòm như cắt cổ mổ heo",
+      "nón tháo múa cục bầm lổn nhổn như bả cà phê",
+      "đi cầu ỉa bục rách ra mủ máu đen ngòm sền sệt tanh khinh bỉ",
+      "xả ra bồn máu tươi lòe ầm nghẹt mặt váng xỉu lả",
+      "ruột nóng ran ọc máu lỏng muốn gục lịm ngã"
+    ],
+    "mandatory_red_flags": [
+      "Nôn ra lượng máu tươi > 200ml hoặc ục liên tiếp bãi lớn bầm đen kịch",
+      "Tụt huyết áp tâm thu < 90 mmHg kèm mạch nhanh dốc dồi > 120 lần/phút",
+      "Vã mồ hôi hột, bầm thớt mặt ráo ngất lịm khi bước rẽ vào bồn vệ sinh"
+    ],
+    "triage_probing_questions": [
+      "Anh/chị vừa nón ói ra máu tươi hay đi cầu ra máu/phân đen lỏng tanh hôi mấy lần từ lúc sáng rồi?",
+      "Khi đứng dậy bước ra khỏi nhà vệ sinh bạn có bị hoa mắt bạt lịm ngất gục hay mạch đập dữ dội không?"
+    ]
+  },
+  "gastro_severe_vomit_diarrhea": {
+    "protocol_code": "PRO_GASTRO_003",
+    "body_system": "4. Gastrointestinal & Abdominal (Tiêu hóa & Bụng)",
+    "clinical_name": "Nôn Ói Kịch Liệt & Tiêu Chảy Mất Nước Nặng (Severe Vomiting, Diarrhea & Acute Dehydration)",
+    "esi_baseline_acuity": "ESI Level 3 (hoặc ESI 2 nếu có dấu hiệu tụt mạch mất nước kịch)",
+    "standard_en_terms": [
+      "acute gastroenteritis",
+      "severe dehydration",
+      "intractable vomiting",
+      "profuse diarrhea",
+      "electrolyte imbalance",
+      "hypovolemic dehydration"
+    ],
+    "standard_vi_terms": [
+      "viêm dạ dày ruột cấp tính",
+      "tiêu chảy mất nước nặng nề",
+      "nôn ói liên tục cất dịch",
+      "rối loạn điện giải lịm tim",
+      "sức nhục nhăn da lịm héo"
+    ],
+    "patient_slang_dialect": [
+      "tỉa tiêu xả nước rào rào 15 lần một buổi sáng",
+      "nôn thốc nôn tháo ăn uống nghìn nhọt giội hết ra",
+      "lịm lả kiệt sức không còn hạt nước nào trong người để tháo",
+      "khô quắt mồm miệng khát muốn xỉu lả điệu rũ",
+      "tiêu vặt ói dội hoa mắt rũ cắp thòng rạp tay chân"
+    ],
+    "mandatory_red_flags": [
+      "Không thể tiểu tiện (nón nén nước tiểu câm rớt > 8-12 tiếng liên tiếp)",
+      "Huyết áp tâm thu < 90 mmHg kèm nhịp tim nhanh > 120 lần/phút do tụt huyết động",
+      "Lơ mơ li bì kiệt nghẹn nhăn lú lẫn thốt"
+    ],
+    "triage_probing_questions": [
+      "Trong 8 đến 12 giờ vừa qua bác có tiểu tiện được lần nào không hay màu nước tiểu đỏ gắt kén nước?",
+      "Bác có cảm giác khát nước khô đắng họng đến kiệt lả rã rời hoa váng khi ngẩng nhấc dậy không?"
+    ]
+  },
+  "gastro_biliary_colic_jaundice": {
+    "protocol_code": "PRO_GASTRO_004",
+    "body_system": "4. Gastrointestinal & Abdominal (Tiêu hóa & Bụng)",
+    "clinical_name": "Cơn Đau Quặn Mật & Viêm Túi Mật Khẩn Cấp (Biliary Colic / Acute Cholecystitis / Cholangitis)",
+    "esi_baseline_acuity": "ESI Level 3 (hoặc ESI 2 nếu kèm tam chứng Charcot sốt sét ngạt thảm)",
+    "standard_en_terms": [
+      "biliary colic",
+      "acute cholecystitis",
+      "cholangitis",
+      "right upper quadrant pain",
+      "jaundice",
+      "charcot triad"
+    ],
+    "standard_vi_terms": [
+      "cơn đau quặn mật",
+      "viêm túi mật cấp tính",
+      "viêm đường mật khẩn cấp",
+      "đau hố sườn phải lan lưng",
+      "vàng da vàng mắt cấp tính",
+      "tam chứng Charcot khẩn"
+    ],
+    "patient_slang_dialect": [
+      "đau nhăn cắp ngách bắp dưới sườn gầm bên phải",
+      "nhói buốt xiên chéo rạch ra lưng và bả vai chéo ngả rát",
+      "tự dưng hai mắt vàng bệch da khôn lót khè như nhầy mật",
+      "sốt gầm rung vã lạnh ngớp sau khi ăn thịt mỡ no béo",
+      "đau rách gan họng nón ói ra dịch mật vàng đắng ngắt mồm"
+    ],
+    "mandatory_red_flags": [
+      "Tam chứng Charcot khẩn cấp: Đau hạ sườn phải + Sốt cao rét run hầm + Vàng da ngợp vàng mắt",
+      "Nhịp tim > 120 lần/phút kèm huyết áp tụt < 90 mmHg (Nghi nhiễm trùng huyết đường mật - Reynolds)",
+      "Bụng sườn phải rợn gồng cứng gắt sờ bóp kêu tru"
+    ],
+    "triage_probing_questions": [
+      "Cơn đau hạ sườn phải này xuất hiện có sau bữa ăn nhiều dầu mỡ và lan lên bả vai vai phải không?",
+      "Bác có kèm theo cảm giác sốt rét run lập cập hay nhìn kỹ trong ngự gương mắt vàng khè đi không?"
+    ]
+  },
+  "gu_renal_colic_urolithiasis": {
+    "protocol_code": "PRO_GU_001",
+    "body_system": "5. Genitourinary System (Thận & Tiết niệu)",
+    "clinical_name": "Đau Quặn Thận & Cơn Sỏi Niệu Quản (Renal Colic / Urolithiasis / Kidney Stones)",
+    "esi_baseline_acuity": "ESI Level 3 (Cần xét nghiệm máu, nước tiểu, CT - > 2 Tài nguyên ESI)",
+    "standard_en_terms": [
+      "renal colic",
+      "urolithiasis",
+      "flank pain radiating to groin",
+      "hematuria",
+      "obstructive uropathy"
+    ],
+    "standard_vi_terms": [
+      "cơn đau quặn thận",
+      "sỏi đường tiết niệu kịch bóp",
+      "đau hông bẹ thắt lưng lan chéo bụng bẹn",
+      "tiểu ra máu bầm xát",
+      "tắc nghẽn sỏi niệu quản"
+    ],
+    "patient_slang_dialect": [
+      "đau gồng lưng chát thắt nhục thắt lưng bên hông sau quả thận",
+      "cơn đau buốt xoáy chạy xiên thẳng xuống bụng ngõ háng bẹn bìu",
+      "đau cào xé lăn lộn không tư thế nào bớt buốt",
+      "tiểu ra nước đỏ hồng gắt máu buốt rát như xát muối cắn",
+      "nhức thọt ngang thắt lưng quăn nón ói mật chót"
+    ],
+    "mandatory_red_flags": [
+      "Đau quặn thận kèm sốt cao hầm hập > 38.5 độ C và rét run (Nghi ứ mủ bể thận - Urosepsis kịch -> ESI 2)",
+      "Hoàn toàn bí tiểu tiện vô niệu > 12 giờ trên nền bệnh nhân có 1 quả thận duy nhất",
+      "Tụt huyết áp < 90 mmHg hoặc mạch kịch dập > 120"
+    ],
+    "triage_probing_questions": [
+      "Cơn đau vùng thắt lưng có lan xé chéo xuống hạ vị (vùng kín bẹn bướm/bìu) và làm bác đau lăn lộn không?",
+      "Bác đi tiểu ra nước có màu hồng/đỏ gắt máu và có bị sốt rét run hầm hập không?"
+    ]
+  },
+  "gu_acute_urinary_retention_infection": {
+    "protocol_code": "PRO_GU_002",
+    "body_system": "5. Genitourinary System (Thận & Tiết niệu)",
+    "clinical_name": "Bí Tiểu Cấp Tính & Viêm Tiết Niệu Nặng (Acute Urinary Retention & Urosepsis / Pyelonephritis)",
+    "esi_baseline_acuity": "ESI Level 3 (Cần can thiệp thông tiểu Foley = 1 hoặc 2 tài nguyên)",
+    "standard_en_terms": [
+      "acute urinary retention",
+      "bladder obstruction",
+      "urosepsis",
+      "acute pyelonephritis",
+      "suprapubic fullness",
+      "severe dysuria"
+    ],
+    "standard_vi_terms": [
+      "bí tiểu bàng quang cấp tính",
+      "tắc bàng quang cầu bàng quang đầy",
+      "nhiễm khuẩn huyết tiết niệu urosepsis",
+      "viêm đài bể thận khẩn cấp",
+      "đau thót hạ vị chát"
+    ],
+    "patient_slang_dialect": [
+      "bụng dưới trướng vồng bồng mẩy khóc thét rặn không ra giọt nước tiểu nào",
+      "rặn tiểu 10 tiếng đồng hồ nghẹn ngắc nhăn nhục",
+      "đi tiểu buốt thót như cạo ớt xát muối đái dắt từng giọt",
+      "bàng quang căng rách ê buốt tức rã rời thắt bụng",
+      "sốt rét run cầm rập sau khi đái rắt rò nước rỉ"
+    ],
+    "mandatory_red_flags": [
+      "Bí tiểu tuyệt đối căng đau dữ dội thét buốt (cần đặt thông tiểu khẩn cấp ngay tại trạm)",
+      "Nhiễm khuẩn niệu kèm sốt cao > 39 độ, mạch > 120 và huyết áp tâm thu < 90 mmHg (Nghi Urosepsis -> ESI 1/2)",
+      "Lơ mơ nhầm lẫn lú lẫn phát tác do nhiễm độc nhiễm khuẩn niệu"
+    ],
+    "triage_probing_questions": [
+      "Bạn đã rặn tiểu không ra 1 giọt nước tiểu nào từ cách đây mấy tiếng đồng hồ rồi và bụng dưới có vồng tức căng đau không?",
+      "Nước tiểu rỉ ra có màu đục mùi hôi khằm và bạn có bị sốt hầm hập gai ớt lạnh sống lưng không?"
+    ]
+  },
+  "gu_testicular_torsion": {
+    "protocol_code": "PRO_GU_003",
+    "body_system": "5. Genitourinary System (Thận & Tiết niệu)",
+    "clinical_name": "Đau Quặn Bìu & Xoắn Tinh Hoàn Cấp Tính (Acute Testicular Torsion / Scrotal Emergency)",
+    "esi_baseline_acuity": "ESI Level 2 (Khẩn Cấp - Thời gian vàng mổ tháo xoắn trong vòng 6 giờ)",
+    "standard_en_terms": [
+      "testicular torsion",
+      "acute scrotal pain",
+      "ischial testicle",
+      "absent cremasteric reflex",
+      "surgical emergency urology"
+    ],
+    "standard_vi_terms": [
+      "xoắn tinh hoàn cấp cứu ngoại khoa",
+      "đau vùng bìu cấp tính",
+      "tinh hoàn kéo vọt trên cao",
+      "hoai tử thiếu máu tinh hoàn",
+      "khẩn cấp tháo xoắn"
+    ],
+    "patient_slang_dialect": [
+      "tinh hoàn tự dưng đau xém ngớ xoáy quặn nhức khổng nhục nhục thấu buốt",
+      "một bên quả bìu sưng to tướng vẹo rút gầm gót thong cao hơn bên kia",
+      "đau nhăn thót tim thấu háng rẽ bụng khóc ngả lăn lộn",
+      "nón ói chới với vì đau nhói ở chỗ vùng kín bẹn trai",
+      "buốt đau rã rợi khi sờ chạm nhẹ vào bọc bìu"
+    ],
+    "mandatory_red_flags": [
+      "Đau kịch liệt một bên tinh hoàn phát tác ngẫu hứng đột ngột trong vòng 6 giờ qua (Cảnh báo: Thời gian cứu hoai tử < 6h!)",
+      "Đau vùng bìu khiến bệnh nhân choáng váng nón thốc nón tháo ngất xỉu lả",
+      "Tinh hoàn sưng to tím bầm co xoáy gồng lên cao"
+    ],
+    "triage_probing_questions": [
+      "Cơn đau thót vùng bìu/tinh hoàn bắt đầu chính xác từ lúc mấy giờ trước và diễn biến đột ngột không?",
+      "Một bên tinh hoàn có sưng to cứng thong cao lên bất thường và chạm nhẹ vào cảm thấy buốt ói ra nón không?"
+    ]
+  },
+  "obgyn_ectopic_pregnancy_bleed": {
+    "protocol_code": "PRO_OBGYN_001",
+    "body_system": "6. Gynecology & Obstetrics (Phụ nữ & Sản khoa)",
+    "clinical_name": "Đau Bụng Dưới Thai Kỳ & Thai Ngoài Tử Cung Vỡ (Ectopic Pregnancy Rupture / Severe Pelvic Pain)",
+    "esi_baseline_acuity": "ESI Level 2 (Khẩn Cấp - Nguy cơ vỡ túi thai xuất huyết tràn ổ bụng)",
+    "standard_en_terms": [
+      "ectopic pregnancy rupture",
+      "hemoperitoneum",
+      "pelvic pain with amenorrhea",
+      "cervical motion tenderness",
+      "obstetric bleeding shock"
+    ],
+    "standard_vi_terms": [
+      "thai ngoài tử cung vỡ xuất huyết nội",
+      "đau vùng hố chậu mang thai khẩn cấp",
+      "chậm kinh nghẹt trễ kèm máu âm đạo ra rỉ",
+      "sốc mất máu sản khoa",
+      "tràn máu ổ bụng kịch"
+    ],
+    "patient_slang_dialect": [
+      "đang có bầu trễ kinh bỗng đau quặn xé nát ngách bụng dưới lả chót",
+      "nhói buốt chéo ngã quỵ bên họng bụng ra mép máu đen hôi rỉ",
+      "thót buốt xiên thẳng lên bả vai vai nhói như dao đâm",
+      "bụng dưới cứng ọc đau buốt muốn sụm ngất xỉu trắng bệch",
+      "quặn ê chới với nghẹn thót bụng dưới phụ nữ"
+    ],
+    "mandatory_red_flags": [
+      "Phụ nữ trong độ tuổi sinh đẻ có chậm kinh + Đau quặn bụng dưới + Ra máu âm đạo (Bí mật gán ESI 2 ngay!)",
+      "Tụt huyết áp < 90 mmHg, da trắng bệch lạnh rớt vã mồ hôi ngất lịm (Nghi xuất huyết nội vỡ thai)",
+      "Đau nhói buốt lan thẳng lên bả vai (Dấu hiệu Kehr dương tính - Máu kích thích cơ hoành)"
+    ],
+    "triage_probing_questions": [
+      "Chị có bị chậm kinh hay đang mang thai trong giai đoạn đầu 3 tháng hiện tại không?",
+      "Cơn đau bụng có nhói buốt muốn ngất xỉu và thấy ra rỉ tí máu đen ở âm đạo hay vã lạnh mồ hôi hột không?"
+    ]
+  },
+  "obgyn_vaginal_bleed_miscarriage": {
+    "protocol_code": "PRO_OBGYN_002",
+    "body_system": "6. Gynecology & Obstetrics (Phụ nữ & Sản khoa)",
+    "clinical_name": "Xuất Huyết Âm Đạo Cấp Tính & Dọa Sảy Thai (Acute Vaginal Bleeding & Threatened Abortion)",
+    "esi_baseline_acuity": "ESI Level 2 (Nếu đang mang thai/Máu ầm tháo) hoặc ESI 3",
+    "standard_en_terms": [
+      "acute vaginal bleeding",
+      "threatened abortion",
+      "spontaneous miscarriage",
+      "postpartum hemorrhage",
+      "placenta previa bleed",
+      "heavy menorrhagia"
+    ],
+    "standard_vi_terms": [
+      "xuất huyết âm đạo bất thường",
+      "dọa sảy thai cấp cứu",
+      "băng huyết sau sinh",
+      "tiêu ra băng dội máu sản khoa",
+      "rong kinh cường kinh ồ ạt"
+    ],
+    "patient_slang_dialect": [
+      "máu cửa mình tuôn trào giội như tháo cống thay thảm băng vệ sinh nghẹt ướt",
+      "ra từng cục máu bầm to tướng như nắm tay rớt tuột ra",
+      "bục xả máu đỏ lòe ầm ĩ hoa nín mặt hoa váng muốn xỉu lả",
+      "đang có mang mà bụng co buốt rạch chảy rần máu tuếch bướm",
+      "ướt đẫm hai bỉm băng trong chưa đầy một tiếng đồng hồ"
+    ],
+    "mandatory_red_flags": [
+      "Máu âm đạo tuôn chảy ồ ạt làm ướt sực bét > 2 băng vệ sinh dày chỉ trong vòng 1-2 giờ liền",
+      "Xuất huyết ra mảng cục máu bầm khổng lồm kèm choáng váng tụt huyết áp < 90 mmHg",
+      "Bệnh nhân đang mang thai > 20 tuần bị chảy máu tuôn (Nghi rau tiền đạo vỡ khẩn -> ESI 2)"
+    ],
+    "triage_probing_questions": [
+      "Máu ra ở cửa mình nhiều tới mức làm ướt hết mấy chiếc băng vệ sinh trong vòng 1-2 tiếng vừa qua?",
+      "Chị có thấy xuất ra những cục máu đông lớn như quả trứng hay bong mảng và hoa buốt chới chói khi đứng lên không?"
+    ]
+  },
+  "obgyn_preeclampsia_sepsis": {
+    "protocol_code": "PRO_OBGYN_003",
+    "body_system": "6. Gynecology & Obstetrics (Phụ nữ & Sản khoa)",
+    "clinical_name": "Tiền Sản Giật & Sốt Nhiễm Trùng Sản Khoa (Preeclampsia & Postnatal / Obstetric Sepsis)",
+    "esi_baseline_acuity": "ESI Level 2 (Khẩn Cấp - Nguy cơ phù não co giật sản giật)",
+    "standard_en_terms": [
+      "preeclampsia",
+      "eclampsia",
+      "pregnancy induced hypertension",
+      "hellp syndrome",
+      "postnatal endometritis sepsis",
+      "visual changes pregnancy"
+    ],
+    "standard_vi_terms": [
+      "tiền sản giật khẩn cấp",
+      "cơn sản giật bục não thai kỳ",
+      "tăng huyết áp thai kỳ nặng",
+      "hội chứng HELLP sản khoa",
+      "nhiễm khuẩn huyết hậu sản khẩn chát"
+    ],
+    "patient_slang_dialect": [
+      "đang chửa tháng 8 mà huyết áp giật lên ngọn 170 nhức sọ kịch nát óc",
+      "mắt hoa chớp đóm nhòe mù sương dối lóa chát",
+      "mặt mày tay chân sưng múp phù nề phúng phính đột ngột 2 hôm",
+      "sốt hầm hập gai ngớt bụng ngứa lỏng sau khi mổ đẻ về bục dịch",
+      "đau nhói cắp dưới sườn phải khi đang mang thai lớn"
+    ],
+    "mandatory_red_flags": [
+      "Phụ nữ mang thai > 20 tuần hoặc sau sinh 2 tuần có Huyết Áp >= 160/110 mmHg (Cảnh báo Tiền sản giật nặng!)",
+      "Nhức bủa tạ sọ gập gục, nhìn mờ chớp đom đóm mắt, hoặc đau hạ sườn phải trên nền thai kỳ",
+      "Sốt cao > 39 độ C sau sinh mổ/thường kèm sản dịch mùi hôi tanh khẳm (Nghi viêm nội mạc tử cung tháo máu uốn uế -> ESI 2)"
+    ],
+    "triage_probing_questions": [
+      "Chị đang mang thai tuần thứ bao nhiêu hoặc đã sinh cháu được mấy ngày và huyết áp vừa đo được là bao nhiêu?",
+      "Chị có thấy đau đầu dữ dội, hoa mắt mờ sáng đom đóm hay mặt mày tay chân bị sưng múp lên nhanh không?"
+    ]
+  },
+  "pediatric_fever_neonatal_sepsis": {
+    "protocol_code": "PRO_PED_001",
+    "body_system": "7. Pediatric Emergency (Nhi khoa Khẩn Cấp)",
+    "clinical_name": "Sốt Cao Nhi Khoa & Nguy Cơ Nhiễm Trùng Huyết Sơ Sinh (Pediatric Fever & Neonatal Sepsis < 90 Days)",
+    "esi_baseline_acuity": "ESI Level 2 (Bé dưới 3 tháng tuổi sốt) hoặc ESI 3 (Bé lớn hơn)",
+    "standard_en_terms": [
+      "neonatal sepsis",
+      "pediatric fever",
+      "lethargy",
+      "bulging fontanel",
+      "poor skin turgor",
+      "meningism pediatric",
+      "hypothermia newborn"
+    ],
+    "standard_vi_terms": [
+      "sốt sơ sinh dưới 90 ngày",
+      "nhiễm khuẩn huyết nhi khoa",
+      "lơ mơ li bì bỏ bú",
+      "thóp trước căng phồng hoặc xẹp",
+      "dấu hiệu nếp véo da mất chậm (mất nước nặng)",
+      "hạ thân nhiệt sơ sinh"
+    ],
+    "patient_slang_dialect": [
+      "con mới đẻ 20 ngày mà nóng hầm hập búp 38 độ rưỡi",
+      "bé khóc không thành tiếng lịm lả li bì gọi không tỉnh",
+      "bỏ bú chê sữa khóc yếu xìu như miu thoi ngóp",
+      "thóp trên đỉnh đầu căng mọc như trăng rằm sờ phồng lên",
+      "người con lạnh ngắt tím chát tay chân sờ như nước đá chót mệt"
+    ],
+    "mandatory_red_flags": [
+      "Trẻ sơ sinh DƯỚI 28 ngày tuổi có Nhiệt độ > 38.0 độ C hoặc HẠ nhiệt độ < 36.0 độ C (BẮT BUỘC ESI LEVEL 2)",
+      "Trẻ từ 1 - 3 tháng tuổi sốt >= 38.0 độ C kèm lơ mơ bỏ bú",
+      "Thóp trước căng búp phồng cứng (Nghi viêm màng não), hoặc khóc ré yếu xìu rũ mắt lờ đờ"
+    ],
+    "triage_probing_questions": [
+      "Bé hiện tại là chính xác bao nhiêu ngày/tháng tuổi và nhiệt độ đo kẹp nách/hậu môn được bao nhiêu độ C?",
+      "Bé có đang bị lơ mơ li bì khó thức dậy, khóc ré bỏ bú hoàn toàn hoặc có vết tím xuất huyết ngoài da không?"
+    ]
+  },
+  "pediatric_respiratory_distress_croup": {
+    "protocol_code": "PRO_PED_002",
+    "body_system": "7. Pediatric Emergency (Nhi khoa Khẩn Cấp)",
+    "clinical_name": "Suy Thở Gian Sườn Nhi Khoa & Viêm Tiểu Phế Quản (Pediatric Respiratory Distress & Bronchiolitis / Epiglottitis)",
+    "esi_baseline_acuity": "ESI Level 2 (Khẩn Cấp - Nguy cơ suy thở kiệt lịm)",
+    "standard_en_terms": [
+      "pediatric respiratory distress",
+      "intercostal retractions",
+      "nasal flaring",
+      "grunting respiration",
+      "stridor croup",
+      "epiglottitis drooling",
+      "bronchiolitis oxygen saturation"
+    ],
+    "standard_vi_terms": [
+      "suy hô hấp nhi khoa",
+      "co kéo cơ gian sườn ngực chóp",
+      "cánh mũi phập phồng",
+      "thở rên ừ ử",
+      "viêm nắp thanh môn chảy nước dãi",
+      "thở rít thanh quản croup"
+    ],
+    "patient_slang_dialect": [
+      "bụng và lồng ngực bé cứ rút hõm dốc ngược vào mỗi khi hít thở",
+      "hai mũi phập phồng thoi ngóp thở dốc khò khè khèn khẹt",
+      "cổ họng rít rèn rẹt như chó sủa vang khẹt",
+      "nước dãi chảy giội ròng ròng nghẹt nuốt không cho ăn được",
+      "môi bé tím xanh ngậm bầm móng tay thở rên hừ hừ lịm lả"
+    ],
+    "mandatory_red_flags": [
+      "SpO2 nhi khoa < 92% khí trời, hoặc có âm thanh Thở Rên (Grunting - Chỉ báo suy thở tuyệt khẩn ESI 1/2)",
+      "Co kéo gian sườn khốc liệt, thùy mũi co bóp, môi bầm tím ngợt tím tái",
+      "Chảy nước dãi ròng ròng nghẹt nuốt câm câm tiếng rít (Nghi Viêm nắp thanh môn kịch lịm)"
+    ],
+    "triage_probing_questions": [
+      "Lúc bé hít vao ngực và bụng bé có bị rút lõm sâu vào trong hoặc cánh mũi bóp phập phồng không?",
+      "Bé có thở ra tiếng rít khẹt khẹt khi nằm yên hoặc chảy nước dãi liên tục nghẹn nuốt sữa không?"
+    ]
+  },
+  "pediatric_lethargy_intussusception": {
+    "protocol_code": "PRO_PED_003",
+    "body_system": "7. Pediatric Emergency (Nhi khoa Khẩn Cấp)",
+    "clinical_name": "Trẻ Khóc Thét Lịm & Lồng Ruột / Mất Nước Kịch (Pediatric Lethargy / Intussusception / Severe Dehydration)",
+    "esi_baseline_acuity": "ESI Level 2 (Khẩn Cấp - Nguy cơ tắc hoai tử ruột)",
+    "standard_en_terms": [
+      "intussusception",
+      "pediatric lethargy",
+      "currant jelly stools",
+      "severe pediatric dehydration",
+      "bilious vomiting infant",
+      "paroxysmal abdominal colic child"
+    ],
+    "standard_vi_terms": [
+      "lồng ruột cấp cứu nhi ngoại khoa",
+      "khóc ngắt chấn cơn quái lạ",
+      "tiêu ra phân nhầy máu hồng ngự (như thạch mận/currant jelly)",
+      "nón ói ra dịch mật xanh lềnh",
+      "mất nước kiệt chát nhi khoa"
+    ],
+    "patient_slang_dialect": [
+      "bé đang chơi tự dưng thét lên khóc khóc gập thót người khóc lịm rồi mềm xèo",
+      "khóc rã rợi từng cơn rồi lả xỉu ngủ gà ngủ gạch lờ đờ",
+      "đi cầu ra mủ máu hồng hồng sền sệt như thạch dâu bắp",
+      "ói tháo mọi thứ ra cả mật xanh mật vàng",
+      "tã khô ráo không có một giọt nước tiểu suốt 8 tiếng đồng hồ"
+    ],
+    "mandatory_red_flags": [
+      "Tiêu ra phân bầm nhầy nhầy hồng máu như thạch mận (Currant jelly stools - Dấu hiệu hoai tử lồng ruột -> ESI 2!)",
+      "Khóc thét dữ dội gập người từng cơn rạch ròi xen kẽ những nhịp mềm xỉu lịm lả",
+      "Bỉm tã hoàn toàn khô rang rít không tiểu > 8 giờ kèm mắt trũng sâu thắp khóc không có nước mắt"
+    ],
+    "triage_probing_questions": [
+      "Bé khóc thét gập người đau rát thành từng cơn kéo dài vài phút rồi bỗng mệt lịm ngủ thiếp đi không?",
+      "Trong chiếc tã gần nhất bé đi bẩn có lẫn chất nhầy hồng như máu thạch hay bé ói ra mật màu xanh không?"
+    ]
+  },
+  "trauma_head_injury_tloc": {
+    "protocol_code": "PRO_TRAUMA_001",
+    "body_system": "8. Trauma & Surgical Wounds (Chấn thương)",
+    "clinical_name": "Chấn Thương Sọ Não & Tai Nạn Có Mất Ý Thức (Traumatic Brain Injury & Head Trauma with T-LOC)",
+    "esi_baseline_acuity": "ESI Level 2 (Khẩn Cấp - Nguy cơ xuất huyết nội sọ/chấn động não)",
+    "standard_en_terms": [
+      "traumatic brain injury",
+      "transient loss of consciousness",
+      "epidural hematoma",
+      "subdural bleeding",
+      "anisocoria pupil asymmetric",
+      "skull fracture signs"
+    ],
+    "standard_vi_terms": [
+      "chấn thương sọ brain nặng",
+      "mất ý thức thoảng qua T-LOC",
+      "máu tụ ngai màng cứng / dưới màng cứng",
+      "đồng tử giãn không đều",
+      "dấu hiệu vỡ sàn sọ (kính dâm rỉ dịch lót tai)"
+    ],
+    "patient_slang_dialect": [
+      "ngã ngào sập đập sau gáy tỉnh dậy không nhớ lúc ngã ra sao",
+      "bị tai nạn ngất lịm đi 5 phút sau đó tỉnh dạy nói sảng nón vọt ọc thốc",
+      "hai con ngươi một bên to một bên nhỏ mờ khói bục ráo",
+      "nón vọt bắn thành tia như vòi rồng không kìm được sau tai nạn",
+      "mắt thâm quầng như gấu trúc rỉ dịch trong veo ra cả lỗ tai mũi"
+    ],
+    "mandatory_red_flags": [
+      "Có quãng thời gian mất ý thức ngất xỉu ngay lúc va đập đầu kèm lú lẫn quên nhầm lúc tỉnh lại",
+      "Nón vọt thành tia bục rạch liên tiếp > 2 lần hoặc nhức đầu ngày càng tăng dội",
+      "Đồng tử hai bên mắt giãn không đều (Anisocoria - Dấu hiệu chèn ép tụ máu nội sọ kịch ESI 1/2!)",
+      "Dịch trong veo hoặc máu tuếch rỉ ra từ hai lỗ tai, mũi (Nghi vỡ nền nứt sọ)"
+    ],
+    "triage_probing_questions": [
+      "Lúc bị va đập ngã đập đầu xuống, bệnh nhân có bị ngất lịm bần thần bất tỉnh một khoảng thời gian nào không?",
+      "Sau tai nạn bệnh nhân có bị nón ói thốc vọt thành tia hay hai mắt nhìn mờ có bầm quầng tím dưới bọng mắt không?"
+    ]
+  },
+  "trauma_fracture_arterial_occlude": {
+    "protocol_code": "PRO_TRAUMA_002",
+    "body_system": "8. Trauma & Surgical Wounds (Chấn thương)",
+    "clinical_name": "Gãy Xương, Trật Khớp & Tắc Mạch Máu Chi Cấp Tính (Fractures & Acute Arterial Occlusion / Compartment)",
+    "esi_baseline_acuity": "ESI Level 2 (Nếu mất mạch chi/Gãy xương hở rẽ) hoặc ESI 3/4",
+    "standard_en_terms": [
+      "open fracture",
+      "acute arterial occlusion",
+      "compartment syndrome",
+      "loss of distal pulse",
+      "pallor cold extremity",
+      "dislocation neurovascular compromise"
+    ],
+    "standard_vi_terms": [
+      "gãy xương hở lòi đầu xương",
+      "hội chứng chèn ép khoang chi",
+      "tắc mạch máu ngoại biên cấp tính",
+      "mất mạch chi viễn lọt mạch bàng tay chân",
+      "trật khớp tổn thương thần kinh mạch máu"
+    ],
+    "patient_slang_dialect": [
+      "gãy lòi cả khúc xương trắng lách chọc rách toạc qua màng da bắp thịt",
+      "bàn tay/bàn chân sưng tím lạnh ngắt rờ không thấy giáp mạch tim đập nơi cổ chân",
+      "đau căng nhức buốt bắp bắp muốn nứt rách xé bắp cẳng chân giãy chết",
+      "ngã trật nhục lùi hẳn khớp gối tay nhức không dở nhích được 1 milimet",
+      "chi gãy trắng bệch lịm tê liệt mất hoàn toàn cảm giác"
+    ],
+    "mandatory_red_flags": [
+      "Gãy xương hở rách toạc lòi nhát đầu xương (Open fracture -> ESI 2 - Nguy cơ nhiễm trùng tấy máu gãy lịm)",
+      "Mất hoàn toàn mạch đập ở cổ tay/cổ chân bên chấn thương kèm da nhợt nhạt lạnh toát (Tắc mạch -> ESI 2 khẩn cắm)",
+      "Đau nhức sưng vù căng rách nhức tới mức thuốc giảm đau vô tác dụng (Hội chứng chèn ép khoang khẩn -> ESI 2)"
+    ],
+    "triage_probing_questions": [
+      "Tại vết chấn thương có bị rách da lòi hẳn xương ra ngoài hay máu giội chảy ầm ầm không?",
+      "Ngón tay/ngón chân phía bên dưới chỗ gãy có bị nhợt nhạt lạnh ngắt và rờ vào hoàn toàn không còn cảm giác đau rát không?"
+    ]
+  },
+  "trauma_major_burns_hemorrhage": {
+    "protocol_code": "PRO_TRAUMA_003",
+    "body_system": "8. Trauma & Surgical Wounds (Chấn thương)",
+    "clinical_name": "Vết Thương Chảy Máu Phun & Bỏng Diện Rộng (Major Hemorrhage Laceration & Acute Thermal/Chemical Burns)",
+    "esi_baseline_acuity": "ESI Level 1 (Nếu phun tia bục) hoặc ESI 2 (Bỏng vùng mặt/đường thở/bỏng lớn)",
+    "standard_en_terms": [
+      "major hemorrhage",
+      "arterial bleed spray",
+      "inhalation burn trauma",
+      "facial burns airway",
+      "third degree burn extensive",
+      "tourniquet requirement"
+    ],
+    "standard_vi_terms": [
+      "máu chảy thành tia phun đứt động mạch",
+      "bỏng đường hô hấp hít khói hôi",
+      "bỏng vùng mặt cổ khẩn cấp",
+      "bỏng độ 3 diện rộng trên 20% cơ thể",
+      "cầm máu bằng garo bọ tim"
+    ],
+    "patient_slang_dialect": [
+      "máu vọt phun phọt thành vòi rồng bịt băng gạc 10 chiếc vẫn ướt đẫm",
+      "bị bọp chém đứt phăng mạch máu tay chân giội máu tươi tràn chảo lịm ngã",
+      "chém cháy cháy trát xém rụm cả bắp mặt cổ ngột thở khèn khẹt khói sặc rát họng",
+      "bỏng nước sôi lột bả hết cả tấm bắp mang hai mảng lưng chân phế rã tay chới với",
+      "máu chảy tát bục quấn gạc giặt không ngớt hoa bạt mắt ngất gục"
+    ],
+    "mandatory_red_flags": [
+      "Máu vọt bắn thành tia (Arterial spray) không thể cầm mủ dù đã ép chặt bằng khăn gạc (ESI 1 -> Gọi 115 thới garo!)",
+      "Bỏng cháy xem rụm vùng mặt, cổ, hoặc có tiếng nói khàn bét thở khò khè khét than sau đám cháy (Bỏng đường thở ESI 1!)",
+      "Bỏng rộp bong nứt nước diện rộng > 15-20% cơ thể kèm lạnh toát mồ hôi do sốc đau"
+    ],
+    "triage_probing_questions": [
+      "Vết rách đang chảy máu rỉ rỉ hay đang bắn phun thành tia ướt thót nhầm hết cả nhung băng gạc cầm máu?",
+      "Bệnh nhân có bị bỏng ở vùng mặt/cổ hay thở khò khè đau khét khói rèn rẹt trong cổ họng không?"
+    ]
+  },
+  "meta_anaphylaxis_allergy": {
+    "protocol_code": "PRO_META_001",
+    "body_system": "9. Immunology & Metabolic (Miễn dịch & Nội tiết)",
+    "clinical_name": "Sốc Phản Vệ & Dị Ứng Phù Mạch Cắp Thở (Anaphylactoid Shock & Acute Angioedema / Severe Allergic Flare)",
+    "esi_baseline_acuity": "ESI Level 1 (Nếu nghẹt bóp họng/Tụt huyết áp) hoặc ESI 2",
+    "standard_en_terms": [
+      "anaphylaxis",
+      "anaphylactoid shock",
+      "angioedema airway",
+      "stridor allergy",
+      "severe urticaria hypotension",
+      "epinephrine administration"
+    ],
+    "standard_vi_terms": [
+      "sốc phản vệ độ 2 và độ 3 khẩn cấp",
+      "phù mạch Quincke chèn bắp thanh quản",
+      "mẩn ngứa phát ban toàn thân kịch",
+      "co thắt họng sau ăn hải sản hoặc tiêm kháng sinh",
+      "tụt huyết áp do dị ứng kịch phát"
+    ],
+    "patient_slang_dialect": [
+      "ăn tôm nhộng xong môi mỏ sưng vù vục như quả mận thọt nghẹn bóp cổ họng",
+      "nóng ngứa rần rần rộp kín toàn thân nghẹt lịm thở không ra hơi hối ngóp",
+      "tự dưng lưỡi to bự lên nuốt nước bọt kẹt cứng rắc rít họng",
+      "dùng thuốc xong hoa mắt lịm xỉu tay chân lạnh toát vã bồ hôi hột rũ bét",
+      "ngất lịm sập bục xuống sàn sau khi bị ong độc đốt găm"
+    ],
+    "mandatory_red_flags": [
+      "Phát ban ngứa mẩn kèm nghẹt cắp tiếng rít ở cổ họng (Phù Quincke chèn đường thở -> ESI 1 lập tức! Cần Epinephrine)",
+      "Tụt huyết áp < 90 mmHg, da tái nhợt lơ mơ ngất lịm sau khi tiếp xúc dị nguyên (Sốc phản vệ kịch)",
+      "Nón ói thốc tháo kèm mẫn ngứa râm ran toàn thân ngay vài phút sau khi uống/tiêm thuốc hoặc ăn hải sản"
+    ],
+    "triage_probing_questions": [
+      "Bạn vừa ăn hải sản, tiếp xúc hóa chất hay uống tuýp thuốc/bị côn trùng nào đốt bắp ngay vài chục phút trước không?",
+      "Ngay bây giờ bạn có cảm giác bị nghèn bóp nghẹt ở cổ họng, môi lưỡi sưng múp hay hoa mắt ngất lịm đi không?"
+    ]
+  },
+  "meta_dka_hypoglycemia_coma": {
+    "protocol_code": "PRO_META_002",
+    "body_system": "9. Immunology & Metabolic (Miễn dịch & Nội tiết)",
+    "clinical_name": "Nhiễm Toan Ceton Đái Tháo Đường & Hạ Đường Huyết Kịch Lịm (DKA & Severe Hypoglycemia / Diabetic Coma)",
+    "esi_baseline_acuity": "ESI Level 1 (Nếu ngất lịm GCS < 9) hoặc ESI 2 (Khẩn Cấp - High Risk)",
+    "standard_en_terms": [
+      "diabetic ketoacidosis",
+      "severe hypoglycemia",
+      "kussmaul breathing",
+      "fruity ketone odor",
+      "unconscious diabetic",
+      "blood glucose under 50"
+    ],
+    "standard_vi_terms": [
+      "nhiễm toan ceton đái tháo đường DKA",
+      "hạ đường huyết nghiêm trọng gây mê lịm",
+      "thở kiểu Kussmaul hối ngập",
+      "hơi thở có mùi táo quay ceton",
+      "hôn mê đái tháo đường cấp cứu"
+    ],
+    "patient_slang_dialect": [
+      "tiêm insulin xong nhịn đói giờ bủn xỉn rũ lả vã mồ hôi ướt nhẹp áo mờ ngớ ngất",
+      "lờ đờ lú lẫn tay chân bủn rủn đói nghẹn óc muốn xỉu gục cắm nhăn",
+      "bác bị tiểu đường mà sáng giờ khát cháy miệng thở sâu ồng ộc mệt lịm ói mật lửng lơ",
+      "hơi thở phả ra mùi ngọt nồng nặc như mùi chổi bục chót mê lịm",
+      "kháo khất gọi lay cấm không tỉnh dậy nổi trên giường lúc sáng sớm"
+    ],
+    "mandatory_red_flags": [
+      "Đường huyết mao mạch test nhanh < 50 mg/dL (2.8 mmol/L) kèm hoa mắt vã bồ hôi lịm ngất (Hạ đường huyết -> ESI 1/2)",
+      "Đường huyết > 250 mg/dL (13.9 mmol/L) kèm thở dốc dồn dập rát sâu (Thở Kussmaul) + Nón ói kiệt nước (Nghi DKA -> ESI 2)",
+      "Bệnh nhân đái tháo đường li bì lơ mơ mất ý thức trên giường không kêu dậy nổi (AVPU = P/U -> ESI 1)"
+    ],
+    "triage_probing_questions": [
+      "Bệnh nhân có tiền sử bị bệnh tiểu đường và có vừa tiêm thuốc Insulin/uống thuốc hạ đường mà quên ăn sáng không?",
+      "Chỉ số đường huyết (nếu nhà có máy đo nhanh) hiện là bao nhiêu và bệnh nhân có đang bủn rủn tay chân lơ mơ vã mồ hôi hột không?"
+    ]
+  },
+  "meta_neutropenia_immuno_sepsis": {
+    "protocol_code": "PRO_META_003",
+    "body_system": "9. Immunology & Metabolic (Miễn dịch & Nội tiết)",
+    "clinical_name": "Sốt Cao Suy Giảm Miễn Dịch & Hóa Trị Ung Thư Bốc Viêm (Febrile Neutropenia & Immunocompromised Sepsis)",
+    "esi_baseline_acuity": "ESI Level 2 (Khẩn Cấp - Nguy cơ sốc nhiễm khuẩn tàn phá do hạ bắp tiểu cầu/bạch cầu)",
+    "standard_en_terms": [
+      "febrile neutropenia",
+      "immunocompromised sepsis",
+      "post chemotherapy fever",
+      "septic shock risk",
+      "opportunistic infection emergency"
+    ],
+    "standard_vi_terms": [
+      "sốt hạ bạch cầu trung tính",
+      "nhiễm khuẩn huyết trên nền ung thư hóa trị",
+      "sức miễn dịch tàn phá khẩn cấp",
+      "nguy cơ sốc nhiễm khuẩn tiêm lịm",
+      "bệnh nhân ghép tạng sốt kịch"
+    ],
+    "patient_slang_dialect": [
+      "bác vừa truyền hóa chất chữa ung thư 3 ngày về nay sốt rét run hầm hập kiệt nghẹt",
+      "đang dùng thuốc ghép gan rũ rợi tự dưng gai ớt lạnh người lịm xỉu lả",
+      "sốt âm ỉ bủn lủn trên nền bệnh ung thư chới với thở rách",
+      "ngực ớn rét run lập cập khát héo mệt muốn ráo óe ngã bục",
+      "da dẻ nhợt lót nổi chấm đỏ ngứa mệt bần thần sau toa hóa trị"
+    ],
+    "mandatory_red_flags": [
+      "Bệnh nhân ĐANG TRUYỀN HÓA TRỊ UNG THƯ hoặc GHÉP TẠNG có sốt > 38.0 độ C (Bắt buộc gán ESI 2 khẩn cấp ngay!)",
+      "Sốt trên nền ung thư kèm Huyết áp tâm thu < 90 mmHg và mạch nhanh > 120 lần/phút (Nghi Sốc Nhiễm Khuẩn -> ESI 1/2)",
+      "Lơ mơ li bì kiệt lịm thở dốc trên nền ung thư giai đoạn nặng"
+    ],
+    "triage_probing_questions": [
+      "Bệnh nhân có đang trong giai đoạn điều trị ung thư, truyền hóa chất hoặc dùng thuốc ép miễn dịch ghép tạng không?",
+      "Nhiệt độ cơ thể của bác hiện tại là bao nhiêu độ và có cảm nhận thấy ớn lạnh rét run hay bủn lả tụt huyết áp không?"
+    ]
+  },
+  "psych_suicidal_ideation_combative": {
+    "protocol_code": "PRO_PSYCH_001",
+    "body_system": "10. Psychiatric & Toxicology (Tâm thần & Độc học)",
+    "clinical_name": "Ý Định Tự Tử Khẩn Cấp & Bạo Động Tháo Túng Vô Thần (Active Suicidal Ideation & Combative Hysterectomy)",
+    "esi_baseline_acuity": "ESI Level 2 (Khẩn Cấp - Cần giám sát y tế liên tục giữ mạng sống)",
+    "standard_en_terms": [
+      "active suicidal ideation",
+      "suicide attempt",
+      "homicidal ideation",
+      "combative hostile patient",
+      "acute psychotic break",
+      "self-harm crisis"
+    ],
+    "standard_vi_terms": [
+      "ý định tự tử cấp tính",
+      "tự sát hở máu kịch",
+      "kích động tâm thần bạo lực",
+      "loạn thần kịch liệt",
+      "khủng hoảng rạch tay buông xuôi"
+    ],
+    "patient_slang_dialect": [
+      "tôi thề hôm nay sẽ tự cất ngã quyên sinh kết liễu cuộc đời bét nhục này",
+      "uống trót 30 viên thuốc ngủ rễ chết cắn bóp không muốn sống nữa",
+      "la thét hò giãy cào xế rạch tay tuôn máu muốn tự vẫn ngay lập tức",
+      "leo ra gờ lan can tầng 15 khóc lóc gục gã đe đọp buông sườn xuống bãi",
+      "khùng điên quậy phá đập phá đồ đạc khóc la vô thần không nhượng ai"
+    ],
+    "mandatory_red_flags": [
+      "Bệnh nhân khẩn khoản phác thảo ý định tự tử hoặc VỪA MỚI THỰC HIỆN hành động tự tử (Uống thuốc ngủ, rạch mạch máu -> ESI 1/2)",
+      "Bạo động hiến hung vô thần có khả năng tự gây hại hoặc sát hại nhân viên y tế / người lân cận",
+      "Khủng hoảng hoang tưởng ảo thanh răn đe kích động nhảy tháp cao"
+    ],
+    "triage_probing_questions": [
+      "Bạn có đang nắm giữ trong tay vũ khí, thuốc độc hay có ý định cụ thể nào muốn tự tử làm tổn thương bản thân ngay lúc này không?",
+      "Bạn đã nuốt/uống loại thuốc độc hoặc rạch nhầm vết thương nào chưa và xung quanh có người thân đang ở bên cạnh để giúp bạn bảo đảm an toàn không?"
+    ]
+  },
+  "toxic_poisoning_opioid_overdose": {
+    "protocol_code": "PRO_TOXIC_001",
+    "body_system": "10. Psychiatric & Toxicology (Tâm thần & Độc học)",
+    "clinical_name": "Ngộ Độc Hóa Chất / Thực Phẩm & Thấu Độc Opioid (Acute Poisoning, Envenomation & Opioid Overdose)",
+    "esi_baseline_acuity": "ESI Level 1 (Nếu ngất thở lịm sùi bọt mép) hoặc ESI 2 (Khẩn Cấp)",
+    "standard_en_terms": [
+      "acute poisoning",
+      "opioid overdose",
+      "naloxone candidate",
+      "pinpoint pupils",
+      "organophosphate poison",
+      "venomous snakebite Emergency"
+    ],
+    "standard_vi_terms": [
+      "ngộ độc cấp cứu hóa chất",
+      "sốc quá liều opioid ma túy",
+      "co quắp đồng tử kim châm",
+      "ngộ độc thuốc trừ sâu rụng dịch",
+      "rắn độc cắp găm chát béo chát tim"
+    ],
+    "patient_slang_dialect": [
+      "uống trúng lọ thuốc trừ sâu cỏ phế giờ múa dãi ục chao chao thở gào lịm",
+      "chích quá liều ma túy nằm xỉu lịm ngắt ngọp tím tái đồng tử co tít bằng cái gắp kim",
+      "bị bắp con rạp rắn lục rắn hổ chúa găm vào cẳng chân giờ tím rịm sưng vù lan hốc óe nón",
+      "ngộ độc màng nấm độc nón múa máu bộc ói mật lả xỉu chới với thở ráo",
+      "nuốt nhầm hóa chất tẩy bồn cầu rác cháy bắp lở phồng mòm miệng ngột thở răn"
+    ],
+    "mandatory_red_flags": [
+      "Ngộ độc/Qúa liều Opioid ma túy khiến Nhịp thở < 10 lần/phút, tím tái, đồng tử co nhỏ như đầu kim châm (Cần tiêm Naloxone -> ESI 1 khẩn!)",
+      "Ngộ độc thuốc trừ sâu lân hữu cơ: Chảy dãi ầm ầm, tụt mạch lịm xỉu co thắt phế quản (ESI 1/2)",
+      "Vết cắn của rắn độc gây tím rịm sưng nề lan nhanh lên các khớp gốc chi kèm choáng tụt huyết áp"
+    ],
+    "triage_probing_questions": [
+      "Bệnh nhân vừa uống/nuốt phải nhãn hiệu thuốc trừ sâu, hóa chất bôi tẩy, hay chích quá liều chất gì cách đây bao lâu?",
+      "Bệnh nhân hiện có đang thở cực kỳ chậm (dưới 10 lần/phút), sùi bọt mép hay bất tỉnh nhơn nhơn lay không dậy nổi không?"
+    ]
+  }
+}
