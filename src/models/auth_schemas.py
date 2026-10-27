@@ -74,10 +74,19 @@ class RegisterRequestDTO(BaseModel):
 
 
 class VerifyOtpRequestDTO(BaseModel):
-    """DTO Thẻ kiểm toán Mã OTP 6 chữ số."""
-    email: str | None = Field(default=None, description="Email sở hữu mã xác nhận")
+    """DTO Thẻ kiểm toán Mã OTP 6 chữ số.
+
+    ``email`` là bắt buộc: thiếu nó, mã chỉ còn là 6 chữ số được dò trên mọi tài
+    khoản cùng lúc, và mã của bất kỳ ai khớp trước sẽ mở phiên cho người đó.
+    """
+    email: str = Field(..., description="Email sở hữu mã xác nhận")
     code: str = Field(..., min_length=6, max_length=6, description="Mã PIN 6 chữ số")
     purpose: str = Field(default="REGISTRATION", description="Mục đích xác thực (REGISTRATION | PASSWORD_RESET)")
+
+    @field_validator("email")
+    @classmethod
+    def clean_email(cls, v: str) -> str:
+        return v.strip().lower()
 
     @field_validator("code")
     @classmethod
@@ -103,10 +112,15 @@ class ForgotPasswordRequestDTO(BaseModel):
 
 class ResetPasswordRequestDTO(BaseModel):
     """DTO cập nhật mật khẩu mới thông qua OTP / Token thuyên chuyển."""
-    email: str | None = Field(default=None, description="Email của tài khoản cần đổi Mật khẩu")
+    email: str = Field(..., description="Email của tài khoản cần đổi Mật khẩu")
     token: str | None = Field(default=None, description="Token ủy thác đổi mật khẩu (hoặc mã OTP)")
     otp: str | None = Field(default=None, description="Mã PIN 6 chữ số OTP")
     newPassword: str = Field(..., min_length=8, description="Mật khẩu mới (tối thiểu 8 ký tự)")
+
+    @field_validator("email")
+    @classmethod
+    def clean_email(cls, v: str) -> str:
+        return v.strip().lower()
 
 
 class StandardMessageResponseDTO(BaseModel):

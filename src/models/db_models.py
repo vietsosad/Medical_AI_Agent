@@ -458,6 +458,7 @@ class OtpCode(SQLModel, table=True):
     # Mục đích: REGISTRATION | PASSWORD_RESET | TWO_FACTOR
     purpose: str = Field(default="REGISTRATION", index=True, description="Mục đích sử dụng mã")
     is_used: bool = Field(default=False, index=True, description="Cờ đánh dấu mã đã được kích hoạt hay chưa")
+    failed_attempts: int | None = Field(default=0, description="Số lần nhập sai mã; chạm ngưỡng thì mã bị huỷ")
 
     expires_at: datetime = Field(index=True, description="Thời điểm hết hạn hiệu lực của mã OTP")
     created_at: datetime = Field(default_factory=get_utc_now, index=True, description="Thời điểm phát sinh mã OTP")

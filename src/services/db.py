@@ -142,6 +142,10 @@ _ADDITIVE_TRIAGE_CASE_COLUMNS: tuple[tuple[str, str], ...] = (
     ("conversation_memory", "JSON"),
     ("conversation_control", "JSON"),
 )
+# Một mã 6 chữ số chỉ an toàn khi số lần đoán bị chặn; dòng cũ để NULL, đọc là 0.
+_ADDITIVE_OTP_CODE_COLUMNS: tuple[tuple[str, str], ...] = (
+    ("failed_attempts", "INTEGER"),
+)
 # ``ehr_profiles.phone_number`` is the member's own contact number. Existing rows
 # predate it and stay NULL, which reads as "chưa cập nhật" - never as a real number.
 _ADDITIVE_EHR_PROFILE_COLUMNS: tuple[tuple[str, str], ...] = (
@@ -211,6 +215,7 @@ _ADDITIVE_COLUMNS_BY_TABLE: tuple[tuple[str, tuple[tuple[str, str], ...]], ...] 
     ("simple_agent_chat_sessions", _ADDITIVE_SIMPLE_AGENT_CHAT_SESSION_COLUMNS),
     ("simple_agent_nurse_reviews", _ADDITIVE_SIMPLE_AGENT_NURSE_REVIEW_COLUMNS),
     ("chat_messages", _ADDITIVE_CHAT_MESSAGE_COLUMNS),
+    ("otp_codes", _ADDITIVE_OTP_CODE_COLUMNS),
 )
 
 _ADDITIVE_COLUMNS_PG: tuple[str, ...] = tuple(

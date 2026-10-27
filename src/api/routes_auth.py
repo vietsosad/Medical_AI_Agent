@@ -7,6 +7,7 @@ Tuân thủ quy chuẩn kỹ thuật tại .agents/rules/backend-rules.md:
 - Quản trị trọn gói phiên làm việc CSDL và Xoay vòng Refresh Token (Token Rotation + HTTP Cookie injection).
 """
 
+import secrets
 import uuid
 from datetime import timedelta
 
@@ -51,6 +52,75 @@ from src.services.log_redaction import mask_email, pseudonym
 
 settings = get_settings()
 router = APIRouter(prefix="/auth", tags=["Identity & Auth (Group 1)"])
+
+# Một mã 6 chữ số chỉ an toàn khi số lần đoán bị chặn.
+MAX_OTP_ATTEMPTS = 5
+_OTP_INVALID_DETAIL = "Mã bảo mật OTP không hợp lệ hoặc không thuộc về tài khoản này."
+_OTP_EXPIRED_DETAIL = "Mã PIN bảo mật OTP đã hết chu kỳ sống 15 phút. Vui lòng yêu cầu cấp lại mã mới."
+
+
+async def _issue_otp(session: SessionDep, *, email: str, purpose: str, valid_minutes: int = 15) -> str:
+    """Cấp mã mới cho (email, purpose) và huỷ mọi mã cũ chưa dùng của cặp đó.
+
+    Không huỷ mã cũ thì mỗi lần gọi lại endpoint gửi mã sẽ thêm một mã sống nữa,
+    và kẻ đoán mã có thêm một cơ hội trúng cho mỗi lần gọi. Người gọi tự commit.
+    """
+    stale = await session.execute(
+        select(OtpCode).where(
+            OtpCode.email == email,
+            OtpCode.purpose == purpose,
+            OtpCode.is_used == False,  # noqa: E712
+        )
+    )
+    for old_code in stale.scalars().all():
+        old_code.is_used = True
+        session.add(old_code)
+
+    otp_pin = generate_otp_code(6)
+    session.add(OtpCode(
+        email=email,
+        code=otp_pin,
+        purpose=purpose,
+        expires_at=get_utc_now() + timedelta(minutes=valid_minutes),
+    ))
+    return otp_pin
+
+
+async def _match_otp(session: SessionDep, *, email: str, code: str, purpose: str) -> OtpCode:
+    """Trả về mã còn hiệu lực của đúng (email, purpose) nếu ``code`` khớp.
+
+    Mã luôn được tra theo email, không bao giờ chỉ theo 6 chữ số: tra theo mã
+    trần sẽ dò cùng lúc trên mọi tài khoản. Mỗi lần sai được đếm, chạm
+    MAX_OTP_ATTEMPTS thì mã bị huỷ. Hàm không đánh dấu mã đã dùng -- người gọi
+    quyết định việc đó.
+    """
+    res = await session.execute(
+        select(OtpCode)
+        .where(
+            OtpCode.email == email,
+            OtpCode.purpose == purpose,
+            OtpCode.is_used == False,  # noqa: E712
+        )
+        .order_by(OtpCode.created_at.desc())  # type: ignore
+    )
+    otp_entry = res.scalars().first()
+    if not otp_entry:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=_OTP_INVALID_DETAIL)
+
+    expires_at = otp_entry.expires_at
+    if expires_at.tzinfo is not None:
+        expires_at = expires_at.replace(tzinfo=None)
+    if get_utc_now() > expires_at:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=_OTP_EXPIRED_DETAIL)
+
+    if not secrets.compare_digest(otp_entry.code.encode(), code.encode()):
+        otp_entry.failed_attempts = (otp_entry.failed_attempts or 0) + 1
+        if otp_entry.failed_attempts >= MAX_OTP_ATTEMPTS:
+            otp_entry.is_used = True
+        session.add(otp_entry)
+        await session.commit()
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=_OTP_INVALID_DETAIL)
+    return otp_entry
 
 
 def _build_user_profile_dto(user: User) -> UserProfileDTO:
@@ -157,15 +227,7 @@ async def register_clinical_user(payload: RegisterRequestDTO, session: SessionDe
     session.add(ehr_profile)
 
     # 4. Phát sinh và lưu mã OTP (Hiệu lực 15 phút)
-    otp_pin = generate_otp_code(6)
-    expires_time = get_utc_now() + timedelta(minutes=15)
-    otp_record = OtpCode(
-        email=new_user.email,
-        code=otp_pin,
-        purpose="REGISTRATION",
-        expires_at=expires_time,
-    )
-    session.add(otp_record)
+    otp_pin = await _issue_otp(session, email=new_user.email, purpose="REGISTRATION")
     await session.commit()
 
     # 5. Gửi thư điện tử xác nhận thông qua Async SMTP Engine
@@ -177,43 +239,25 @@ async def register_clinical_user(payload: RegisterRequestDTO, session: SessionDe
     )
 
 
-@router.post("/verify-otp", response_model=AuthResponseDTO)
-async def verify_clinical_otp(payload: VerifyOtpRequestDTO, session: SessionDep, response: Response) -> AuthResponseDTO:
+@router.post("/verify-otp", response_model=AuthResponseDTO | StandardMessageResponseDTO)
+async def verify_clinical_otp(
+    payload: VerifyOtpRequestDTO, session: SessionDep, response: Response
+) -> AuthResponseDTO | StandardMessageResponseDTO:
     """Xác nhận mã bảo mật OTP 6 chữ số.
-    
+
     Khi thành công: Kích hoạt chính thức hồ sơ (is_active=True), tạo bản ghi CSDL Token Session và tráo đổi lấy cặp Tokens Bearer & Cookie.
+    Riêng mã PASSWORD_RESET chỉ được kiểm tra ở đây; ``/reset-password`` mới tiêu thụ nó.
     """
-    now = get_utc_now()
+    # 1-2. Đối chiếu mã theo đúng email, kiểm chứng hạn dùng và số lần sai
+    otp_entry = await _match_otp(session, email=payload.email, code=payload.code, purpose=payload.purpose)
 
-    # 1. Truy cứu mã OTP hợp lệ từ CSDL
-    query = select(OtpCode).where(
-        OtpCode.code == payload.code,
-        OtpCode.purpose == payload.purpose,
-        OtpCode.is_used == False # noqa: E712
-    )
-    if payload.email:
-        query = query.where(OtpCode.email == payload.email)
-
-    # Ưu tiên bản ghi mới nhất
-    query = query.order_by(OtpCode.created_at.desc()) # type: ignore
-    res = await session.execute(query)
-    otp_entry = res.scalars().first()
-
-    if not otp_entry:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Mã bảo mật y khoa OTP không hợp lệ, hoặc không thuộc về giao dịch này."
-        )
-
-    # 2. Kiểm chứng thời hạn hiệu lực (UTC)
-    expires_at = otp_entry.expires_at
-    if expires_at.tzinfo is not None:
-        expires_at = expires_at.replace(tzinfo=None)
-
-    if now > expires_at:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Mã PIN bảo mật OTP đã hết chu kỳ sống 15 phút. Vui lòng yêu cầu cấp lại mã mới."
+    if payload.purpose == "PASSWORD_RESET":
+        # Cấp phiên ở đây biến "quên mật khẩu" thành đăng nhập bằng OTP mà
+        # không đổi mật khẩu, và đánh dấu mã đã dùng khiến /reset-password
+        # ngay sau đó luôn báo sai mã.
+        return StandardMessageResponseDTO(
+            success=True,
+            message="Mã xác minh hợp lệ. Vui lòng đặt mật khẩu mới.",
         )
 
     # 3. Đóng đinh cờ is_used = True (Chống Replay Attack)
@@ -384,16 +428,7 @@ async def forgot_password_request(payload: ForgotPasswordRequestDTO, session: Se
     user = res.scalars().first()
 
     if user and user.is_active:
-        otp_pin = generate_otp_code(6)
-        expires_time = get_utc_now() + timedelta(minutes=15)
-
-        otp_record = OtpCode(
-            email=user.email, # type: ignore
-            code=otp_pin,
-            purpose="PASSWORD_RESET",
-            expires_at=expires_time,
-        )
-        session.add(otp_record)
+        otp_pin = await _issue_otp(session, email=user.email, purpose="PASSWORD_RESET")  # type: ignore[arg-type]
         await session.commit()
         await send_reset_password_otp(user.email, otp_pin, valid_minutes=15) # type: ignore
 
@@ -410,28 +445,7 @@ async def reset_user_password(payload: ResetPasswordRequestDTO, session: Session
     if not target_otp:
         raise HTTPException(status_code=400, detail="Vui lòng cung cấp mã xác minh OTP khôi phục mật khẩu.")
 
-    now = get_utc_now()
-    query = select(OtpCode).where(
-        OtpCode.code == target_otp,
-        OtpCode.purpose == "PASSWORD_RESET",
-        OtpCode.is_used == False # noqa: E712
-    )
-    if payload.email:
-        query = query.where(OtpCode.email == payload.email)
-    query = query.order_by(OtpCode.created_at.desc()) # type: ignore
-
-    res = await session.execute(query)
-    otp_entry = res.scalars().first()
-
-    if not otp_entry:
-        raise HTTPException(status_code=400, detail="Mã xác nhận OTP không đúng hoặc không trùng khớp với tài khoản.")
-
-    expires_at = otp_entry.expires_at
-    if expires_at.tzinfo is not None:
-        expires_at = expires_at.replace(tzinfo=None)
-    if now > expires_at:
-        raise HTTPException(status_code=400, detail="Mã OTP khôi phục đã hết thời gian hiệu lực 15 phút.")
-
+    otp_entry = await _match_otp(session, email=payload.email, code=target_otp, purpose="PASSWORD_RESET")
     otp_entry.is_used = True
     session.add(otp_entry)
 
