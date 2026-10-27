@@ -186,12 +186,24 @@ async def _get_chat_session_or_404(session: AsyncSession, session_id: str) -> Si
             select(SimpleAgentChatSession).where(SimpleAgentChatSession.session_id == session_id)
         )
     ).scalars().first()
-    if chat is None or chat.status != "COMPLETED":
+    if chat is None or not _is_reviewable(chat):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Không tìm thấy ca simple_agent đã hoàn tất để thẩm định.",
         )
     return chat
+
+
+def _is_reviewable(chat: SimpleAgentChatSession) -> bool:
+    # A case flagged by the pre-LLM emergency screen is reviewable while the
+    # patient is still talking: it exists so a human can look *now*.
+    return chat.status == "COMPLETED" or (chat.status == "ACTIVE" and bool(chat.attention_required))
+
+
+_REVIEWABLE_CLAUSE = or_(
+    SimpleAgentChatSession.status == "COMPLETED",
+    (SimpleAgentChatSession.status == "ACTIVE") & (SimpleAgentChatSession.attention_required == True),  # noqa: E712
+)
 
 
 async def _get_or_create_review(session: AsyncSession, session_id: str) -> SimpleAgentNurseReview:
@@ -253,7 +265,7 @@ def _queue_item(
     patient_name: str | None,
 ) -> dict[str, Any]:
     ai_esi = _ai_proposed_esi(chat)
-    waiting_since = chat.completed_at or chat.started_at
+    waiting_since = chat.completed_at or chat.attention_raised_at or chat.started_at
     decided_at = review.decided_at or review.handed_off_at
     return {
         "session_id": chat.session_id,
@@ -261,6 +273,11 @@ def _queue_item(
         "final_action": chat.final_action,
         "ai_proposed_esi": ai_esi,
         "is_insufficient": chat.final_action == "RETURN_INCOMPLETE",
+        # "Cần xem ngay" from the emergency screen -- a reason, not an ESI.
+        "session_status": chat.status,
+        "attention_required": bool(chat.attention_required),
+        "attention_reason": chat.attention_reason,
+        "attention_raised_at": chat.attention_raised_at.isoformat() if chat.attention_raised_at else None,
         "turn_count": chat.turn_count,
         "waiting_since": waiting_since.isoformat(),
         "review_status": review.review_status,
@@ -280,6 +297,11 @@ def _queue_item(
         "parked_by_nurse_id": review.parked_by_nurse_id,
         "parked_reason": review.parked_reason,
     }
+
+
+def _urgency_rank(item: dict[str, Any]) -> int:
+    rank = item["ai_proposed_esi"] if item["ai_proposed_esi"] is not None else 6
+    return min(rank, 1) if item["attention_required"] else rank
 
 
 @router.get("/queue", status_code=status.HTTP_200_OK)
@@ -332,7 +354,7 @@ async def get_simple_nurse_queue(
         await session.execute(
             select(SimpleAgentChatSession, User.email, User.full_name)
             .join(User, User.id == SimpleAgentChatSession.patient_id)
-            .where(SimpleAgentChatSession.status == "COMPLETED")
+            .where(_REVIEWABLE_CLAUSE)
         )
     ).all()
 
@@ -367,7 +389,12 @@ async def get_simple_nurse_queue(
         except ValueError:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="esi_levels phải là danh sách số nguyên phân cách bằng dấu phẩy.") from None
         if allowed_levels:
-            items = [item for item in items if item["ai_proposed_esi"] in allowed_levels]
+            # A flagged case counts at its urgency rank too, so an "ESI 1-2"
+            # view cannot hide a danger sign that has no ESI yet.
+            items = [
+                item for item in items
+                if item["ai_proposed_esi"] in allowed_levels or _urgency_rank(item) in allowed_levels
+            ]
 
     summary = {
         "total_waiting": len(items),
@@ -390,9 +417,9 @@ async def get_simple_nurse_queue(
     if bucket == "DECIDED":
         items.sort(key=lambda item: item["decided_at"] or "", reverse=True)
     else:
-        items.sort(
-            key=lambda item: (item["ai_proposed_esi"] if item["ai_proposed_esi"] is not None else 6, item["waiting_since"])
-        )
+        # A flagged case without an ESI yet ranks with ESI 1: unknown acuity
+        # with a danger sign is not "least urgent".
+        items.sort(key=lambda item: (_urgency_rank(item), item["waiting_since"]))
 
     total_items = len(items)
     total_pages = max(1, -(-total_items // page_size))
@@ -472,6 +499,10 @@ async def get_simple_nurse_case(session_id: str, nurse: NurseUserDep, session: S
         "ai_proposed_esi": _ai_proposed_esi(chat),
         "matched_esi_levels": chat.matched_esi_levels,
         "final_concepts": chat.final_concepts,
+        "session_status": chat.status,
+        "attention_required": bool(chat.attention_required),
+        "attention_reason": chat.attention_reason,
+        "attention_raised_at": chat.attention_raised_at.isoformat() if chat.attention_raised_at else None,
         "review_status": review.review_status,
         "assigned_nurse_id": review.assigned_nurse_id,
         "case_version": review.version,

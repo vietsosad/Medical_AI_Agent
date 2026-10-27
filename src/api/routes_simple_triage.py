@@ -46,8 +46,10 @@ from src.models.db_models import (
     get_utc_now,
 )
 from src.services.sbar_pdf import SbarPdfData, build_sbar_pdf
+from src.simple_agent.emergency_screen import EmergencySignal, emergency_guidance, screen_patient_message
 from src.simple_agent.persistence import deserialize_session, serialize_session
 from src.simple_agent.realtime import (
+    EVENT_CASE_STATUS_CHANGED,
     EVENT_MESSAGE_CREATED,
     SIMPLE_STAFF_QUEUE_TOPIC,
     get_event_bus,
@@ -61,7 +63,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/simple-triage", tags=["Simple Agent Pilot"])
 
 _TURN_FAILED_DETAIL = (
-    "Không thể xử lý lượt hội thoại này do lỗi kết nối tới dịch vụ AI. Vui lòng thử gửi lại."
+    "Không thể xử lý lượt hội thoại này do lỗi kết nối tới dịch vụ AI. Vui lòng thử gửi lại. "
+    "Nếu đang có dấu hiệu nguy kịch, hãy gọi cấp cứu 115 ngay."
 )
 
 # The only two decision.py actions that end a conversation -- everything else
@@ -173,6 +176,36 @@ def _record_turn_messages(
         question_target_id=decision.get("question_target_id"), decision_snapshot=decision,
     )
     return patient_row, agent_row
+
+
+def _raise_attention(chat_session: SimpleAgentChatSession, signal: EmergencySignal) -> bool:
+    """Flag the case for the nurse queue; returns whether this call raised it."""
+    if chat_session.attention_required:
+        return False
+    chat_session.attention_required = True
+    chat_session.attention_reason = signal.label
+    chat_session.attention_rule_id = signal.rule_id
+    chat_session.attention_raised_at = get_utc_now()
+    return True
+
+
+def _apply_emergency_signal(result: dict[str, Any], signal: EmergencySignal) -> None:
+    """Put the fixed 115 instruction in front of this turn's reply."""
+    decision = result["decision"]
+    decision["safety_alert"] = signal.as_dict()
+    levels = decision.get("matched_esi_levels") or []
+    # A decisive ESI 1/2 outcome already carries its own fixed 115 message.
+    if decision.get("action") == "RETURN_MATCH" and levels and min(levels) <= 2:
+        return
+    result["message"] = f"{emergency_guidance(signal)}\n\n{result['message']}"
+
+
+async def _announce_attention(session_id: str) -> None:
+    # Only "something changed": the queue re-reads over REST, so a lost event
+    # delays the alert by one poll, it never hides the case.
+    await get_event_bus().publish(
+        SIMPLE_STAFF_QUEUE_TOPIC, EVENT_CASE_STATUS_CHANGED, {"session_id": session_id, "attention_required": True}
+    )
 
 
 def _apply_turn_outcome_to_chat_session(chat_session: SimpleAgentChatSession, result: dict[str, Any]) -> None:
@@ -335,6 +368,9 @@ async def start_simple_triage(
     # the chat UI show a real, retryable error card instead of silence. No
     # partial state is persisted either way: every session.add()/commit()
     # below only runs once process_turn has actually returned.
+    # The emergency screen is deterministic and runs before any model call;
+    # _TURN_FAILED_DETAIL carries the 115 instruction if the turn then fails.
+    signal = screen_patient_message(payload.message)
     try:
         result = await runtime.process_turn(session_id, payload.message, restore=initial_session)
     except Exception:
@@ -348,6 +384,9 @@ async def start_simple_triage(
         session_id=session_id, patient_id=current_user.id, initial_message=payload.message,
         profile_id=payload.profile_id,
     )
+    if signal:
+        _raise_attention(chat_session, signal)
+        _apply_emergency_signal(result, signal)
     _apply_turn_outcome_to_chat_session(chat_session, result)
     patient_row, agent_row = _record_turn_messages(
         session_id=session_id, turn_index=0, patient_message=payload.message, result=result,
@@ -358,6 +397,8 @@ async def start_simple_triage(
     session.add(patient_row)
     session.add(agent_row)
     await session.commit()
+    if signal:
+        await _announce_attention(session_id)
 
     return {"session_id": session_id, **result}
 
@@ -401,6 +442,14 @@ async def continue_simple_triage(
     runtime = get_simple_agent_runtime()
     restore = None if runtime.has_hot_session(session_id) else deserialize_session(_record_to_session_dict(record))
 
+    # Committed before the model runs: if the turn then fails, the nurse
+    # queue still has the case and the patient still gets the 115 line.
+    signal = screen_patient_message(payload.message)
+    if signal and _raise_attention(chat_session, signal):
+        session.add(chat_session)
+        await session.commit()
+        await _announce_attention(session_id)
+
     # See the matching try/except in start_simple_triage above for why.
     try:
         result = await runtime.process_turn(session_id, payload.message, restore=restore)
@@ -410,6 +459,8 @@ async def continue_simple_triage(
 
     _apply_session_dict_to_record(record, serialize_session(runtime.export_session(session_id)))
     turn_index = chat_session.turn_count
+    if signal:
+        _apply_emergency_signal(result, signal)
     _apply_turn_outcome_to_chat_session(chat_session, result)
     patient_row, agent_row = _record_turn_messages(
         session_id=session_id, turn_index=turn_index, patient_message=payload.message, result=result,

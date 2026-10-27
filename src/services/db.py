@@ -196,6 +196,11 @@ _ADDITIVE_SIMPLE_AGENT_FACT_TARGET_COLUMNS: tuple[tuple[str, str], ...] = (
 # (see db_models.py's SimpleAgentChatSession).
 _ADDITIVE_SIMPLE_AGENT_CHAT_SESSION_COLUMNS: tuple[tuple[str, str], ...] = (
     ("profile_id", "VARCHAR"),
+    # Cờ "cần xem ngay" của bộ sàng lọc cấp cứu; dòng cũ NULL đọc là chưa bật.
+    ("attention_required", "BOOLEAN"),
+    ("attention_reason", "VARCHAR"),
+    ("attention_rule_id", "VARCHAR"),
+    ("attention_raised_at", "TIMESTAMP"),
 )
 
 # simple_agent_nurse_reviews already has real pilot rows predating the

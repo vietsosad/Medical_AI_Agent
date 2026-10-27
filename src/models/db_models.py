@@ -811,6 +811,15 @@ class SimpleAgentChatSession(SQLModel, table=True):
     last_activity_at: datetime = Field(default_factory=get_utc_now, index=True)
     completed_at: datetime | None = Field(default=None)
 
+    # Cờ "cần xem ngay" do bộ sàng lọc cấp cứu trước LLM bật
+    # (src/simple_agent/emergency_screen.py): đưa ca lên hàng đợi điều dưỡng
+    # ngay cả khi phiên còn ACTIVE. Đây là lý do để người xem sớm, KHÔNG phải
+    # một mức ESI. Giữ lý do và thời điểm của lần bật đầu tiên.
+    attention_required: bool | None = Field(default=False)
+    attention_reason: str | None = Field(default=None)
+    attention_rule_id: str | None = Field(default=None)
+    attention_raised_at: datetime | None = Field(default=None)
+
 
 class SimpleAgentChatMessage(SQLModel, table=True):
     """One row per message in a simple_agent conversation -- full history, never truncated.
