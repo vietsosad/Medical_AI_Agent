@@ -67,7 +67,7 @@ export const DynamicTriagePreview: React.FC = () => {
                 }`}
               >
                 <Stethoscope className="w-5 h-5 text-emerald-400 shrink-0 stroke-[2.2]" />
-                <span>Góc Nhìn Bác Sĩ (HITL)</span>
+                <span>Góc Nhìn Điều Dưỡng (HITL)</span>
               </button>
             </div>
           </div>
@@ -147,7 +147,9 @@ export const DynamicTriagePreview: React.FC = () => {
                 </div>
               </motion.div>
             ) : (
-              /* TAB 2: CLINICIAN VIEW (HITL REVIEW TERMINAL & KANBAN - IMG-03) */
+              /* TAB 2: CLINICIAN VIEW (NURSE QUEUE + CASE REVIEW - IMG-03).
+                 Chỉ mô tả màn hình đang chạy thật: hàng đợi, màn thẩm định ca
+                 và bàn quyết định của điều dưỡng. */
               <motion.div
                 key="clinician-tab"
                 initial={{ opacity: 0, y: 16 }}
@@ -160,30 +162,30 @@ export const DynamicTriagePreview: React.FC = () => {
                 <div className="lg:col-span-6 space-y-6 text-left">
                   <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-950/80 text-emerald-300 font-extrabold text-sm rounded-lg border border-emerald-800">
                     <Stethoscope className="w-4 h-4 text-emerald-400" />
-                    <span>TRẠM ĐIỀU CHẾ &amp; THẨM ĐỊNH BÁC SĨ (NURSE STATION HITL)</span>
+                    <span>TRẠM THẨM ĐỊNH CỦA ĐIỀU DƯỠNG (HITL)</span>
                   </div>
-                  
+
                   <h3 className="font-heading text-2xl sm:text-3xl font-extrabold text-white leading-tight">
-                    Bàn Giao Bệnh Án SBAR &amp; <br />
-                    <span className="text-emerald-400">Quy Quyền Override Chuyên Môn</span>
+                    Phiếu SBAR &amp; <br />
+                    <span className="text-emerald-400">Quyết Định Của Điều Dưỡng</span>
                   </h3>
-                  
+
                   <p className="text-base sm:text-lg font-medium text-slate-300 leading-relaxed">
-                    AI đóng vai trò phụ tá gom dữ liệu triệu chứng thành Phiếu tóm tắt SBAR (Situation - Background - Assessment - Recommendation). Bác sĩ là người giữ phán Quyết định cuối cùng (HITL - Human-in-the-Loop).
+                    AI gom lời kể của người bệnh thành phiếu tóm tắt SBAR (Situation - Background - Assessment - Recommendation) kèm mức ESI đề xuất. Điều dưỡng xem toàn bộ hồ sơ và là người chốt hoặc điều chỉnh mức ESI.
                   </p>
 
                   <div className="space-y-4 pt-4 border-t border-slate-800 font-semibold text-sm sm:text-base text-slate-200">
                     <div className="flex items-start gap-3">
                       <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                      <span><strong>Bảng Điều Khám Kanban ESI 1 ➔ 5:</strong> Phân luồng ca bệnh cấp cứu tối khẩn lên vị trí ghim ưu tiên cao nhất, đếm ngược đồng hồ SLA.</span>
+                      <span><strong>Hàng đợi theo mức ESI 1–5:</strong> Lọc ca theo mức độ, kèm thời gian chờ tiếp nhận và tín hiệu riêng cho ca ESI 1–2.</span>
                     </div>
                     <div className="flex items-start gap-3">
                       <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                      <span><strong>Trạm Duyệt 3 Cột Chuyên Nghiệp:</strong> Cột 1 Dịch tễ &amp; Bệnh án &gt; Cột 2 SBAR &amp; Trích dẫn RAG &gt; Cột 3 Bàn điều khiển Quyết định Override.</span>
+                      <span><strong>Màn thẩm định ca:</strong> Phiếu SBAR, từng tiêu chí phác đồ đã đối chiếu kèm giá trị người bệnh khai, và toàn bộ hội thoại với AI.</span>
                     </div>
                     <div className="flex items-start gap-3">
                       <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                      <span><strong>Chữ Ký Sốt Trừng Chiếu &amp; Audit Log:</strong> Mọi thay đổi ESI đều lưu trữ minh chứng pháp y hợp quy.</span>
+                      <span><strong>Quyết định có lý do:</strong> Giữ nguyên hoặc điều chỉnh mức ESI, bắt buộc ghi lý do khi điều chỉnh.</span>
                     </div>
                   </div>
 

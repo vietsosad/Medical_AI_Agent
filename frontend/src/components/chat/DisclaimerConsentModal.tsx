@@ -85,8 +85,8 @@ export function DisclaimerConsentModal() {
               <h4 className="text-sm font-bold text-foreground tracking-tight">
                 AI Hỗ Trợ Ghi Nhận
               </h4>
-              <p className="text-[13px] text-slate-600 font-medium leading-relaxed dark:text-slate-300">
-                Hệ thống sử dụng <span className="font-semibold text-slate-700 dark:text-slate-200">DeepAgent + Hybrid RAG</span> để thu thập triệu chứng và chuẩn bị đề xuất phân độ ESI cho nhân viên y tế thẩm định.
+              <p className="text-sm text-slate-600 font-medium leading-relaxed dark:text-slate-300">
+                Mô hình ngôn ngữ đọc lời bạn kể để ghi nhận triệu chứng. Mức ESI đề xuất được đối chiếu với tiêu chí phác đồ, rồi chuyển cho nhân viên y tế thẩm định.
               </p>
             </div>
           </motion.div>
@@ -100,8 +100,8 @@ export function DisclaimerConsentModal() {
               <h4 className="text-sm font-bold text-foreground tracking-tight">
                 Không Thay Thế Bác Sĩ
               </h4>
-              <p className="text-[13px] text-slate-600 font-medium leading-relaxed dark:text-slate-300">
-                Đánh giá của AI <span className="font-bold text-rose-600 uppercase text-[11px] px-1.5 py-0.5 bg-rose-100 rounded-md mx-1">Tuyệt đối không</span> thay thế chẩn đoán y học chính thức hay y lệnh từ bác sĩ.
+              <p className="text-sm text-slate-600 font-medium leading-relaxed dark:text-slate-300">
+                Đánh giá của AI <span className="font-bold text-rose-600 uppercase text-xs px-1.5 py-0.5 bg-rose-100 rounded-md mx-1">Tuyệt đối không</span> thay thế chẩn đoán y học chính thức hay y lệnh từ bác sĩ.
               </p>
             </div>
           </motion.div>
@@ -114,10 +114,12 @@ export function DisclaimerConsentModal() {
             </div>
             <div className="space-y-1 relative z-10">
               <h4 className="text-sm font-bold text-rose-900 tracking-tight">
-                Phản Xạ Khẩn Cấp
+                Khi Có Dấu Hiệu Nguy Kịch
               </h4>
-              <p className="text-[13px] text-rose-700/90 font-medium leading-relaxed">
-                Hệ thống tự động khóa chat và kích hoạt lệnh <strong className="text-rose-700">cấp cứu 115</strong> nếu phát hiện dấu hiệu đe dọa sinh mạng.
+              {/* Không hứa điều hệ thống không làm: ứng dụng chỉ hiện nút gọi
+                  115 cho kết quả khẩn, không tự gọi hay điều xe thay ai. */}
+              <p className="text-sm text-rose-700/90 font-medium leading-relaxed">
+                Hệ thống <strong className="text-rose-700">không tự gọi 115</strong> thay bạn. Với kết quả ở mức khẩn cấp, màn hình hiện nút gọi 115 để bạn bấm. Nếu thấy nguy kịch, hãy gọi 115 ngay, không chờ AI trả lời.
               </p>
             </div>
           </motion.div>

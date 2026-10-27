@@ -378,8 +378,8 @@ export const EmergencySosManager: React.FC<EmergencySosManagerProps> = ({ classN
                   </div>
 
                   {/* Card Footer */}
-                  <div className="mt-5 pt-3 border-t border-border/80 flex items-center justify-between text-[11px] font-mono text-muted-foreground">
-                    <span className="uppercase font-semibold">Trạng thái: Mã hóa PII</span>
+                  <div className="mt-5 pt-3 border-t border-border/80 flex items-center justify-between text-xs font-mono text-muted-foreground">
+                    <span className="uppercase font-semibold">Trạng thái: Đã lưu</span>
                     <span className={cn("font-bold flex items-center gap-1", isPrimary ? "text-amber-700 font-extrabold" : "text-emerald-700 font-extrabold")}>
                       <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                       <span>Sẵn sàng ESI 115</span>
@@ -406,13 +406,16 @@ export const EmergencySosManager: React.FC<EmergencySosManagerProps> = ({ classN
 
           <div className="space-y-2.5 flex-1">
             <div className="flex flex-wrap items-center gap-2.5">
+              {/* Nội dung phải khớp đúng những gì hệ thống làm: số điện thoại
+                  được lưu và trả về dạng văn bản thường cho nhân viên y tế xem
+                  ca (routes_nurse_simple.py), không có tầng mã hoá nào, và
+                  không có cơ chế tự gọi hay điều xe 115. */}
               <span className="text-xs font-mono font-black px-3 py-1 rounded-md bg-amber-500 text-slate-950 uppercase tracking-wider shadow-sm dark:text-slate-50">
-                Cam kết Y Đức &amp; Bảo Mật E2E PII/PHI
+                Ai được xem số này
               </span>
-              <span className="text-xs font-mono text-slate-400 font-bold hidden md:inline">|| AES-256 DATABASE ENCRYPTION</span>
             </div>
-            <p className="text-sm md:text-base text-slate-200 font-normal leading-relaxed italic">
-              <strong className="text-amber-300 font-extrabold not-italic">Được Mã Hóa &amp; Bảo Mật E2E PII.</strong> Nhằm bảo đảm tuyệt đối riêng tư, SĐT người thân của bạn được giữ mã mật trong cơ sở dữ liệu. Thông tin này <span className="underline decoration-amber-400 font-bold text-white">CHỈ ĐƯỢC TỰ ĐỘNG GIẢI MÃ (Unmask)</span> hiển thị cho Điều Dưỡng Lâm Sàng khi ca khám Triage của bạn chuyển sang <strong className="text-rose-300 not-italic font-black bg-rose-950/80 px-2 py-0.5 rounded border border-rose-500/50">Báo Động Đỏ (ESI 1 hoặc ESI 2)</strong> để điều xe 115 trong thời gian vàng.
+            <p className="text-sm md:text-base text-slate-200 font-normal leading-relaxed">
+              <strong className="text-amber-300 font-extrabold">Chỉ nhân viên y tế đang xem ca sàng lọc của bạn.</strong> Số điện thoại người thân được lưu trong hồ sơ của bạn và hiển thị cho nhân viên y tế khi họ thẩm định ca, để liên lạc khi cần. Hệ thống không tự gọi số này và không tự điều xe 115.
             </p>
           </div>
         </div>
@@ -517,7 +520,7 @@ export const EmergencySosManager: React.FC<EmergencySosManagerProps> = ({ classN
                 <div className="space-y-2">
                   <label htmlFor="input-sos-phone" className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5 dark:text-slate-100">
                     <Phone className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Số điện thoại di động (Mã hóa PII):</span>
+                    <span>Số điện thoại di động:</span>
                   </label>
                   <input
                     id="input-sos-phone"
@@ -558,7 +561,7 @@ export const EmergencySosManager: React.FC<EmergencySosManagerProps> = ({ classN
                     <AlertOctagon className="w-6 h-6 text-amber-600 shrink-0 animate-pulse" />
                     <div className="text-xs">
                       <div className="font-extrabold text-amber-950">Đặt làm Nguồn liên hệ cấp cứu số 1</div>
-                      <div className="text-slate-600 text-[11px] font-medium mt-0.5 dark:text-slate-300">Điều dưỡng lâm sàng sẽ gọi số này đầu tiên khi Triage ESI 1/2</div>
+                      <div className="text-slate-600 text-xs font-medium mt-0.5 dark:text-slate-300">Số này được hiển thị đầu tiên cho nhân viên y tế khi cần liên lạc</div>
                     </div>
                   </div>
                   <Controller

@@ -53,7 +53,7 @@ function OAuthCallbackContent() {
         loginSuccess(res.user, res.access_token, res.refresh_token);
 
         setStatus("success");
-        toast.success(`🎉 Đồng bộ tài khoản ${res.user.name || res.user.email} từ ${provider.toUpperCase()} thành công!`);
+        toast.success(`Đồng bộ tài khoản ${res.user.name || res.user.email} từ ${provider.toUpperCase()} thành công!`);
 
         // Điều hướng tự động sau 1.5 giây để trải nghiệm mượt mà
         setTimeout(() => {

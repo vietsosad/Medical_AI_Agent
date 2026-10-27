@@ -63,7 +63,7 @@ export default function VerifyOtpPage() {
 
       setIsSuccess(true);
       setIsVerifying(false);
-      toast.success("🎉 Xác thực tài khoản y khoa thành công! Hệ thống sẵn sàng cấp quyền truy cập.");
+      toast.success("Xác thực tài khoản y khoa thành công! Hệ thống sẵn sàng cấp quyền truy cập.");
     } catch (error) {
       console.error("OTP Verification Exception:", error);
       const msg = error instanceof Error ? error.message : "Mã bảo mật y khoa không hợp lệ hoặc sự cố kết nối Server.";

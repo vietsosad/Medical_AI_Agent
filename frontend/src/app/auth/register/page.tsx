@@ -90,7 +90,7 @@ export default function RegisterPage() {
         password: data.password,
       });
 
-      toast.success(`🎉 Đăng ký hồ sơ y khoa thành công cho: ${data.fullName}! Vui lòng nhập mã OTP để kích hoạt.`);
+      toast.success(`Đăng ký hồ sơ y khoa thành công cho: ${data.fullName}! Vui lòng nhập mã OTP để kích hoạt.`);
       router.push(`/auth/verify-otp?email=${encodeURIComponent(data.email)}`);
     } catch (error) {
       console.error("Registration Error:", error);
