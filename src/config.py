@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -9,6 +9,16 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 # turn into an open-ended retrieval loop.  This hard ceiling is intentionally
 # code-owned rather than environment-owned.
 RAG_REFINEMENT_ATTEMPTS_HARD_MAX = 3
+
+DEFAULT_JWT_SECRET_KEY = "super-secret-default-jwt-key-change-in-prod"
+# Values published in this repo (the code default and the .env examples):
+# anyone who has read them can sign a staff token for any known email.
+_PUBLISHED_JWT_SECRETS = frozenset({
+    DEFAULT_JWT_SECRET_KEY,
+    "doi-thanh-mot-chuoi-ngau-nhien-that-dai",
+    "your-production-jwt-secret",
+})
+MIN_PRODUCTION_JWT_SECRET_LENGTH = 32
 
 
 class Settings(BaseSettings):
@@ -103,7 +113,7 @@ class Settings(BaseSettings):
     sync_database_url: str = ""
 
     # Security & Auth (UI Group 1: Identity & Auth)
-    jwt_secret_key: str = "super-secret-default-jwt-key-change-in-prod"
+    jwt_secret_key: str = DEFAULT_JWT_SECRET_KEY
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = Field(default=1440, ge=1)   # 1 day default
     refresh_token_expire_minutes: int = Field(default=10080, ge=1) # 7 days default
@@ -198,6 +208,21 @@ class Settings(BaseSettings):
     # đang hoảng có bấm lại nhiều lần vẫn không bị khoá.
     facility_lookups_per_user: int = Field(default=20, ge=1, le=200)
     facility_rate_limit_window_seconds: int = Field(default=300, ge=10, le=3600)
+
+    @model_validator(mode="after")
+    def _refuse_a_published_jwt_secret_in_production(self) -> "Settings":
+        # Fail at startup, not silently: a production process signing tokens
+        # with a known secret is an open door to every staff account.
+        if self.app_env == "production" and (
+            self.jwt_secret_key in _PUBLISHED_JWT_SECRETS
+            or len(self.jwt_secret_key) < MIN_PRODUCTION_JWT_SECRET_LENGTH
+        ):
+            raise ValueError(
+                "JWT_SECRET_KEY must be set to a private random value of at least "
+                f"{MIN_PRODUCTION_JWT_SECRET_LENGTH} characters when APP_ENV=production. "
+                'Generate one with: python -c "import secrets; print(secrets.token_urlsafe(64))"'
+            )
+        return self
 
 
 @lru_cache

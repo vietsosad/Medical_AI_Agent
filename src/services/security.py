@@ -112,6 +112,18 @@ def decode_jwt_token(token: str) -> dict[str, Any] | None:
         return None
 
 
+def decode_access_token(token: str) -> dict[str, Any] | None:
+    """Như ``decode_jwt_token`` nhưng chỉ nhận thẻ ``type == "access"``.
+
+    Refresh token cùng chữ ký và sống 7 ngày; nếu cổng API nhận nó như access
+    token thì vòng xoay refresh không còn giới hạn được gì.
+    """
+    payload = decode_jwt_token(token)
+    if not payload or payload.get("type") != "access":
+        return None
+    return payload
+
+
 # =====================================================================
 # 3. QUẢN TRỊ PHIÊN LÀM VIỆC CSDL & XOAY VÒNG REFRESH TOKEN (SESSION ENGINE)
 # =====================================================================

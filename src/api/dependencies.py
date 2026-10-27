@@ -15,7 +15,7 @@ from sqlmodel import select
 
 from src.models.db_models import User
 from src.services.db import get_async_session
-from src.services.security import decode_jwt_token
+from src.services.security import decode_access_token
 
 # Khai báo chuẩn giao thức HTTP Bearer Token của FastAPI
 security_bearer = HTTPBearer(auto_error=False)
@@ -40,7 +40,7 @@ async def get_current_user(
         raise credentials_exception
 
     token = token_credentials.credentials
-    payload = decode_jwt_token(token)
+    payload = decode_access_token(token)
     if not payload:
         raise credentials_exception
 

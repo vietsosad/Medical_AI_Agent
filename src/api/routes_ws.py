@@ -22,7 +22,7 @@ from src.api.dependencies import CLINICAL_STAFF_ROLES
 from src.models.db_models import TriageCase, User
 from src.services.db import get_async_session
 from src.services.event_bus import STAFF_QUEUE_TOPIC, case_topic, patient_topic, get_event_bus
-from src.services.security import decode_jwt_token
+from src.services.security import decode_access_token
 from src.api.websocket_manager import drain_client_frames, pump_events_to_socket
 
 logger = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ async def _resolve_socket_user(websocket: WebSocket, token: str | None) -> User 
     if not raw_token:
         return None
 
-    payload = decode_jwt_token(raw_token)
+    payload = decode_access_token(raw_token)
     if not payload:
         return None
 
