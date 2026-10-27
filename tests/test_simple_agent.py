@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
-
 import numpy as np
 import pytest
 
@@ -9,28 +7,8 @@ from src.simple_agent.agent import PREASK_CHECK_LIMIT, SimpleTriageAgent
 from src.simple_agent.corpus import Corpus
 from src.simple_agent.decision import atom_status, evaluate_atoms, rank_question_targets
 from src.simple_agent.session import Session
+from src.simple_agent.sql_bundle_corpus import load_corpus_from_sql_bundle
 from src.simple_agent.tools import AgentToolbox
-
-
-ROOT = Path(__file__).resolve().parents[1]
-CORPUS_DIR = ROOT / "data/siu"
-INDEX_DIR = ROOT / "data/indexes_siu"
-REQUIRED_CORPUS_FILES = (
-    *(CORPUS_DIR / name for name in (
-        "clinical_concepts.jsonl",
-        "concept_relations.jsonl",
-        "protocol_atoms.jsonl",
-        "fact_targets.jsonl",
-    )),
-    *(INDEX_DIR / name for name in (
-        "concept_embeddings.npy",
-        "concept_metadata.json",
-        "protocol_embeddings.npy",
-        "protocol_metadata.json",
-        "fact_target_patient_embeddings.npy",
-        "fact_target_patient_metadata.json",
-    )),
-)
 
 
 def _embed(_: str) -> np.ndarray:
@@ -46,13 +24,9 @@ def _embed(_: str) -> np.ndarray:
 
 
 def _corpus() -> Corpus:
-    missing = [path for path in REQUIRED_CORPUS_FILES if not path.is_file()]
-    if missing:
-        pytest.skip(
-            "requires the non-versioned data/siu and data/indexes_siu corpus "
-            f"assets ({len(missing)} files missing)"
-        )
-    return Corpus(CORPUS_DIR, INDEX_DIR)
+    # The versioned SQL bundle is the corpus every environment is seeded
+    # from, so these tests run everywhere against what production serves.
+    return load_corpus_from_sql_bundle()
 
 
 def _agent(**kwargs) -> SimpleTriageAgent:

@@ -8,15 +8,16 @@ runtime now sources its corpus entirely from the
 (populated by ``scripts/migrate_simple_agent_corpus_to_pg.py``), not from
 ``data/siu``/``data/indexes_siu`` at all.
 
-``tests/test_simple_agent.py`` and ``scripts/run_agent.py`` deliberately keep
-using the file-based ``Corpus(corpus_dir, index_dir)`` constructor -- offline,
-free, no live Postgres dependency for the test suite. This module is a
-separate, additive entry point; ``corpus.py`` itself has no idea Postgres
-exists (see ``Corpus.from_records``).
+The test suite reads the same rows offline from the versioned SQL bundle via
+``sql_bundle_corpus.py``, which shares ``corpus_from_rows`` below; only
+``scripts/run_agent.py`` still uses the file-based ``Corpus(corpus_dir,
+index_dir)`` constructor. ``corpus.py`` itself has no idea Postgres exists
+(see ``Corpus.from_records``).
 """
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any
 
 import numpy as np
@@ -91,6 +92,22 @@ def load_corpus_from_postgres(engine: Any) -> Corpus:
         fact_rows = db.exec(select(SimpleAgentFactTarget)).all()
         fact_embedding_rows = db.exec(select(SimpleAgentFactTargetEmbedding)).all()
 
+    return corpus_from_rows(concept_rows, relation_rows, atom_rows, fact_rows, fact_embedding_rows)
+
+
+def corpus_from_rows(
+    concept_rows: Sequence[Any],
+    relation_rows: Sequence[Any],
+    atom_rows: Sequence[Any],
+    fact_rows: Sequence[Any],
+    fact_embedding_rows: Sequence[Any],
+) -> Corpus:
+    """Validate and map rows of the five corpus tables into a ``Corpus``.
+
+    Rows only need the table's columns as attributes, so the SQL-bundle loader
+    (``sql_bundle_corpus.py``) goes through this exact mapping and the same
+    emptiness/embedding checks as production instead of a parallel copy.
+    """
     if not concept_rows or not atom_rows or not fact_rows:
         raise CorpusError(
             "simple_agent corpus tables are empty -- run "
