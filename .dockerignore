@@ -21,6 +21,12 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 
+# Local scratch and tool caches never belong in the image
+.tmp/
+.tmp-*/
+scratch/
+node_modules/
+
 # Frontend is deployed separately on Vercel
 frontend/
 
