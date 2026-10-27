@@ -94,15 +94,13 @@ def _build_tools() -> list[BaseTool]:
 # session and turn -- mirrors how understanding.py reuses one OpenAI client.
 _agents_cache: dict[str, Any] = {}
 
-# No call in src/simple_agent/ sets an explicit timeout today (see
-# AGENT_OVERVIEW.md's "Chưa có, cần bổ sung" list) -- a stalled network call
-# hangs the OpenAI SDK's own multi-minute default instead of failing fast.
-# Confirmed the hard way: a turn hung for 10+ minutes during manual E2E
-# testing. Fixed here, for this new call site, without touching the other
-# (pre-existing) unbounded call sites in understanding.py/phrasing.py/
-# resource_estimate.py -- that's a separate, already-tracked gap.
-_LLM_REQUEST_TIMEOUT_SECONDS = 30.0
-_LLM_MAX_RETRIES = 1
+# Without an explicit timeout a stalled network call hangs the OpenAI SDK's
+# own multi-minute default instead of failing fast. Confirmed the hard way: a
+# turn hung for 10+ minutes during manual E2E testing. agent.py's shared
+# client (phrasing, confirmation intent, pre-ask, resource estimate,
+# embeddings) uses these same two values.
+LLM_REQUEST_TIMEOUT_SECONDS = 30.0
+LLM_MAX_RETRIES = 1
 
 
 def _get_agent(model_name: str) -> Any:
@@ -110,7 +108,7 @@ def _get_agent(model_name: str) -> Any:
     if agent is None:
         llm = ChatOpenAI(
             model=model_name, temperature=0,
-            timeout=_LLM_REQUEST_TIMEOUT_SECONDS, max_retries=_LLM_MAX_RETRIES,
+            timeout=LLM_REQUEST_TIMEOUT_SECONDS, max_retries=LLM_MAX_RETRIES,
         )
         agent = create_deep_agent(
             model=llm,

@@ -37,7 +37,11 @@ from openai import OpenAI
 from . import skills
 from .confirmation_intent import classify_confirmation_reply
 from .corpus import REPO_ROOT, Corpus, CorpusError, fold, validate_fact
-from .deepagent_understanding import run_deepagent_understanding_loop
+from .deepagent_understanding import (
+    LLM_MAX_RETRIES,
+    LLM_REQUEST_TIMEOUT_SECONDS,
+    run_deepagent_understanding_loop,
+)
 from .decision import (
     MAX_ASKED_FACTS_PER_SESSION,
     MIN_ATOM_RELEVANCE_SCORE_FOR_PROACTIVE_ASK,
@@ -454,7 +458,9 @@ class SimpleTriageAgent:
             api_key = os.getenv("OPENAI_API_KEY")
             if not api_key:
                 raise RuntimeError("OPENAI_API_KEY is not set. Add it to .env or export it in this shell.")
-            self._client = wrap_simple_agent_openai(OpenAI(api_key=api_key))
+            self._client = wrap_simple_agent_openai(
+                OpenAI(api_key=api_key, timeout=LLM_REQUEST_TIMEOUT_SECONDS, max_retries=LLM_MAX_RETRIES)
+            )
         return self._client
 
     def _embed(self, text: str) -> np.ndarray:
