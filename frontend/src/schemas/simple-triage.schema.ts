@@ -2,6 +2,9 @@ import { z } from "zod";
 
 import { simpleAgentSbarSchema, simpleReviewStatusSchema, simpleSatisfiedRequirementSchema } from "./simple-nurse.schema";
 
+// Mức ESI luôn là số nguyên 1-5; 2.5 hay 0 là dữ liệu hỏng, không phải một mức.
+const esiNumberSchema = z.number().int().min(1).max(5);
+
 /**
  * Zod schemas validating `/api/v1/simple-triage/*` responses at the network
  * boundary -- same purpose as `triage-stream.schema.ts`, but for the much
@@ -32,7 +35,7 @@ export const simpleTriageDecisionSchema = z.object({
   supported_protocol_atoms: z.number(),
   unresolved_protocol_requirements: z.number(),
   question_target_id: z.string().nullable(),
-  matched_esi_levels: z.array(z.number()),
+  matched_esi_levels: z.array(esiNumberSchema),
   matched_atoms: z
     .array(z.object({
       atom_id: z.string(),
@@ -71,12 +74,12 @@ export const simpleTriageSessionSummarySchema = z.object({
   completed_at: z.string().nullable(),
   final_route: z.string().nullable(),
   final_action: z.string().nullable(),
-  matched_esi_levels: z.array(z.number()),
+  matched_esi_levels: z.array(esiNumberSchema),
   final_message: z.string().nullable(),
   final_concepts: z.array(z.string()),
   review_status: simpleReviewStatusSchema.nullable(),
   is_overridden: z.boolean(),
-  final_esi: z.number().nullable(),
+  final_esi: esiNumberSchema.nullable(),
   decision_type: z.enum(["CONFIRM_ESI", "ADJUST_ESI"]).nullable().default(null),
   decision_reason_code: z.string().nullable().default(null),
   decision_note: z.string().nullable().default(null),

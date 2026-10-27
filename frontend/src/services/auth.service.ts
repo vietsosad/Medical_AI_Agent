@@ -68,19 +68,21 @@ export interface UpdatePhoneNumberRequestDTO {
 // ============================================================================
 const handleApiError = (error: unknown, fallbackMessage: string): never => {
   if (axios.isAxiosError(error)) {
-    const axiosErr = error as AxiosError<{ detail?: string; message?: string }>;
-    
+    const axiosErr = error as AxiosError<{ detail?: unknown; message?: unknown }>;
+
     // Nếu lỗi kết nối mạng (Network Error / Port 8000 down)
     if (!axiosErr.response) {
-      console.error("🌐 [API Service Error] Máy chủ FastAPI không phản hồi:", axiosErr.message);
-      throw new Error("Không thể kết nối tới máy chủ AI Triage FastAPI (Port 8000). Vui lòng kiểm tra trạng thái dịch vụ Backend.");
+      console.error("[API Service Error] Máy chủ không phản hồi:", axiosErr.message);
+      throw new Error("Không kết nối được tới hệ thống. Vui lòng kiểm tra mạng rồi thử lại.");
     }
 
-    // Nếu Backend FastAPI trả về lỗi chi tiết (detail từ Pydantic hoặc Exception)
-    const backendMsg = axiosErr.response.data?.detail || axiosErr.response.data?.message;
-    if (backendMsg) {
+    // Câu lỗi do backend viết là chuỗi tiếng Việt; lỗi 422 của Pydantic lại là
+    // một mảng, hiện thẳng ra sẽ thành "[object Object]" -- khi đó dùng câu dự phòng.
+    const backendMsg = axiosErr.response.data?.detail ?? axiosErr.response.data?.message;
+    if (typeof backendMsg === "string" && backendMsg.trim()) {
       throw new Error(backendMsg);
     }
+    throw new Error(fallbackMessage);
   }
 
   if (error instanceof Error) {

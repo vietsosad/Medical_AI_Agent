@@ -36,32 +36,93 @@ const TURN_TIMEOUT_MS = 90_000;
  * contract -- see `@/types/simple-triage` for why that's not reused here.
  */
 
+/**
+ * Loại lỗi, để màn hình quyết định cách trình bày mà không phải dò chuỗi
+ * thông báo. `message` luôn là câu tiếng Việt cố định đọc được cho người bệnh:
+ * không bao giờ là chuỗi kỹ thuật của axios, tên biến môi trường hay mảng
+ * `detail` 422 của FastAPI (vốn hiện thành "[object Object]").
+ */
+export type SimpleTriageErrorKind =
+  | "UNAVAILABLE"
+  | "TIMEOUT"
+  | "NETWORK"
+  | "SERVER"
+  | "UNAUTHORIZED"
+  | "NOT_FOUND"
+  | "INVALID_INPUT"
+  | "REJECTED"
+  | "CONTRACT"
+  | "UNKNOWN";
+
+export class SimpleTriageApiError extends Error {
+  readonly kind: SimpleTriageErrorKind;
+
+  constructor(kind: SimpleTriageErrorKind, message: string) {
+    super(message);
+    this.name = "SimpleTriageApiError";
+    this.kind = kind;
+  }
+}
+
+/** Dịch vụ sàng lọc AI đang tắt trên môi trường này (HTTP 503). */
+export function isPilotUnavailableError(error: unknown): boolean {
+  return error instanceof SimpleTriageApiError && error.kind === "UNAVAILABLE";
+}
+
+const PILOT_ERROR_MESSAGES: Record<Exclude<SimpleTriageErrorKind, "REJECTED" | "UNKNOWN">, string> = {
+  UNAVAILABLE: "Dịch vụ sàng lọc AI tạm thời chưa hoạt động.",
+  TIMEOUT: "Hệ thống phản hồi quá lâu nên yêu cầu này chưa hoàn tất. Vui lòng thử lại.",
+  NETWORK: "Không kết nối được tới hệ thống. Vui lòng kiểm tra mạng rồi thử lại.",
+  SERVER: "Hệ thống đang gặp sự cố nên chưa xử lý được yêu cầu này. Vui lòng thử lại sau ít phút.",
+  UNAUTHORIZED: "Phiên đăng nhập đã hết hạn hoặc bạn không có quyền xem nội dung này. Vui lòng đăng nhập lại.",
+  NOT_FOUND: "Không tìm thấy phiên này, hoặc phiên không thuộc tài khoản của bạn.",
+  INVALID_INPUT: "Nội dung gửi lên chưa hợp lệ. Vui lòng kiểm tra lại rồi gửi.",
+  CONTRACT: "Hệ thống trả về dữ liệu không đọc được. Vui lòng tải lại trang.",
+};
+
 const handlePilotApiError = (error: unknown, fallbackMessage: string): never => {
   if (axios.isAxiosError(error)) {
-    const axiosErr = error as AxiosError<{ detail?: string; message?: string }>;
+    const axiosErr = error as AxiosError<{ detail?: unknown; message?: unknown }>;
+    if (axiosErr.code === AxiosError.ECONNABORTED || axiosErr.code === AxiosError.ETIMEDOUT) {
+      throw new SimpleTriageApiError("TIMEOUT", PILOT_ERROR_MESSAGES.TIMEOUT);
+    }
     if (!axiosErr.response) {
-      throw new Error("Không thể kết nối tới máy chủ AI Triage FastAPI. Vui lòng kiểm tra dịch vụ Backend.");
+      throw new SimpleTriageApiError("NETWORK", PILOT_ERROR_MESSAGES.NETWORK);
     }
-    if (axiosErr.response.status === 503) {
-      throw new Error(
-        "Triage Agent đang tắt trên môi trường này (SIMPLE_AGENT_ENABLED=false).",
-      );
+    const statusCode = axiosErr.response.status;
+    if (statusCode === 503) {
+      throw new SimpleTriageApiError("UNAVAILABLE", PILOT_ERROR_MESSAGES.UNAVAILABLE);
     }
-    const backendMsg = axiosErr.response.data?.detail || axiosErr.response.data?.message;
-    if (backendMsg) {
-      throw new Error(backendMsg);
+    if (statusCode >= 500) {
+      throw new SimpleTriageApiError("SERVER", PILOT_ERROR_MESSAGES.SERVER);
     }
+    if (statusCode === 401 || statusCode === 403) {
+      throw new SimpleTriageApiError("UNAUTHORIZED", PILOT_ERROR_MESSAGES.UNAUTHORIZED);
+    }
+    if (statusCode === 404) {
+      throw new SimpleTriageApiError("NOT_FOUND", PILOT_ERROR_MESSAGES.NOT_FOUND);
+    }
+    if (statusCode === 422) {
+      throw new SimpleTriageApiError("INVALID_INPUT", PILOT_ERROR_MESSAGES.INVALID_INPUT);
+    }
+    // Các mã 4xx còn lại (400, 409...) mang câu tiếng Việt do chính route pilot
+    // viết, ví dụ "Phiên này đã kết thúc..." -- chỉ nhận khi nó thật là chuỗi.
+    const backendMsg = axiosErr.response.data?.detail ?? axiosErr.response.data?.message;
+    throw new SimpleTriageApiError(
+      "REJECTED",
+      typeof backendMsg === "string" && backendMsg.trim() ? backendMsg : fallbackMessage,
+    );
   }
   // A schema mismatch here is a bug in this file's types, not a backend
   // fault -- surface a short, readable message instead of the raw
   // JSON-stringified issues array Zod puts in `error.message`.
   if (error instanceof ZodError) {
-    throw new Error("Dữ liệu máy chủ trả về không đúng hợp đồng dữ liệu (lỗi ở phía frontend, không phải do bạn).");
+    throw new SimpleTriageApiError("CONTRACT", PILOT_ERROR_MESSAGES.CONTRACT);
   }
-  if (error instanceof Error) {
+  if (error instanceof SimpleTriageApiError) {
     throw error;
   }
-  throw new Error(fallbackMessage);
+  throw new SimpleTriageApiError("UNKNOWN", fallbackMessage);
 };
 
 export const simpleTriageService = {

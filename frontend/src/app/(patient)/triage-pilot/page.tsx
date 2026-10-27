@@ -4,14 +4,15 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { AlertTriangle, FlaskConical, History, Loader2, RefreshCw, ShieldAlert } from "lucide-react";
+import { AlertTriangle, FlaskConical, History, Loader2, PhoneCall, RefreshCw, ShieldAlert } from "lucide-react";
 
 import { DisclaimerConsentModal } from "@/components/chat/DisclaimerConsentModal";
+import { EmergencyCallHint } from "@/components/chat/EmergencyCallHint";
 import { MessageItem } from "@/components/chat/MessageItem";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { SimpleCareTeamDock } from "@/components/chat/SimpleCareTeamDock";
 import { SimplePilotProfileSelector } from "@/components/chat/SimplePilotProfileSelector";
-import { SimpleEsiResultCard } from "@/components/chat/SimpleEsiResultCard";
+import { SimpleEsiResultCard, isUrgentEsi } from "@/components/chat/SimpleEsiResultCard";
 import { NearbyFacilitiesCard } from "@/components/chat/NearbyFacilitiesCard";
 import { SimpleMatchedProtocolsCard } from "@/components/chat/SimpleMatchedProtocolsCard";
 import { SimplePilotNurseDecisionSummary } from "@/components/chat/SimplePilotNurseDecisionSummary";
@@ -28,6 +29,7 @@ import {
   useStartSimpleTriage,
   useSubmitSimpleTriageChat,
 } from "@/queries/useSimpleTriageQueries";
+import { isPilotUnavailableError } from "@/services/simple-triage.service";
 import type { SimpleTriageMessageRowDTO } from "@/types/simple-triage";
 import type { ChatMessage, DecisionStatus } from "@/types/triage-chat";
 
@@ -149,6 +151,7 @@ export default function TriagePilotPage() {
     sessionQuery.data?.review_display_status === "APPROVED" ||
     sessionQuery.data?.review_display_status === "OVERRIDDEN";
   const displayedEsiLevel = hasNurseDecision && finalEsiLevel !== null ? finalEsiLevel : topEsiLevel;
+  const showUrgentCall = isCompleted && displayedEsiLevel !== null && isUrgentEsi(displayedEsiLevel);
   const isSending = chatMutation.isPending;
   const canSubmit = !!sessionId && !isCompleted && !isSending && !sessionQuery.isLoading;
 
@@ -199,6 +202,10 @@ export default function TriagePilotPage() {
   // `scrollIntoView` tự tìm vùng cuộn gần nhất (chính là khung hội thoại), nên
   // chỉ cần một mốc neo ở cuối danh sách, không cần giữ ref tới container.
   const bottomRef = useRef<HTMLDivElement>(null);
+  // Khi phiên đã có kết quả, mốc cuộn là chính thẻ kết quả chứ không phải đáy:
+  // bên dưới thẻ còn danh sách cơ sở y tế, tiêu chí phác đồ và SBAR, nên cuộn
+  // tới đáy sẽ đẩy mức ESI -- và nút gọi 115 của ESI 1/2 -- ra khỏi tầm mắt.
+  const resultRef = useRef<HTMLDivElement>(null);
 
   // Đưa hội thoại về cuối mỗi khi có nội dung mới. Lần đầu vào phiên thì nhảy
   // thẳng (không cần diễn hoạt cả trang), các lượt sau thì cuộn mượt.
@@ -210,13 +217,14 @@ export default function TriagePilotPage() {
     hasAutoScrolledRef.current = true;
     // Chờ trình duyệt dựng xong khối vừa thêm rồi mới đo chiều cao.
     const id = window.requestAnimationFrame(() => {
-      bottomRef.current?.scrollIntoView({ behavior, block: "end" });
+      if (resultRef.current) {
+        resultRef.current.scrollIntoView({ behavior, block: "start" });
+      } else {
+        bottomRef.current?.scrollIntoView({ behavior, block: "end" });
+      }
     });
     return () => window.cancelAnimationFrame(id);
   }, [transcript.length, pendingOutgoing, isSending, isCompleted, displayedEsiLevel]);
-
-  const is503 = (error: unknown): boolean =>
-    error instanceof Error && error.message.includes("SIMPLE_AGENT_ENABLED");
 
   // -- Start screen: no session_id yet -------------------------------------
   // Same flex-column + bottom-pinned-input shell as the active chat screen
@@ -309,16 +317,17 @@ export default function TriagePilotPage() {
   }
 
   // -- 503: pilot disabled on this environment ----------------------------
-  if (sessionQuery.isError && is503(sessionQuery.error)) {
+  // Người bệnh không bật được cờ nào ở máy chủ, nên màn này không nói về cấu
+  // hình -- chỉ nói việc họ làm được ngay bây giờ.
+  if (sessionQuery.isError && isPilotUnavailableError(sessionQuery.error)) {
     return (
       <div className="mx-auto flex h-full max-w-lg flex-col items-center justify-center gap-4 p-8 text-center">
         <ShieldAlert className="size-12 text-amber-600" aria-hidden="true" />
-        <h1 className="text-xl font-bold text-slate-950 dark:text-slate-50">Triage Agent đang tắt</h1>
+        <h1 className="text-xl font-bold text-slate-950 dark:text-slate-50">Dịch vụ sàng lọc AI tạm thời chưa hoạt động</h1>
         <p className="text-sm leading-6 text-slate-700 dark:text-slate-200">
-          Triage Agent đang tắt trên môi trường này. Cần bật cờ
-          <code className="mx-1 rounded bg-muted px-1.5 py-0.5 font-mono text-xs">SIMPLE_AGENT_ENABLED=true</code>
-          ở backend rồi thử lại.
+          Bạn vẫn có thể liên hệ trực tiếp cơ sở y tế gần nhất để được thăm khám.
         </p>
+        <EmergencyCallHint className="justify-center" />
       </div>
     );
   }
@@ -359,7 +368,7 @@ export default function TriagePilotPage() {
           )}
           <VerifiedClinicalContextHeader profileId={sessionQuery.data?.profile_id ?? null} />
 
-          {sessionQuery.isError && !is503(sessionQuery.error) ? (
+          {sessionQuery.isError && !isPilotUnavailableError(sessionQuery.error) ? (
             <div role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center">
               <p className="text-sm font-semibold text-rose-900">Không thể tải phiên này.</p>
               <p className="mt-2 text-sm text-rose-800">
@@ -368,11 +377,12 @@ export default function TriagePilotPage() {
               <button
                 type="button"
                 onClick={() => void sessionQuery.refetch()}
-                className="mt-4 flex min-h-10 mx-auto items-center gap-2 rounded-xl border border-rose-300 bg-card px-4 text-sm font-semibold text-rose-800 hover:bg-rose-100"
+                className="mt-4 flex min-h-11 mx-auto items-center gap-2 rounded-xl border border-rose-300 bg-card px-4 text-sm font-semibold text-rose-800 hover:bg-rose-100"
               >
                 <RefreshCw className="size-4" aria-hidden="true" />
                 Tải lại
               </button>
+              <EmergencyCallHint className="mt-4 justify-center" />
             </div>
           ) : sessionQuery.isLoading ? (
             <div className="flex flex-col items-center gap-3 py-12 text-slate-400">
@@ -410,7 +420,11 @@ export default function TriagePilotPage() {
           {/* Khung nổi bật riêng cho kết quả ESI, ngay sau tin nhắn cuối cùng của
               chatbot -- phản hồi trực tiếp yêu cầu "phải làm nổi bật là ESI2"
               thay vì chỉ có 1 câu chữ chìm trong khối cảnh báo bên dưới. */}
-          {isCompleted && displayedEsiLevel !== null && <SimpleEsiResultCard esiLevel={displayedEsiLevel} />}
+          {isCompleted && displayedEsiLevel !== null && (
+            <div ref={resultRef} className="scroll-mt-4">
+              <SimpleEsiResultCard esiLevel={displayedEsiLevel} />
+            </div>
+          )}
 
           {/* Tìm cơ sở y tế gần nhất. Chỉ là phần hiển thị thêm bên dưới kết
               quả: nó đọc đúng `displayedEsiLevel` mà backend đã chốt ở trên và
@@ -466,12 +480,26 @@ export default function TriagePilotPage() {
         </div>
       )}
 
+      {/* Thanh ghim đáy luôn trong tầm mắt, kể cả khi người bệnh cuộn đọc SBAR.
+          Với ESI 1/2, hành động chính ở đây là gọi 115 -- "Bắt đầu phiên mới"
+          lùi xuống làm lựa chọn phụ. Mức hiển thị là mức điều dưỡng đã chốt
+          nếu có, nên khi điều dưỡng hạ mức thì nút 115 cũng rút đi. */}
       {isCompleted && (
-        <div className="shrink-0 z-10 border-t border-border bg-card p-4 text-center">
+        <div className="shrink-0 z-10 flex flex-col items-stretch gap-2 border-t border-border bg-card p-4 sm:flex-row sm:justify-center">
+          {showUrgentCall && (
+            <a
+              href="tel:115"
+              aria-label="Gọi Tổng đài Cấp cứu Quốc gia 115"
+              className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-rose-700 px-6 text-base font-black text-white transition-colors hover:bg-rose-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-600 focus-visible:ring-offset-2"
+            >
+              <PhoneCall className="size-5 shrink-0" aria-hidden="true" />
+              Gọi 115
+            </a>
+          )}
           <button
             type="button"
             onClick={handleNewSession}
-            className="mx-auto flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-background px-4 text-sm font-semibold text-slate-800 hover:bg-muted dark:text-slate-100 dark:border-slate-700"
+            className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-background px-4 text-sm font-semibold text-slate-800 hover:bg-muted dark:text-slate-100 dark:border-slate-700"
           >
             <RefreshCw className="size-4" aria-hidden="true" />
             Bắt đầu phiên mới

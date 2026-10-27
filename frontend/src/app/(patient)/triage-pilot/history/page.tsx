@@ -22,6 +22,7 @@ import {
 
 import { useGetProfiles } from "@/queries/useProfileQueries";
 import { useSimpleTriageSessions } from "@/queries/useSimpleTriageQueries";
+import { isPilotUnavailableError } from "@/services/simple-triage.service";
 import { SimplePilotReviewBadge } from "@/components/chat/SimplePilotReviewBadge";
 import {
   pilotAiProposedEsi,
@@ -268,7 +269,7 @@ export default function SimpleTriageHistoryPage() {
   const pageStart = (currentPage - 1) * PAGE_SIZE;
   const pagedSessions = filteredSessions.slice(pageStart, pageStart + PAGE_SIZE);
 
-  const is503 = error instanceof Error && error.message.includes("SIMPLE_AGENT_ENABLED");
+  const is503 = isPilotUnavailableError(error);
 
   return (
     <div className="h-full w-full overflow-y-auto bg-background rounded-3xl">

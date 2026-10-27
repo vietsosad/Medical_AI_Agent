@@ -12,6 +12,7 @@ import {
 import { SimplePilotReviewBadge } from "@/components/chat/SimplePilotReviewBadge";
 import { SimplePilotSbarAccordion } from "@/components/chat/SimplePilotSbarAccordion";
 import { useSimpleCareTeamRealtime, useSimpleTriageSessionDetail } from "@/queries/useSimpleTriageQueries";
+import { isPilotUnavailableError } from "@/services/simple-triage.service";
 import type { SimpleTriageMessageRowDTO } from "@/types/simple-triage";
 import type { ChatMessage, DecisionStatus } from "@/types/triage-chat";
 
@@ -49,7 +50,7 @@ export function SimplePilotHistoryDetail({ sessionId }: { sessionId: string }) {
   // A nurse decision only signals this page to re-read persisted data.
   useSimpleCareTeamRealtime(sessionId);
 
-  const is503 = error instanceof Error && error.message.includes("SIMPLE_AGENT_ENABLED");
+  const is503 = isPilotUnavailableError(error);
 
   if (isLoading) {
     return (
