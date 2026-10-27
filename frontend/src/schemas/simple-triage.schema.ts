@@ -55,6 +55,15 @@ export const simpleTriageDecisionSchema = z.object({
     .array(z.object({ atom_id: z.string(), score: z.number(), confident_enough_to_ask: z.boolean() }))
     .optional(),
   retrieval_query: z.string().nullable().optional(),
+  // Backend pre-LLM emergency screen hit -- see SimpleSafetyAlertDTO.
+  safety_alert: z
+    .object({
+      rule_id: z.string(),
+      kind: z.enum(["EMERGENCY", "SELF_HARM"]),
+      label: z.string(),
+      trigger: z.string(),
+    })
+    .optional(),
 });
 
 export const simpleTriageTurnResponseSchema = z.object({

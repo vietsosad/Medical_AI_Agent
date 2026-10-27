@@ -104,4 +104,51 @@ describe("trang sàng lọc Triage Agent", () => {
 
     expect(callLinks()).toHaveLength(0);
   });
+
+  it("phiên đang chạy có lượt bị sàng lọc cấp cứu gắn cờ: nút 115 ở ngay trên ô nhập, chat không bị khoá", () => {
+    queries.useSimpleTriageSessionDetail.mockReturnValue(activeSession({
+      rule_id: "SA_SCREEN_SYNCOPE_V1",
+      kind: "EMERGENCY",
+      label: "ngất hoặc bất tỉnh",
+      trigger: "ngất xỉu",
+    }));
+
+    render(<TriagePilotPage />);
+
+    expect(callLinks()).toHaveLength(1);
+    // Cờ không khoá hội thoại: ô nhập vẫn còn để người bệnh tiếp tục kể.
+    expect(screen.getByRole("textbox")).toBeInTheDocument();
+  });
+
+  it("phiên đang chạy không có cờ: không đẩy nút 115 lên", () => {
+    queries.useSimpleTriageSessionDetail.mockReturnValue(activeSession(undefined));
+
+    render(<TriagePilotPage />);
+
+    expect(callLinks()).toHaveLength(0);
+  });
 });
+
+function activeSession(safetyAlert: Record<string, string> | undefined) {
+  const session = completedSession(1);
+  return {
+    ...session,
+    data: {
+      ...session.data,
+      status: "ACTIVE",
+      matched_esi_levels: [],
+      messages: [
+        {
+          turn_index: 0,
+          sender: "AGENT",
+          content: "Lưu ý an toàn: bạn có nhắc tới ngất hoặc bất tỉnh.",
+          route: "TRIAGE",
+          action: "ASK_NEXT",
+          question_target_id: null,
+          decision_snapshot: safetyAlert ? { safety_alert: safetyAlert } : {},
+          created_at: "2026-10-27T08:00:00Z",
+        },
+      ],
+    },
+  };
+}

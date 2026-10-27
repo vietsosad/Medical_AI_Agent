@@ -17,6 +17,7 @@ import {
   MessagesSquare,
   RefreshCw,
   Search,
+  ShieldAlert,
   Stethoscope,
   UserRound,
   UserRoundCheck,
@@ -149,7 +150,9 @@ function QueueRow({ item, tab, index }: { item: SimpleNurseQueueItemDTO; tab: Ta
   const minutes = waitingMinutes(item.waiting_since);
   // Chỉ hồi sức và cấp cứu mới được chuyển động. Nếu mức nào cũng nhấp nháy
   // thì chẳng mức nào nổi bật, và bảng trực thành một cái đèn nháy.
-  const isHighAcuity = item.ai_proposed_esi !== null && item.ai_proposed_esi <= 2;
+  // Ca bị bộ sàng lọc cấp cứu gắn cờ cũng được chuyển động, nhưng giữ màu
+  // "chưa có ESI": cờ là lý do để xem ngay, không phải một mức ESI.
+  const isHighAcuity = (item.ai_proposed_esi !== null && item.ai_proposed_esi <= 2) || Boolean(item.attention_required);
 
   const openCase = () => {
     if (mine || tab === "decided") {
@@ -232,6 +235,16 @@ function QueueRow({ item, tab, index }: { item: SimpleNurseQueueItemDTO; tab: Ta
             </p>
 
             <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+              {item.attention_required && (
+                <MetaChip icon={ShieldAlert} className="border-rose-300 bg-rose-50 font-bold text-rose-900">
+                  Cần xem ngay{item.attention_reason ? `: ${item.attention_reason}` : ""}
+                </MetaChip>
+              )}
+              {item.session_status === "ACTIVE" && (
+                <MetaChip icon={MessagesSquare} className="border-sky-200 bg-sky-50 text-sky-900">
+                  Người bệnh vẫn đang trò chuyện
+                </MetaChip>
+              )}
               <MetaChip icon={Clock3} className={waitClasses(minutes)}>
                 Chờ {formatWait(minutes)}
               </MetaChip>

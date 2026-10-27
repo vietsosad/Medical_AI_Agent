@@ -11,6 +11,7 @@ import {
   Lock,
   MessagesSquare,
   Quote,
+  ShieldAlert,
   UserRoundCheck,
   XCircle,
 } from "lucide-react";
@@ -220,6 +221,20 @@ export function SimpleNurseCaseWorkspace({ sessionId }: { sessionId: string }) {
             <p className="mt-2 max-w-2xl text-base leading-6 text-slate-700 dark:text-slate-200">
               {data.initial_message.trim() || "Chưa có mô tả triệu chứng ban đầu"}
             </p>
+
+            {data.attention_required && (
+              <p
+                role="status"
+                className="mt-3 flex max-w-2xl items-start gap-2 rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-base text-rose-950"
+              >
+                <ShieldAlert className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
+                <span>
+                  <strong>Cần xem ngay:</strong> sàng lọc tự động phát hiện{" "}
+                  {data.attention_reason ?? "dấu hiệu nguy kịch"} trong lời người bệnh. Đây không phải mức ESI.
+                  {data.session_status === "ACTIVE" && " Người bệnh vẫn đang trò chuyện với trợ lý."}
+                </span>
+              </p>
+            )}
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <span

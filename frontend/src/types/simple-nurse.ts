@@ -103,12 +103,20 @@ export interface SimpleSatisfiedRequirementDTO {
   actual_value: string | number | boolean | null;
 }
 
+export type SimpleSessionStatus = "ACTIVE" | "COMPLETED" | "ABANDONED";
+
 export interface SimpleNurseQueueItemDTO {
   session_id: string;
   initial_message: string;
   final_action: "RETURN_MATCH" | "RETURN_INCOMPLETE" | null;
   ai_proposed_esi: 1 | 2 | 3 | 4 | 5 | null;
   is_insufficient: boolean;
+  // "Cần xem ngay" from the pre-LLM emergency screen -- a reason, not an ESI.
+  // A flagged case can be ACTIVE: the patient may still be talking.
+  session_status?: SimpleSessionStatus;
+  attention_required?: boolean;
+  attention_reason?: string | null;
+  attention_raised_at?: string | null;
   turn_count: number;
   waiting_since: string;
   review_status: SimpleReviewStatus;
@@ -206,6 +214,10 @@ export interface SimpleNurseCaseDetailDTO {
   ai_proposed_esi: 1 | 2 | 3 | 4 | 5 | null;
   matched_esi_levels: number[];
   final_concepts: string[];
+  session_status?: SimpleSessionStatus;
+  attention_required?: boolean;
+  attention_reason?: string | null;
+  attention_raised_at?: string | null;
   review_status: SimpleReviewStatus;
   assigned_nurse_id: string | null;
   case_version: number;

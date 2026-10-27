@@ -59,12 +59,24 @@ export const simpleNurseDashboardSchema = z.object({
   ),
 });
 
+/**
+ * "Cần xem ngay" from the backend's pre-LLM emergency screen: a reason for a
+ * human to look now, never an ESI. A flagged case can still be ACTIVE.
+ */
+const attentionFields = {
+  session_status: z.enum(["ACTIVE", "COMPLETED", "ABANDONED"]).default("COMPLETED"),
+  attention_required: z.boolean().default(false),
+  attention_reason: z.string().nullable().default(null),
+  attention_raised_at: z.string().nullable().default(null),
+};
+
 export const simpleNurseQueueItemSchema = z.object({
   session_id: z.string(),
   initial_message: z.string(),
   final_action: z.enum(["RETURN_MATCH", "RETURN_INCOMPLETE"]).nullable(),
   ai_proposed_esi: esiLevelSchema.nullable(),
   is_insufficient: z.boolean(),
+  ...attentionFields,
   turn_count: z.number(),
   waiting_since: z.string(),
   review_status: simpleReviewStatusSchema,
@@ -73,7 +85,7 @@ export const simpleNurseQueueItemSchema = z.object({
   unread_count: z.number(),
   patient_email: z.string().nullable(),
   patient_name: z.string().nullable(),
-  final_esi: z.number().nullable(),
+  final_esi: z.number().int().min(1).max(5).nullable(),
   decision_type: z.enum(["CONFIRM_ESI", "ADJUST_ESI"]).nullable(),
   decision_note: z.string().nullable(),
   decided_at: z.string().nullable(),
@@ -155,12 +167,13 @@ export const simpleNurseCaseDetailSchema = z.object({
   final_action: z.enum(["RETURN_MATCH", "RETURN_INCOMPLETE"]).nullable(),
   final_message: z.string().nullable(),
   ai_proposed_esi: esiLevelSchema.nullable(),
-  matched_esi_levels: z.array(z.number()),
+  matched_esi_levels: z.array(z.number().int().min(1).max(5)),
   final_concepts: z.array(z.string()),
+  ...attentionFields,
   review_status: simpleReviewStatusSchema,
   assigned_nurse_id: z.string().nullable(),
   case_version: z.number(),
-  final_esi: z.number().nullable(),
+  final_esi: z.number().int().min(1).max(5).nullable(),
   decision_type: z.enum(["CONFIRM_ESI", "ADJUST_ESI"]).nullable(),
   decision_reason_code: z
     .enum(["MATCHES_PROTOCOL", "ADDITIONAL_CLINICAL_JUDGMENT", "INSUFFICIENT_PATIENT_DATA", "OTHER"])
@@ -174,5 +187,5 @@ export const simpleNurseActionResponseSchema = z.object({
   session_id: z.string(),
   review_status: simpleReviewStatusSchema,
   case_version: z.number(),
-  final_esi: z.number().nullable().optional(),
+  final_esi: z.number().int().min(1).max(5).nullable().optional(),
 });

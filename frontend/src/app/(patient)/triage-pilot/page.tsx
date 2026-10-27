@@ -154,6 +154,13 @@ export default function TriagePilotPage() {
   const showUrgentCall = isCompleted && displayedEsiLevel !== null && isUrgentEsi(displayedEsiLevel);
   const isSending = chatMutation.isPending;
   const canSubmit = !!sessionId && !isCompleted && !isSending && !sessionQuery.isLoading;
+  // Bộ sàng lọc cấp cứu ở backend gắn `safety_alert` vào lượt có dấu hiệu nguy
+  // kịch. Tin nhắn đó có thể bị cuộn khuất, nên nút 115 ở lại ngay trên ô nhập
+  // cho tới hết phiên -- phiên vẫn tiếp tục, không bị khoá.
+  const hasSafetyAlert = useMemo(
+    () => (sessionQuery.data?.messages ?? []).some((row) => row.decision_snapshot.safety_alert),
+    [sessionQuery.data?.messages],
+  );
 
   const handleStart = async (content: string) => {
     const trimmed = content.trim();
@@ -471,6 +478,11 @@ export default function TriagePilotPage() {
 
       {!isCompleted && (
         <div className="shrink-0 z-10 w-full">
+          {hasSafetyAlert && (
+            <div className="border-t border-rose-300 bg-rose-50 px-4 py-2 dark:border-rose-900 dark:bg-rose-950/40">
+              <EmergencyCallHint className="mx-auto max-w-3xl justify-center" />
+            </div>
+          )}
           <ChatInput
             key={sessionId}
             onSendMessage={handleSend}

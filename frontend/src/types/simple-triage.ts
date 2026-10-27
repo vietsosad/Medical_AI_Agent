@@ -71,6 +71,17 @@ export interface SimpleTriageDecisionDTO {
   // replaces the old "concept labels + raw Vietnamese message" join. Null
   // before any concept is recorded, or on a stub understanding_fn (tests).
   retrieval_query?: string | null;
+  // Set by the backend's pre-LLM emergency screen (emergency_screen.py) on a
+  // turn whose message named a danger sign: a reason to keep the 115 action
+  // in view, never an ESI.
+  safety_alert?: SimpleSafetyAlertDTO;
+}
+
+export interface SimpleSafetyAlertDTO {
+  rule_id: string;
+  kind: "EMERGENCY" | "SELF_HARM";
+  label: string;
+  trigger: string;
 }
 
 /** The `{"session_id", "message", "decision"}` shape returned by both
