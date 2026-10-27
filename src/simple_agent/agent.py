@@ -104,6 +104,17 @@ _NEGATED_CLAUSE_RE = re.compile(
     r"(?:^|[,;.]\s*)(?:no|not|without|denies?|absent(?:\s+of)?|negative\s+for)\b[^,.;]*",
     re.IGNORECASE,
 )
+# A negated vital function is a finding, not a denial: "not breathing, no
+# pulse" is exactly what the ESI 1 atoms are written against, and stripping
+# it left only "unresponsive" to retrieve with.
+_ABSENT_VITAL_FUNCTION_RE = re.compile(
+    r"^[,;.\s]*(?:no|not|without|absent(?:\s+of)?)\s+(?:a\s+)?"
+    r"(?:breath(?:ing|e|s)?|pulse|heart\s*beat|heartbeat|respon(?:se|sive|ding|d)|conscious(?:ness)?|"
+    r"awake|waking|wak(?:e|ing)\s+up|moving|speaking|talking)\b"
+    # ...but "no breathing difficulty" denies a symptom, like any other denial.
+    r"(?!\s+(?:difficult|problem|trouble|issue|pain|discomfort)\w*)",
+    re.IGNORECASE,
+)
 
 
 def _strip_negated_clauses(retrieval_query: str) -> str:
@@ -120,7 +131,10 @@ def _strip_negated_clauses(retrieval_query: str) -> str:
     confirmed_ready elsewhere in this file) -- this is a deterministic
     backstop, not a replacement for that instruction.
     """
-    cleaned = _NEGATED_CLAUSE_RE.sub("", retrieval_query)
+    cleaned = _NEGATED_CLAUSE_RE.sub(
+        lambda match: match.group(0) if _ABSENT_VITAL_FUNCTION_RE.match(match.group(0)) else "",
+        retrieval_query,
+    )
     cleaned = re.sub(r"\s{2,}", " ", cleaned).strip(" ,.;")
     # Never return an empty string (e.g. a query that was nothing but a
     # denial) -- an empty embed() call is worse than a slightly noisy one.

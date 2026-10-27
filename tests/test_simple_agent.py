@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from src.simple_agent.agent import PREASK_CHECK_LIMIT, SimpleTriageAgent
+from src.simple_agent.agent import PREASK_CHECK_LIMIT, SimpleTriageAgent, _strip_negated_clauses
 from src.simple_agent.corpus import Corpus
 from src.simple_agent.decision import atom_status, evaluate_atoms, rank_question_targets
 from src.simple_agent.phrasing import emergency_outcome_message
@@ -1223,6 +1223,22 @@ def test_normal_vitals_match_no_vital_sign_atom() -> None:
     )
 
     assert supported == []
+
+
+@pytest.mark.parametrize(
+    ("query", "expected"),
+    [
+        # Absent vital functions are findings, and exactly what ESI 1 atoms describe.
+        ("Unresponsive, not breathing, no pulse", "Unresponsive, not breathing, no pulse"),
+        ("Chest pain. Not responding to voice", "Chest pain. Not responding to voice"),
+        # Ordinary denials are still stripped.
+        ("Headache, no neck stiffness, denies fever", "Headache"),
+        ("Cough, no breathing difficulty", "Cough"),
+        ("Abdominal pain, without vomiting", "Abdominal pain"),
+    ],
+)
+def test_negation_stripper_keeps_absent_vital_functions(query: str, expected: str) -> None:
+    assert _strip_negated_clauses(query) == expected
 
 
 def test_emergency_outcome_message_names_the_person_asked_about() -> None:
