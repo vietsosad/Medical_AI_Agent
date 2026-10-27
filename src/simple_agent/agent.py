@@ -49,7 +49,7 @@ from .decision import (
     rank_question_targets,
     retrieve_atoms_scored,
 )
-from .phrasing import phrase_confirmation, phrase_outcome, phrase_question
+from .phrasing import emergency_outcome_message, phrase_confirmation, phrase_outcome, phrase_question
 from .preask_check import check_already_answered, content_words
 from .resource_estimate import estimate_resource_count
 from .session import Session
@@ -1155,8 +1155,13 @@ class SimpleTriageAgent:
 
         # Every askable fact is resolved. Confirm with the patient before
         # finalising -- they may still want to add or correct something.
+        # Except a decisive ESI 1/2 match, which finalises at once, as in the
+        # real algorithm (see decisive_match above). Holding it behind
+        # "anything to add?" kept the session ACTIVE, and the nurse queue
+        # lists COMPLETED sessions only -- an emergency the patient walked
+        # away from mid-confirmation reached no one.
         confirmed_ready = outcome.get("confirmed_ready") is True or confirmation_intent
-        if not session.confirmation_offered or not confirmed_ready:
+        if not decisive_match and (not session.confirmation_offered or not confirmed_ready):
             first_offer = not session.confirmation_offered
             session.confirmation_offered = True
             summary = self._phrase("confirmation", self._confirmation_context(session))
@@ -1188,8 +1193,12 @@ class SimpleTriageAgent:
         # patient-answerable question is already resolved and confirmed, i.e.
         # exactly when there is enough recorded context for the estimate to
         # be worth trusting.
+        # Resource count only separates ESI 3/4/5, so a decisive ESI 1/2
+        # match must not wait on (or fail with) this LLM call -- `atoms` also
+        # holds the generic fallback atoms, which do reference resource_count.
         if (
-            "fact_target:resource_count" not in session.facts
+            not decisive_match
+            and "fact_target:resource_count" not in session.facts
             and not session.resource_count_estimated
             and any(_references_fact(atom, "fact_target:resource_count") for atom in atoms)
         ):
@@ -1278,7 +1287,10 @@ class SimpleTriageAgent:
             # untouched (still the full set, e.g. for the sidebar/history
             # list badges) -- only what gets phrased into this message narrows.
             levels = [str(top_level)] if top_level is not None else []
-            message_out = self._phrase("outcome", {"matched": True, "esi_levels": levels, "subject": subject_context})
+            if top_level in (1, 2):
+                message_out = emergency_outcome_message(top_level, subject_context)
+            else:
+                message_out = self._phrase("outcome", {"matched": True, "esi_levels": levels, "subject": subject_context})
             action, reason = "RETURN_MATCH", "At least one retrieved protocol atom is fully supported by stated facts."
         else:
             message_out = self._phrase("outcome", {"matched": False, "esi_levels": [], "subject": subject_context})

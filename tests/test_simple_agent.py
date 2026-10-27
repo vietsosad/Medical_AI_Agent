@@ -6,6 +6,7 @@ import pytest
 from src.simple_agent.agent import PREASK_CHECK_LIMIT, SimpleTriageAgent
 from src.simple_agent.corpus import Corpus
 from src.simple_agent.decision import atom_status, evaluate_atoms, rank_question_targets
+from src.simple_agent.phrasing import emergency_outcome_message
 from src.simple_agent.session import Session
 from src.simple_agent.sql_bundle_corpus import load_corpus_from_sql_bundle
 from src.simple_agent.tools import AgentToolbox
@@ -1080,6 +1081,102 @@ def test_resource_count_estimator_is_not_called_for_a_purely_esi_1_2_decisive_ma
 
     assert result["decision"]["action"] == "RETURN_MATCH"
     assert len(calls) == 0
+
+
+# -- decisive ESI 1/2 matches finalise at once, with a fixed message ----------
+
+
+def _decisive_agent(phrased: list[str], estimator_calls: list[tuple]) -> SimpleTriageAgent:
+    def understanding(toolbox: AgentToolbox, _message: str) -> None:
+        # No confirmed_ready: the patient has not been asked to confirm.
+        toolbox.finish_turn(intent="TRIAGE")
+
+    def phraser(kind: str, _ctx: dict) -> str:
+        phrased.append(kind)
+        return kind
+
+    def estimator(*args):
+        estimator_calls.append(args)
+        return None
+
+    return _agent(
+        embedder=_embed, understanding_fn=understanding, phraser=phraser,
+        resource_estimator=estimator, confirmation_classifier=lambda _message: False,
+    )
+
+
+def test_a_decisive_esi_1_match_finalises_without_a_confirmation_round_trip() -> None:
+    # "con tôi tím tái": the ESI 1 criterion is fully supported the moment
+    # the fact is recorded. It used to be held behind "còn gì bổ sung
+    # không?", which left the session ACTIVE -- and the nurse queue lists
+    # COMPLETED sessions only, so an emergency the family walked away from
+    # to call for help was never seen by anyone.
+    phrased: list[str] = []
+    estimator_calls: list[tuple] = []
+    agent = _decisive_agent(phrased, estimator_calls)
+    session = agent.sessions["test"]
+    session.concepts.add("concept:cyanosis")
+    session.seen_atom_ids.append("atom:esi_1_uri_cyanosis")
+    session.facts["fact_target:cyanosis_present"] = "YES"
+
+    result = agent.process_turn("test", "con tôi tím tái")
+
+    assert result["decision"]["action"] == "RETURN_MATCH"
+    assert result["decision"]["matched_esi_levels"][0] == 1
+    assert session.confirmation_offered is False
+    assert "115" in result["message"]
+    # Neither the closing message nor the resource estimate depends on a model.
+    assert phrased == []
+    assert estimator_calls == []
+
+
+def test_a_decisive_esi_2_match_tells_the_patient_to_go_now() -> None:
+    phrased: list[str] = []
+    estimator_calls: list[tuple] = []
+    agent = _decisive_agent(phrased, estimator_calls)
+    session = agent.sessions["test"]
+    session.concepts.add("concept:abdominal_pain")
+    session.seen_atom_ids.append("atom:esi_2_severe_abdominal_pain")
+    session.facts["fact_target:pain_severity"] = 9
+
+    result = agent.process_turn("test", "đau bụng 9 trên 10")
+
+    assert result["decision"]["action"] == "RETURN_MATCH"
+    assert result["decision"]["matched_esi_levels"][0] == 2
+    assert "cấp cứu ngay" in result["message"]
+    assert "115" in result["message"]
+    assert phrased == []
+
+
+def test_a_non_decisive_match_still_confirms_before_finalising() -> None:
+    # The early finalisation is for ESI 1/2 only; ESI 3-5 keep the
+    # "anything to add?" step that lets a patient correct the record.
+    phrased: list[str] = []
+    agent = _decisive_agent(phrased, [])
+    session = agent.sessions["test"]
+    session.concepts.add("concept:arm_pain")
+    session.facts.update({
+        "fact_target:pain_present": "YES",
+        "fact_target:pain_severity": 0,
+        "fact_target:resource_count": 1,
+        "fact_target:symptom_onset": "UNKNOWN",
+    })
+
+    result = agent.process_turn("test", "đau tay nhẹ")
+
+    assert result["decision"]["action"] == "ASK_CONFIRMATION"
+    assert phrased == ["confirmation"]
+
+
+def test_emergency_outcome_message_names_the_person_asked_about() -> None:
+    message = emergency_outcome_message(1, {"type": "OTHER_PERSON", "label": "con của bạn"})
+
+    assert "về con của bạn" in message
+    assert "115 ngay cho con của bạn" in message
+    assert "chẩn đoán" in message  # still says it is not a diagnosis
+
+    esi_2 = emergency_outcome_message(2, {"type": "OTHER_PERSON", "label": "con của bạn"})
+    assert esi_2.count("Con của bạn nên được đưa") == 1
 
 
 # -- generic fallback atoms (retrieval-independent ESI 3/4/5 "else" rules) ----

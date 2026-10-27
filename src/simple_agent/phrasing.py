@@ -91,3 +91,30 @@ def phrase_outcome(
 ) -> str:
     payload = {"matched": matched, "esi_levels": esi_levels, "subject": subject or {"type": "SELF"}}
     return _call(client, "phrase_outcome", OUTCOME_PHRASING_SYSTEM_PROMPT, payload, model)
+
+
+def emergency_outcome_message(esi_level: int, subject: dict[str, Any] | None = None) -> str:
+    """Fixed closing message for a decisive ESI 1/2 match -- never sent to a model.
+
+    The outcome prompt only says the data "lines up with" a level and never
+    tells anyone to act, and a provider failure here would turn a match that
+    decision.py has already made into a 502 that persists nothing. The one
+    message that must say "call 115 now" is therefore not left to an LLM.
+    """
+    subject = subject or {"type": "SELF"}
+    other = subject.get("type") == "OTHER_PERSON"
+    label = (subject.get("label") or "người bạn đang hỏi giúp") if other else ""
+    described = f"Những gì bạn mô tả về {label}" if other else "Những gì bạn mô tả"
+    closing = (
+        "Đây không phải chẩn đoán; hồ sơ đã được chuyển vào hàng đợi để nhân viên y tế xác nhận."
+    )
+    if esi_level == 1:
+        return (
+            f"{described} khớp với tiêu chí ở mức khẩn cấp cao nhất (ESI 1). "
+            f"Hãy gọi cấp cứu 115 ngay{f' cho {label}' if other else ''}. {closing}"
+        )
+    go = f"{label[:1].upper()}{label[1:]} nên được đưa" if other else "Bạn nên"
+    return (
+        f"{described} khớp với tiêu chí ở mức khẩn cấp (ESI 2). "
+        f"{go} đến cơ sở cấp cứu ngay bây giờ, không chờ đợi; nếu tình trạng nặng lên, hãy gọi 115. {closing}"
+    )
