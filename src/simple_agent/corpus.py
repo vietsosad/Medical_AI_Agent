@@ -65,6 +65,23 @@ GENERIC_FALLBACK_FACT_TARGET_IDS = frozenset({
 })
 
 
+# Measured vital signs, plus cyanosis (the one observable sign the ESI 1
+# danger-zone criteria use). An ESI 1/2 atom built only from these says
+# nothing about the presenting complaint, so whether it is evaluated must not
+# depend on its wording resembling the complaint. Real incident (2026-09-16):
+# a respiratory-failure case (SpO2 78, RR 42) satisfied three ESI 1 atoms but
+# returned ESI 2, because semantic ranking left all three outside the top
+# ATOM_RETRIEVAL_LIMIT. See Corpus.vital_sign_decisive_atom_ids below.
+VITAL_SIGN_FACT_TARGET_IDS = frozenset({
+    "fact_target:heart_rate",
+    "fact_target:respiratory_rate",
+    "fact_target:spo2",
+    "fact_target:temperature",
+    "fact_target:systolic_bp",
+    "fact_target:cyanosis_present",
+})
+
+
 class CorpusError(RuntimeError):
     """The four source files or their indexes cannot be used together."""
 
@@ -273,6 +290,21 @@ class Corpus:
                 for requirement in (branch if isinstance(branch, list) else [branch])
             })
             and fact_ids <= GENERIC_FALLBACK_FACT_TARGET_IDS
+        )
+        # Same retrieval-independence for ESI 1/2 danger-zone vital-sign
+        # atoms (see VITAL_SIGN_FACT_TARGET_IDS): always evaluated, never
+        # allowed to drive what gets asked.
+        self.vital_sign_decisive_atom_ids: frozenset[str] = frozenset(
+            atom["atom_id"]
+            for atom in self.protocol_atoms
+            if atom.get("decision_effect", {}).get("impact") == "ASSIGN_ESI"
+            and atom.get("decision_effect", {}).get("candidate_esi") in (1, 2)
+            and (fact_ids := {
+                requirement["fact_target_id"]
+                for branch in atom.get("requirements", [])
+                for requirement in (branch if isinstance(branch, list) else [branch])
+            })
+            and fact_ids <= VITAL_SIGN_FACT_TARGET_IDS
         )
 
         # facts_for_concept and distinguishes_from are both derived from the same

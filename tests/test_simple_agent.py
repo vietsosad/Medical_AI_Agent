@@ -1168,6 +1168,63 @@ def test_a_non_decisive_match_still_confirms_before_finalising() -> None:
     assert phrased == ["confirmation"]
 
 
+def test_reported_danger_zone_vitals_reach_esi_1_without_help_from_retrieval() -> None:
+    # Real incident (2026-09-16): SpO2 78 and RR 42 satisfied three ESI 1
+    # atoms, but semantic ranking kept all three outside the top 8, so the
+    # case came back ESI 2. The zero-vector embedder retrieves nothing at
+    # all here -- the match must come from the vital-sign atoms alone.
+    phrased: list[str] = []
+    agent = _decisive_agent(phrased, [])
+    session = agent.sessions["test"]
+    session.concepts.add("concept:shortness_of_breath")
+    session.facts.update({"fact_target:spo2": 78, "fact_target:respiratory_rate": 42})
+    assert session.seen_atom_ids == []
+
+    result = agent.process_turn("test", "SpO2 78, thở 42 lần một phút")
+
+    assert result["decision"]["action"] == "RETURN_MATCH"
+    assert result["decision"]["matched_esi_levels"][0] == 1
+    matched_ids = {atom["atom_id"] for atom in result["decision"]["matched_atoms"]}
+    assert matched_ids <= agent.corpus.vital_sign_decisive_atom_ids
+    assert "atom:esi_1_severe_hypoxemia" in matched_ids
+
+
+def test_vital_sign_atoms_never_decide_what_gets_asked() -> None:
+    # Always evaluated, like the generic fallback atoms -- but a patient who
+    # never mentioned breathing must not be asked for an SpO2 reading just
+    # because those atoms are in play.
+    def understanding(toolbox: AgentToolbox, _message: str) -> None:
+        toolbox.finish_turn(intent="TRIAGE")
+
+    agent = _agent(embedder=_embed, understanding_fn=understanding, phraser=lambda kind, ctx: kind)
+    session = agent.sessions["test"]
+    session.concepts.add("concept:arm_pain")
+
+    result = agent.process_turn("test", "tôi bị đau tay")
+
+    target = result["decision"]["question_target_id"]
+    assert target not in {"fact_target:spo2", "fact_target:respiratory_rate", "fact_target:systolic_bp"}
+
+
+def test_normal_vitals_match_no_vital_sign_atom() -> None:
+    corpus = _corpus()
+    atoms = [corpus.atom_by_id[atom_id] for atom_id in sorted(corpus.vital_sign_decisive_atom_ids)]
+
+    supported, _missing, _excluded = evaluate_atoms(
+        atoms,
+        {
+            "fact_target:spo2": 98,
+            "fact_target:respiratory_rate": 16,
+            "fact_target:heart_rate": 78,
+            "fact_target:systolic_bp": 120,
+            "fact_target:temperature": 36.8,
+            "fact_target:cyanosis_present": "NO",
+        },
+    )
+
+    assert supported == []
+
+
 def test_emergency_outcome_message_names_the_person_asked_about() -> None:
     message = emergency_outcome_message(1, {"type": "OTHER_PERSON", "label": "con của bạn"})
 

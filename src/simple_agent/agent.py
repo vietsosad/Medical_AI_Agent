@@ -876,8 +876,17 @@ class SimpleTriageAgent:
         # mentioned pain at all -- these atoms exist to *recognise* a match
         # once its generic facts are already known some other way (concept
         # links, patient's own wording), never to drive what gets asked.
+        # ESI 1/2 vital-sign atoms (corpus.py's vital_sign_decisive_atom_ids)
+        # join for the same reason and on the same terms: a reported SpO2 of
+        # 78 must reach decision.py whatever this turn's query ranked first.
         atom_ids_in_play = list(
-            dict.fromkeys(retrieved_atom_ids + list(self.corpus.generic_fallback_atom_ids))
+            dict.fromkeys(
+                retrieved_atom_ids
+                # sorted: a frozenset of str iterates in a per-process hash
+                # order, and atom order breaks ranking ties further down.
+                + sorted(self.corpus.generic_fallback_atom_ids)
+                + sorted(self.corpus.vital_sign_decisive_atom_ids)
+            )
         )
         atoms = [self.corpus.atom_by_id[atom_id] for atom_id in atom_ids_in_play]
         with trace_span(
