@@ -49,6 +49,7 @@ from .decision import (
     rank_question_targets,
     retrieve_atoms_scored,
 )
+from .output_guard import guard_patient_text
 from .phrasing import emergency_outcome_message, phrase_confirmation, phrase_outcome, phrase_question
 from .preask_check import check_already_answered, content_words
 from .resource_estimate import estimate_resource_count
@@ -115,6 +116,32 @@ _ABSENT_VITAL_FUNCTION_RE = re.compile(
     r"(?!\s+(?:difficult|problem|trouble|issue|pain|discomfort)\w*)",
     re.IGNORECASE,
 )
+
+
+def _phrasing_fallback(kind: str, context: dict[str, Any]) -> str:
+    """Fixed text that replaces a Phase C message the output guard blocked."""
+    if kind == "question":
+        fact_target = context["fact_target"]
+        return f"Bạn có thể cho mình biết thêm về: {fact_target.get('lay_terms') or fact_target['name']}?"
+    if kind == "confirmation":
+        return "Mình đã ghi nhận những thông tin bạn chia sẻ. Bạn còn muốn bổ sung hoặc sửa điều gì không?"
+    if context.get("matched") and context.get("esi_levels"):
+        return (
+            f"Dựa trên những gì bạn mô tả, dữ liệu phân loại khớp với mức ESI {', '.join(context['esi_levels'])}. "
+            "Đây không phải chẩn đoán; hồ sơ đã được chuyển cho nhân viên y tế xem lại."
+        )
+    return (
+        "Mình đã ghi nhận những gì bạn chia sẻ, nhưng dữ liệu hiện chưa đủ tiêu chí để kết luận mức độ. "
+        "Hồ sơ đã được chuyển cho nhân viên y tế; nếu triệu chứng nặng lên, hãy đến cơ sở y tế hoặc gọi 115."
+    )
+
+
+def _guarded_free_reply(reply: str | None, fallback: str) -> str:
+    """Phase A's own prose (small talk, clarifying questions) through the same guard."""
+    safe, blocked = guard_patient_text(reply or "", fallback)
+    if blocked and reply:
+        logger.warning("Output guard replaced a phase A reply (%s)", blocked)
+    return safe
 
 
 def _strip_negated_clauses(retrieval_query: str) -> str:
@@ -621,9 +648,12 @@ class SimpleTriageAgent:
                     message = phrase_confirmation(client, **context)
                 else:
                     message = phrase_outcome(client, **context)
+            message, blocked = guard_patient_text(message, _phrasing_fallback(kind, context))
+            if blocked:
+                logger.warning("Output guard replaced a phase C %s message (%s)", kind, blocked)
             finish_trace_span(
                 phrasing_span,
-                {"kind": kind, "response_length": len(message)},
+                {"kind": kind, "response_length": len(message), "output_guard": blocked},
             )
             return message
 
@@ -782,7 +812,9 @@ class SimpleTriageAgent:
 
         intent = outcome.get("intent")
         if intent != "TRIAGE" and not session.concepts:
-            reply = outcome.get("conversational_response") or "Chào bạn! Bạn đang gặp vấn đề sức khỏe gì?"
+            reply = _guarded_free_reply(
+                outcome.get("conversational_response"), "Chào bạn! Bạn đang gặp vấn đề sức khỏe gì?"
+            )
             session.remember_turn("agent", reply)
             return self._result(
                 reply, route="NON_CLINICAL", action="RESPOND",
@@ -794,10 +826,9 @@ class SimpleTriageAgent:
         if clarification or not session.concepts:
             # Prefer the model's own conversational_response over the generic
             # fallback when there is one.
-            reply = (
-                clarification
-                or outcome.get("conversational_response")
-                or "Bạn có thể mô tả triệu chứng, vị trí và thời điểm bắt đầu không?"
+            reply = _guarded_free_reply(
+                clarification or outcome.get("conversational_response"),
+                "Bạn có thể mô tả triệu chứng, vị trí và thời điểm bắt đầu không?",
             )
             session.remember_turn("agent", reply)
             return self._result(

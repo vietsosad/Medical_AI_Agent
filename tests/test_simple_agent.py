@@ -1225,6 +1225,37 @@ def test_normal_vitals_match_no_vital_sign_atom() -> None:
     assert supported == []
 
 
+def test_a_phrased_question_that_diagnoses_is_replaced_before_the_patient_sees_it() -> None:
+    def understanding(toolbox: AgentToolbox, message: str) -> None:
+        toolbox.search_clinical_concepts(message)
+        toolbox.record_concept(concept_id="concept:chest_pain", subject="SELF", status="ASSERTED")
+        toolbox.finish_turn(intent="TRIAGE")
+
+    agent = _agent(
+        embedder=_embed, understanding_fn=understanding,
+        phraser=lambda kind, ctx: "Bạn bị nhồi máu cơ tim rồi, hãy uống aspirin ngay.",
+    )
+
+    result = agent.process_turn("test", "tôi bị đau ngực")
+
+    assert result["decision"]["action"] == "ASK_NEXT"
+    assert "nhồi máu" not in result["message"]
+    assert "aspirin" not in result["message"]
+    target = agent.corpus.fact_by_id[result["decision"]["question_target_id"]]
+    assert (target.get("lay_terms") or target["name"]) in result["message"]
+
+
+def test_a_free_reply_that_diagnoses_is_replaced() -> None:
+    def understanding(toolbox: AgentToolbox, _message: str) -> None:
+        toolbox.finish_turn(intent="NON_CLINICAL", conversational_response="Bạn bị viêm phổi đấy.")
+
+    agent = _agent(embedder=_embed, understanding_fn=understanding, phraser=lambda kind, ctx: kind)
+
+    result = agent.process_turn("test", "chào")
+
+    assert result["message"] == "Chào bạn! Bạn đang gặp vấn đề sức khỏe gì?"
+
+
 @pytest.mark.parametrize(
     ("query", "expected"),
     [
