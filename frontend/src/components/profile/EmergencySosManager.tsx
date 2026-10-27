@@ -207,7 +207,7 @@ export const EmergencySosManager: React.FC<EmergencySosManagerProps> = ({ classN
   if (isError) {
     return (
       <div className={cn("bg-rose-50 border border-rose-200 rounded-3xl p-8 text-center max-w-2xl mx-auto space-y-4 shadow-sm", className)}>
-        <AlertTriangle className="w-12 h-12 text-rose-600 mx-auto animate-bounce" />
+        <AlertTriangle className="w-12 h-12 text-rose-600 mx-auto" aria-hidden="true" />
         <h3 className="text-lg font-extrabold text-foreground">Không thể kết nối danh bạ khẩn cấp SOS</h3>
         <p className="text-xs text-slate-600 font-medium dark:text-slate-300">
           Có lỗi xảy ra khi đồng bộ dữ liệu từ máy chủ. Vui lòng kiểm tra kết nối mạng và thử lại.
@@ -253,7 +253,7 @@ export const EmergencySosManager: React.FC<EmergencySosManagerProps> = ({ classN
             "h-11 px-5 rounded-2xl font-extrabold text-xs flex items-center justify-center gap-2 transition-all duration-200 shadow-md shrink-0 self-start sm:self-center",
             isMaxReached
               ? "bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed dark:bg-slate-700 dark:border-slate-700"
-              : "bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/25 active:scale-95 font-black dark:text-slate-50"
+              : "bg-amber-500 hover:bg-amber-400 text-amber-950 shadow-amber-500/25 active:scale-95 font-black"
           )}
         >
           <UserPlus className="w-4 h-4 stroke-[3]" />
@@ -278,7 +278,7 @@ export const EmergencySosManager: React.FC<EmergencySosManagerProps> = ({ classN
           <button
             type="button"
             onClick={handleOpenAdd}
-            className="px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs inline-flex items-center gap-2 shadow-lg shadow-amber-500/25 transition-all active:scale-95 dark:text-slate-50"
+            className="px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-amber-950 font-black text-xs inline-flex items-center gap-2 shadow-lg shadow-amber-500/25 transition-all active:scale-95"
           >
             <UserPlus className="w-4 h-4 stroke-[3]" />
             <span>Khởi Tạo Liên Hệ Đầu Tiên</span>
@@ -315,7 +315,7 @@ export const EmergencySosManager: React.FC<EmergencySosManagerProps> = ({ classN
                     <div className="flex items-start justify-between gap-2 pb-4 border-b border-border/80">
                       <div>
                         {isPrimary ? (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500 text-slate-950 font-mono text-[10px] font-black tracking-wider shadow-md shadow-amber-500/35 uppercase dark:text-slate-50">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500 text-amber-950 font-mono text-[10px] font-black tracking-wider shadow-md shadow-amber-500/35 uppercase">
                             <AlertOctagon className="w-3.5 h-3.5 fill-slate-950 text-amber-500 shrink-0" />
                             <span>NGUỒN LIÊN HỆ CẤP CỨU SỐ 1</span>
                           </span>
@@ -340,7 +340,7 @@ export const EmergencySosManager: React.FC<EmergencySosManagerProps> = ({ classN
                         <button
                           type="button"
                           onClick={() => handleTriggerDelete(contact)}
-                          className="h-8 w-8 rounded-xl bg-muted hover:bg-rose-50 text-slate-500 hover:text-rose-600 flex items-center justify-center transition-colors border border-slate-300/70 hover:border-rose-300 shadow-2xs"
+                          className="h-8 w-8 rounded-xl bg-muted hover:bg-rose-50 text-muted-foreground hover:text-rose-600 flex items-center justify-center transition-colors border border-slate-300/70 hover:border-rose-300 shadow-2xs"
                           title="Xóa liên hệ này"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -364,7 +364,7 @@ export const EmergencySosManager: React.FC<EmergencySosManagerProps> = ({ classN
                         "flex items-center gap-2.5 p-3.5 rounded-2xl font-mono font-extrabold text-base shadow-inner transition-colors",
                         isPrimary ? "bg-card border border-amber-300/90 text-emerald-800 shadow-xs" : "bg-background border border-border/90 text-emerald-700"
                       )}>
-                        <Phone className="w-4 h-4 text-emerald-600 shrink-0 animate-bounce-short" />
+                        <Phone className="w-4 h-4 text-emerald-600 shrink-0" aria-hidden="true" />
                         <span className="tracking-wider">{contact.phone_number}</span>
                       </div>
 
@@ -410,7 +410,7 @@ export const EmergencySosManager: React.FC<EmergencySosManagerProps> = ({ classN
                   được lưu và trả về dạng văn bản thường cho nhân viên y tế xem
                   ca (routes_nurse_simple.py), không có tầng mã hoá nào, và
                   không có cơ chế tự gọi hay điều xe 115. */}
-              <span className="text-xs font-mono font-black px-3 py-1 rounded-md bg-amber-500 text-slate-950 uppercase tracking-wider shadow-sm dark:text-slate-50">
+              <span className="text-xs font-mono font-black px-3 py-1 rounded-md bg-amber-500 text-amber-950 uppercase tracking-wider shadow-sm">
                 Ai được xem số này
               </span>
             </div>
@@ -504,7 +504,7 @@ export const EmergencySosManager: React.FC<EmergencySosManagerProps> = ({ classN
                             className={cn(
                               "h-9 px-2 rounded-xl border text-xs transition-all flex items-center justify-center shadow-2xs",
                               field.value === opt.value
-                                ? "bg-amber-500 text-slate-950 border-amber-500 font-black shadow-md shadow-amber-500/25 dark:text-slate-50"
+                                ? "bg-amber-500 text-amber-950 border-amber-500 font-black shadow-md shadow-amber-500/25"
                                 : "bg-muted text-slate-700 border-slate-300 hover:bg-slate-200/60 font-bold dark:text-slate-200 dark:hover:bg-slate-700 dark:border-slate-700"
                             )}
                           >
@@ -599,7 +599,7 @@ export const EmergencySosManager: React.FC<EmergencySosManagerProps> = ({ classN
                   <button
                     type="submit"
                     disabled={updateMutation.isPending}
-                    className="h-10 px-6 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs flex items-center gap-2 shadow-lg shadow-amber-500/25 transition-all active:scale-95 disabled:opacity-50 dark:text-slate-50"
+                    className="h-10 px-6 rounded-xl bg-amber-500 hover:bg-amber-400 text-amber-950 font-black text-xs flex items-center gap-2 shadow-lg shadow-amber-500/25 transition-all active:scale-95 disabled:opacity-50"
                   >
                     <CheckCircle2 className="w-4 h-4 stroke-[3]" />
                     <span>{editingId ? "Lưu Cập Nhật" : "Xác Nhận Thêm"}</span>
@@ -631,7 +631,7 @@ export const EmergencySosManager: React.FC<EmergencySosManagerProps> = ({ classN
             >
               <div className="flex items-center gap-3 text-rose-600 mb-4">
                 <div className="h-12 w-12 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center shrink-0 shadow-sm">
-                  <AlertTriangle className="w-6 h-6 animate-bounce text-rose-600" />
+                  <AlertTriangle className="w-6 h-6 text-rose-600" aria-hidden="true" />
                 </div>
                 <h3 id="alert-dialog-title" className="text-lg font-black text-foreground leading-tight">
                   CẢNH BÁO: Xóa Nguồn Liên Hệ Số 1 (Primary Target)?
