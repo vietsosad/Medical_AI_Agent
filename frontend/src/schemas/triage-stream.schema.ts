@@ -197,7 +197,7 @@ export const intakeSummarySchema = z.object({
   associated_symptoms: z.array(z.string()),
   current_medication: z.array(z.string()),
   recent_procedure: z.string().nullable().optional(),
-  vital_signs: z.record(z.union([z.string(), z.number()])).optional(),
+  vital_signs: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
   vital_signs_status: z.enum([
     "NOT_REVIEWED",
     "PATIENT_REPORTED",
@@ -264,7 +264,7 @@ export const sessionStatusSchema = z.object({
   is_red_flag_triggered: z.boolean(),
   created_at: z.string(),
   updated_at: z.string().nullable().optional(),
-  sbar_summary: z.record(z.unknown()).nullable().optional(),
+  sbar_summary: z.record(z.string(), z.unknown()).nullable().optional(),
   sbar_finalized: z.boolean().default(false),
   intake_confirmation_status: z.enum([
     "NOT_READY",

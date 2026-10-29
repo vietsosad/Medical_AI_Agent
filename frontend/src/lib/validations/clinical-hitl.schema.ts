@@ -254,7 +254,8 @@ export const observationsFormSchema = z
 export const triageDecisionFormSchema = z
   .object({
     action: z.enum(["CONFIRM_ESI", "ADJUST_ESI", "REQUEST_SPECIALIST_REVIEW"]),
-    final_esi: z.coerce.number().int().min(1).max(5),
+    // zod 4 types every coerce input as unknown; the select only ever hands back an ESI number.
+    final_esi: z.coerce.number<number>().int().min(1).max(5),
     reason_code: z.string().min(2, "Vui lòng chọn lý do."),
     note: z.string(),
   })

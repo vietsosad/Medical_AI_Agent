@@ -24,12 +24,12 @@ export const MedicationSchema = z.object({
   frequency: z.string().min(1, "Tần suất dùng thuốc không được để trống"),
 });
 
-export const EhrLiteSchema: z.ZodType<EhrLiteDTO> = z
+export const EhrLiteSchema: z.ZodType<EhrLiteDTO, EhrLiteDTO> = z
   .object({
     patient_id: z.string().optional(),
     age: z
       .number({
-        invalid_type_error: "Tuổi phải là dạng số",
+        error: "Tuổi phải là dạng số",
       })
       .int("Tuổi phải là số nguyên")
       .min(0, "Tuổi không được nhỏ hơn 0")
@@ -39,7 +39,7 @@ export const EhrLiteSchema: z.ZodType<EhrLiteDTO> = z
     gender: z.enum(["MALE", "FEMALE", "OTHER"]).nullable().optional(),
     height_cm: z
       .number({
-        invalid_type_error: "Chiều cao phải là dạng số",
+        error: "Chiều cao phải là dạng số",
       })
       .min(50, "Chiều cao tối thiểu là 50 cm")
       .max(250, "Chiều cao tối đa là 250 cm")
@@ -47,7 +47,7 @@ export const EhrLiteSchema: z.ZodType<EhrLiteDTO> = z
       .optional(),
     weight_kg: z
       .number({
-        invalid_type_error: "Cân nặng phải là dạng số",
+        error: "Cân nặng phải là dạng số",
       })
       .min(3.0, "Cân nặng tối thiểu là 3.0 kg")
       .max(350.0, "Cân nặng tối đa là 350.0 kg")
@@ -60,7 +60,7 @@ export const EhrLiteSchema: z.ZodType<EhrLiteDTO> = z
     last_updated: z.string().nullable().optional(),
   });
 
-export const EmergencyContactSchema: z.ZodType<EmergencyContactDTO> = z
+export const EmergencyContactSchema: z.ZodType<EmergencyContactDTO, EmergencyContactDTO> = z
   .object({
     id: z.string().optional(),
     full_name: z.string().min(2, "Họ tên người liên hệ phải có ít nhất 2 ký tự"),
