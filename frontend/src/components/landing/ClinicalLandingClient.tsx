@@ -1,56 +1,54 @@
 "use client";
 
 import React from "react";
-import { HeroSection } from "./HeroSection";
-import { TrustBentoGrid } from "./TrustBentoGrid";
-import { DynamicTriagePreview } from "./DynamicTriagePreview";
-import { SystemPathwaysGrid } from "./SystemPathwaysGrid";
-import { HealthTopicsSection } from "./HealthTopicsSection";
-import { ShieldCheck, HeartPulse } from "lucide-react";
+import { Activity, ShieldCheck } from "lucide-react";
 
+import { BACKDROP_CREDITS } from "./backdrop-photos";
+import { CareLoopSection } from "./CareLoopSection";
+import { EvidenceGateSection } from "./EvidenceGateSection";
+import { HealthTopicsSection } from "./HealthTopicsSection";
+import { LandingClosingCta } from "./LandingClosingCta";
+import { LandingHero } from "./LandingHero";
+import { PhotoCreditDisclosure } from "./photo-credits";
+
+/**
+ * Trang chủ: ít chữ, để hình động kể. Phiên mẫu ở đầu trang cho thấy một lần
+ * sàng lọc, sơ đồ "không đoán" cho thấy kết luận đến từ đâu, hai màn hình cho
+ * thấy kết quả tới tay điều dưỡng, rồi kiến thức sức khỏe và lời mời bắt đầu.
+ */
 export default function ClinicalLandingClient() {
   return (
-    <main className="w-full min-h-screen bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col justify-between selection:bg-sky-100 dark:selection:bg-sky-900 selection:text-sky-900 dark:selection:text-white">
-      {/* 1. HERO SECTION (VID-01 + IMG-01) */}
-      <HeroSection />
-
-      {/* 2. NGUYÊN TẮC AN TOÀN LÂM SÀNG (cổng bằng chứng + đối chiếu tất định) */}
-      <TrustBentoGrid />
-
-      {/* 3. INTERACTIVE DYNAMIC TRIAGE PREVIEW (Patient vs Clinician Tabs) */}
-      <DynamicTriagePreview />
-
-      {/* 4. THÔNG TIN SỨC KHỎE ĐÁNG CHÚ Ý (HEALTH EDUCATION -> TRIAGE) */}
+    <main className="flex min-h-screen w-full flex-col bg-background text-foreground selection:bg-brand-edge selection:text-brand-ink">
+      <LandingHero />
+      <EvidenceGateSection />
+      <CareLoopSection />
       <HealthTopicsSection />
+      <LandingClosingCta />
 
-      {/* 5. PATIENT PATHWAYS & EHR / ARCHIVE DIRECTORY */}
-      <SystemPathwaysGrid />
-
-      {/* 6. FOOTER -- chỉ nêu điều kiểm chứng được: dữ liệu định danh được che
-             trong nhật ký hệ thống (src/services/log_redaction.py) và giới hạn
-             sử dụng của công cụ. Không đặt lại nhãn HIPAA/ISO khi chưa có
-             chứng nhận thật. */}
-      <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 py-8 px-4 sm:px-6 lg:px-8 text-sm font-semibold text-slate-600 dark:text-slate-400">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-          <div className="flex items-start gap-3">
-            <div className="p-2 bg-emerald-100 dark:bg-emerald-950 rounded-lg text-emerald-600 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800 shrink-0">
-              <ShieldCheck className="w-5 h-5 stroke-[2.2]" />
-            </div>
-            <div className="min-w-0">
-              <div className="font-bold text-slate-900 dark:text-slate-200">Hệ Thống Sàng Lọc Lâm Sàng AI20K</div>
-              <div className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                Thông tin định danh được che trong nhật ký hệ thống; toàn bộ hội thoại được lưu để nhân viên y tế rà soát
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-2 max-w-md">
-            <HeartPulse className="w-4.5 h-4.5 text-rose-500 shrink-0 stroke-[2.2] mt-0.5" />
-            <span className="text-xs leading-relaxed font-medium">
-              Công cụ hỗ trợ sàng lọc ban đầu, không thay thế chẩn đoán hoặc chỉ định của nhân viên y tế.
-              Trong tình huống nguy kịch, hãy gọi cấp cứu 115.
+      {/* Chân trang chỉ nêu điều kiểm chứng được: dữ liệu định danh được che
+          trong nhật ký hệ thống (src/services/log_redaction.py) và giới hạn sử
+          dụng của công cụ. Không đặt lại nhãn HIPAA/ISO khi chưa có chứng nhận.
+          Ảnh nền của trang được ghi công ở đây theo giấy phép của từng ảnh. */}
+      <footer className="border-t border-border bg-background">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 pb-4 pt-8 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
+          <div className="flex items-center gap-4">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900">
+              <Activity className="size-[18px]" strokeWidth={2.4} aria-hidden="true" />
             </span>
+            <div>
+              <p className="text-base font-extrabold text-foreground">AI Triage</p>
+              <p className="text-sm leading-6 text-muted-foreground">
+                Hỗ trợ sàng lọc ban đầu, không thay thế chẩn đoán của nhân viên y tế.
+              </p>
+            </div>
           </div>
+          <p className="flex items-center gap-2 text-sm leading-6 text-muted-foreground">
+            <ShieldCheck className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+            Thông tin định danh được che trong nhật ký hệ thống.
+          </p>
+        </div>
+        <div className="mx-auto max-w-7xl px-4 pb-8 sm:px-6 lg:px-8">
+          <PhotoCreditDisclosure summary="Ảnh nền: Wikimedia Commons" photos={BACKDROP_CREDITS} className="-ml-3" />
         </div>
       </footer>
     </main>
