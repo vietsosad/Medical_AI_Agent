@@ -394,9 +394,9 @@ export const ClinicalNavbar: React.FC = () => {
 
               <Link
                 href="/auth/register"
-                className="min-h-[44px] px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 shadow-xs transition-all flex items-center gap-2"
+                className="min-h-[44px] px-4 py-2.5 rounded-xl text-sm font-semibold text-brand-foreground bg-brand hover:bg-brand-strong shadow-xs transition-all flex items-center gap-2"
               >
-                <UserPlus className="w-4 h-4 text-slate-300 stroke-[2.2]" />
+                <UserPlus className="w-4 h-4 text-brand-foreground/80 stroke-[2.2]" />
                 <span>Đăng Ký</span>
               </Link>
 
