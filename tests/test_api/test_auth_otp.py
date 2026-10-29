@@ -211,3 +211,42 @@ async def test_registration_code_activates_the_account_and_signs_in(
     assert response.json()["access_token"]
     user = (await db_session.exec(select(User).where(User.email == "patient@test.local"))).first()
     assert user is not None and user.is_active
+
+
+@pytest.mark.asyncio
+async def test_resending_a_registration_code_retires_the_previous_one(
+    client: AsyncClient, db_session, mailbox
+) -> None:
+    await client.post(
+        "/api/v1/auth/register",
+        json={"name": "Người bệnh", "email": "new@test.local", "password": PASSWORD},
+    )
+    resent = await client.post("/api/v1/auth/resend-registration-otp", json={"email": "New@Test.local"})
+    assert resent.status_code == 200
+    first, latest = mailbox["new@test.local"]
+    if first == latest:  # one-in-a-million collision would make the check meaningless
+        pytest.skip("both generated codes are identical")
+
+    stale = await client.post(
+        "/api/v1/auth/verify-otp",
+        json={"email": "new@test.local", "code": first, "purpose": "REGISTRATION"},
+    )
+    current = await client.post(
+        "/api/v1/auth/verify-otp",
+        json={"email": "new@test.local", "code": latest, "purpose": "REGISTRATION"},
+    )
+
+    assert stale.status_code == 400
+    assert current.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_resend_reveals_nothing_about_other_emails(client: AsyncClient, db_session, mailbox) -> None:
+    await _active_user(db_session, "active@test.local")
+
+    unknown = await client.post("/api/v1/auth/resend-registration-otp", json={"email": "nobody@test.local"})
+    active = await client.post("/api/v1/auth/resend-registration-otp", json={"email": "active@test.local"})
+
+    assert unknown.status_code == active.status_code == 200
+    assert unknown.json()["message"] == active.json()["message"]
+    assert mailbox == {}

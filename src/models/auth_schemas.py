@@ -110,6 +110,11 @@ class ForgotPasswordRequestDTO(BaseModel):
         return val
 
 
+class ResendRegistrationOtpRequestDTO(ForgotPasswordRequestDTO):
+    """DTO xin gửi lại mã xác minh cho tài khoản vừa đăng ký, chưa kích hoạt."""
+    email: str = Field(..., description="Email vừa dùng để đăng ký")
+
+
 class ResetPasswordRequestDTO(BaseModel):
     """DTO cập nhật mật khẩu mới thông qua OTP / Token thuyên chuyển."""
     email: str = Field(..., description="Email của tài khoản cần đổi Mật khẩu")

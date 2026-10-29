@@ -24,6 +24,7 @@ from src.models.auth_schemas import (
     OAuthUrlResponseDTO,
     RefreshTokenRequestDTO,
     RegisterRequestDTO,
+    ResendRegistrationOtpRequestDTO,
     ResetPasswordRequestDTO,
     StandardMessageResponseDTO,
     UpdatePhoneNumberRequestDTO,
@@ -236,6 +237,31 @@ async def register_clinical_user(payload: RegisterRequestDTO, session: SessionDe
     return StandardMessageResponseDTO(
         success=True,
         message=f"Hồ sơ y khoa của {new_user.full_name} đã được khởi tạo! Vui lòng kiểm tra hòm thư Email để lấy mã PIN OTP 6 chữ số."
+    )
+
+
+@router.post("/resend-registration-otp", response_model=StandardMessageResponseDTO)
+async def resend_registration_otp(
+    payload: ResendRegistrationOtpRequestDTO, session: SessionDep
+) -> StandardMessageResponseDTO:
+    """Gửi lại mã xác minh cho tài khoản vừa đăng ký mà chưa kích hoạt.
+
+    Trả cùng một câu cho mọi email, giống forgot-password, để không lộ email nào
+    đã có tài khoản. Mã mới huỷ mọi mã cũ (``_issue_otp``), nên sau khi gửi lại
+    chỉ mã mới nhất còn dùng được.
+    """
+    query = select(User).where(User.email == payload.email)
+    res = await session.execute(query)
+    user = res.scalars().first()
+
+    if user and not user.is_active:
+        otp_pin = await _issue_otp(session, email=user.email, purpose="REGISTRATION")  # type: ignore[arg-type]
+        await session.commit()
+        await send_registration_otp(user.email, user.full_name, otp_pin, valid_minutes=15)  # type: ignore[arg-type]
+
+    return StandardMessageResponseDTO(
+        success=True,
+        message="Nếu email này đang chờ xác minh, một mã mới đã được gửi tới hòm thư.",
     )
 
 

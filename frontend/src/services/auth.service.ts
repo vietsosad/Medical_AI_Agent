@@ -169,6 +169,22 @@ export const authService = {
   },
 
   /**
+   * Gửi lại mã xác minh đăng ký (POST /api/v1/auth/resend-registration-otp).
+   * Máy chủ trả cùng một câu cho mọi email và mã mới huỷ mã cũ.
+   */
+  resendRegistrationOtp: async (payload: ForgotPasswordRequestDTO): Promise<StandardMessageResponseDTO> => {
+    try {
+      const response = await axiosClient.post<StandardMessageResponseDTO>(
+        "/api/v1/auth/resend-registration-otp",
+        payload
+      );
+      return response.data;
+    } catch (error) {
+      return handleApiError(error, "Chưa gửi lại được mã. Vui lòng thử lại sau.");
+    }
+  },
+
+  /**
    * Thực thi đặt lại mật khẩu mới cùng mã xác thực (POST /api/v1/auth/reset-password)
    */
   resetPassword: async (payload: ResetPasswordRequestDTO): Promise<StandardMessageResponseDTO> => {
