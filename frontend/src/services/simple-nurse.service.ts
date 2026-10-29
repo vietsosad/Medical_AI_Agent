@@ -26,19 +26,37 @@ import { simpleCaseMessagesSchema } from "@/schemas/simple-care-team.schema";
  * URL prefix with it.
  */
 
+/**
+ * Lỗi từ máy chủ, giữ nguyên mã lỗi (vd. `CASE_VERSION_CONFLICT` của
+ * `_assert_version`) để giao diện nhận ra xung đột phiên bản mà không phải dò
+ * câu chữ thông báo.
+ */
+export class SimpleNurseApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly code: string | null,
+  ) {
+    super(message);
+    this.name = "SimpleNurseApiError";
+  }
+}
+
 const handlePilotApiError = (error: unknown, fallbackMessage: string): never => {
   if (axios.isAxiosError(error)) {
     const axiosErr = error as AxiosError<{ detail?: unknown }>;
     if (!axiosErr.response) {
       throw new Error("Không thể kết nối tới máy chủ AI Triage FastAPI. Vui lòng kiểm tra dịch vụ Backend.");
     }
-    if (axiosErr.response.status === 503) {
-      throw new Error("Triage Agent đang tắt trên môi trường này (SIMPLE_AGENT_ENABLED=false).");
+    const { status } = axiosErr.response;
+    if (status === 503) {
+      throw new SimpleNurseApiError("Triage Agent đang tắt trên môi trường này (SIMPLE_AGENT_ENABLED=false).", status, null);
     }
     const detail = axiosErr.response.data?.detail;
-    if (typeof detail === "string") throw new Error(detail);
+    if (typeof detail === "string") throw new SimpleNurseApiError(detail, status, null);
     if (detail && typeof detail === "object" && "message" in detail) {
-      throw new Error(String((detail as { message: unknown }).message));
+      const code = "code" in detail && typeof detail.code === "string" ? detail.code : null;
+      throw new SimpleNurseApiError(String((detail as { message: unknown }).message), status, code);
     }
   }
   if (error instanceof ZodError) {

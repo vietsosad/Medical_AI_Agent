@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { Inbox, Loader2, MessageSquareText, X } from "lucide-react";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
+import { Inbox, LoaderCircle, MessageSquareText, ShieldAlert, X } from "lucide-react";
 
 import { useSimpleNurseQueue, useSimpleNurseQueueRealtime } from "@/queries/useSimpleNurseQueries";
 import type { SimpleNurseQueueItemDTO } from "@/types/simple-nurse";
@@ -14,7 +15,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { enterTransition, popVariants, staggerDelay } from "@/lib/motion";
 import { cn } from "@/lib/utils";
+import { esiTheme } from "@/components/clinical/nurse-simple/esi-theme";
+import { AnimatedCount } from "@/components/clinical/nurse-simple/queue/AnimatedCount";
 
 /**
  * Pilot-mode equivalent of `@/components/clinical/ClinicalInbox.tsx`, wired
@@ -45,7 +49,21 @@ import { cn } from "@/lib/utils";
  * links straight to `/clinical/cases-pilot/{id}?openChat=1`, which opens
  * `SimpleCaseChatDock` immediately on arrival instead of replying inline
  * here.
+ *
+ * Styling: the trigger lives inside the sidebar's dark token island, so it is
+ * written with theme tokens only; the drawer is portalled to `<body>` and
+ * follows the page theme.
  */
+
+const rowRise: Variants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: (index: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { ...enterTransition, delay: staggerDelay(index, 0.12) },
+  }),
+};
+
 function InboxRow({
   item,
   index,
@@ -55,43 +73,50 @@ function InboxRow({
   index: number;
   onOpen: () => void;
 }) {
+  const esi = item.ai_proposed_esi;
+  const message = item.initial_message.trim();
+
   return (
-    <li
-      style={{ "--rise-delay": `${Math.min(index, 6) * 60}ms` } as React.CSSProperties}
-      className="glow-soft glow-teal rise-in border border-transparent bg-card p-4 hover:bg-teal-50/40"
-    >
+    <motion.li variants={rowRise} custom={index} initial="hidden" animate="visible" className="p-4">
       <div className="flex flex-wrap items-center gap-2">
+        {item.attention_required && (
+          <span className="inline-flex items-center gap-2 rounded-full bg-rose-700 px-2 text-sm font-bold leading-6 text-white">
+            <ShieldAlert className="size-4" aria-hidden="true" />
+            Cần xem ngay
+          </span>
+        )}
         <span
           className={cn(
-            "rounded-full border px-2.5 py-0.5 text-xs font-bold",
-            item.ai_proposed_esi && item.ai_proposed_esi <= 2
-              ? "border-amber-300 bg-amber-50 text-amber-900"
-              : "border-slate-300 bg-muted text-slate-700 dark:text-slate-200 dark:border-slate-700",
+            "rounded-full border px-2 text-sm font-bold leading-6",
+            esi ? esiTheme(esi).chip : "border-border bg-muted text-muted-foreground",
           )}
         >
-          {item.ai_proposed_esi ? `ESI ${item.ai_proposed_esi}` : "Chưa đủ dữ liệu"}
+          {esi ? `ESI ${esi}` : "Chưa đủ dữ liệu"}
         </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-teal-300 bg-teal-50 px-2.5 py-0.5 text-xs font-bold text-teal-900">
-          <MessageSquareText className="size-3.5" aria-hidden="true" />
+        <span className="inline-flex items-center gap-2 rounded-full border border-brand-edge bg-brand-soft px-2 text-sm font-bold leading-6 text-brand-ink">
+          <MessageSquareText className="size-4" aria-hidden="true" />
           <span className="tabular-nums">{item.unread_count}</span> tin mới
         </span>
       </div>
 
-      <p className="mt-2 line-clamp-2 rounded-lg bg-background px-3 py-2 text-sm leading-6 text-slate-700 dark:text-slate-200">
-        {item.initial_message}
+      {item.patient_name?.trim() && (
+        <p className="mt-2 text-base font-bold text-foreground">{item.patient_name.trim()}</p>
+      )}
+      <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground">
+        {message ? `“${message}”` : "Chưa có mô tả triệu chứng"}
       </p>
 
-      <div className="mt-3 flex justify-end">
+      <div className="mt-4 flex justify-end">
         <Link
           href={`/clinical/cases-pilot/${item.session_id}?openChat=1`}
           onClick={onOpen}
-          className="glow-soft glow-teal flex min-h-11 items-center gap-2 rounded-xl border border-teal-600 bg-teal-600 px-4 text-sm font-bold text-white hover:bg-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2"
+          className="flex min-h-11 items-center gap-2 rounded-xl bg-brand px-4 text-sm font-bold text-brand-foreground transition-colors hover:bg-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           <MessageSquareText className="size-4" aria-hidden="true" />
           Mở chat
         </Link>
       </div>
-    </li>
+    </motion.li>
   );
 }
 
@@ -111,31 +136,50 @@ export function SimpleClinicalInbox() {
           aria-label={`Tin nhắn mới từ ca bạn phụ trách${totalUnread > 0 ? `, ${totalUnread} chưa đọc` : ""}`}
           title="Tin nhắn mới (ca bạn phụ trách)"
           className={cn(
-            "group glow-soft glow-teal relative flex min-h-11 w-full items-center gap-3 rounded-xl border bg-card px-3 text-sm font-semibold text-slate-700 hover:bg-muted hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2 dark:text-slate-200",
-            totalUnread > 0 ? "border-teal-400 ring-2 ring-teal-500/30" : "border-slate-300 dark:border-slate-700",
+            "group relative flex min-h-11 w-full items-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-colors duration-200",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand",
+            totalUnread > 0
+              ? "border-brand-edge bg-brand-soft text-brand-ink hover:bg-brand-edge/30"
+              : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
           )}
         >
-          <span className="relative">
-            <Inbox className="size-5 shrink-0 stroke-[2.1] text-muted-foreground group-hover:text-slate-700 dark:group-hover:text-slate-200" aria-hidden="true" />
-            {totalUnread > 0 && (
-              <span className="absolute -right-2 -top-2 flex size-5 items-center justify-center rounded-full bg-teal-600 text-xs font-bold tabular-nums text-white">
-                {totalUnread > 9 ? "9+" : totalUnread}
-              </span>
-            )}
-          </span>
+          <Inbox className="size-5 shrink-0" strokeWidth={2.1} aria-hidden="true" />
           <span className="min-w-0 flex-1 truncate text-left">Tin nhắn mới</span>
+          {/* Còn người bệnh chờ trả lời: số tin bật vào và tỏa vòng sáng -- "có việc đang chờ bạn". */}
+          <AnimatePresence initial={false}>
+            {totalUnread > 0 && (
+              <motion.span
+                key="badge"
+                aria-hidden="true"
+                variants={popVariants}
+                initial="hidden"
+                animate="visible"
+                exit="hidden"
+                className="live-dot live-teal inline-flex min-w-8 shrink-0 items-center justify-center rounded-full bg-brand px-2 text-sm font-bold leading-6 text-brand-foreground"
+              >
+                {totalUnread > 99 ? "99+" : <AnimatedCount value={totalUnread} />}
+              </motion.span>
+            )}
+          </AnimatePresence>
         </button>
       </DialogTrigger>
 
       <DialogContent
         hideCloseButton
         overlayClassName="bg-slate-950/25 backdrop-blur-none"
-        className="inset-y-0 right-0 left-auto top-0 flex h-dvh w-full max-w-md translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 border-l border-border bg-background p-0 text-foreground shadow-2xl backdrop-blur-none sm:rounded-none"
+        className={cn(
+          "inset-y-0 right-0 left-auto top-0 flex h-dvh w-full max-w-md translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 border-l border-border bg-background p-0 text-foreground shadow-2xl backdrop-blur-none sm:rounded-none",
+          // Ngăn kéo nằm ở mép phải thì trượt vào từ mép phải, không bay từ giữa màn hình ra.
+          "motion-safe:data-[state=open]:[--tw-enter-translate-x:100%]! motion-safe:data-[state=closed]:[--tw-exit-translate-x:100%]!",
+          "motion-reduce:data-[state=open]:[--tw-enter-translate-x:0]! motion-reduce:data-[state=closed]:[--tw-exit-translate-x:0]!",
+          "data-[state=open]:[--tw-enter-translate-y:0]! data-[state=open]:[--tw-enter-scale:1]!",
+          "data-[state=closed]:[--tw-exit-translate-y:0]! data-[state=closed]:[--tw-exit-scale:1]!",
+        )}
       >
-        <header className="flex shrink-0 items-start justify-between gap-3 border-b border-border bg-card p-4">
+        <header className="flex shrink-0 items-start justify-between gap-4 border-b border-border bg-card p-4">
           <div className="min-w-0">
             <DialogTitle className="text-base font-bold text-foreground">Tin nhắn mới</DialogTitle>
-            <DialogDescription className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+            <DialogDescription className="mt-2 text-sm text-muted-foreground">
               Tin nhắn từ các ca bạn phụ trách.
             </DialogDescription>
           </div>
@@ -143,7 +187,7 @@ export function SimpleClinicalInbox() {
             <button
               type="button"
               aria-label="Đóng hộp thư"
-              className="glow-soft glow-sky flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-xl border border-transparent text-muted-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
+              className="flex size-11 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
             >
               <X className="size-5" aria-hidden="true" />
             </button>
@@ -153,40 +197,35 @@ export function SimpleClinicalInbox() {
         <div className="min-h-0 flex-1 overflow-y-auto">
           {isLoading ? (
             <div className="flex min-h-full items-center justify-center gap-2 p-6 text-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              <LoaderCircle className="size-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />
               Đang tải hộp thư...
             </div>
           ) : isError ? (
-            <div className="p-6 text-sm font-medium text-amber-900">Không tải được hộp thư lúc này.</div>
+            <div className="p-6 text-sm font-medium text-amber-900 dark:text-amber-200">Không tải được hộp thư lúc này.</div>
           ) : items.length === 0 ? (
             <div className="flex min-h-full flex-col items-center justify-center gap-4 p-6 text-center">
-              <span className="flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+              <span className="flex size-12 items-center justify-center rounded-2xl bg-brand-soft text-brand-ink">
                 <Inbox className="size-6" aria-hidden="true" />
               </span>
-              <div className="space-y-2">
+              <div>
                 <h3 className="text-base font-bold text-foreground">Hộp thư đang trống</h3>
-                <p className="max-w-xs text-sm leading-6 text-slate-600 dark:text-slate-300">
+                <p className="mt-2 max-w-xs text-sm leading-6 text-muted-foreground">
                   Hiện chưa có bệnh nhân nào đang chờ bạn trả lời.
                 </p>
               </div>
               <DialogClose asChild>
                 <button
                   type="button"
-                  className="glow-soft glow-sky min-h-11 min-w-11 rounded-xl border border-slate-300 bg-card px-4 text-sm font-bold text-slate-700 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 dark:text-slate-200 dark:border-slate-700"
+                  className="min-h-11 min-w-11 rounded-xl border border-border bg-card px-4 text-sm font-bold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   Đóng
                 </button>
               </DialogClose>
             </div>
           ) : (
-            <ol className="divide-y divide-slate-200">
+            <ol className="divide-y divide-border">
               {items.map((item, index) => (
-                <InboxRow
-                  key={item.session_id}
-                  item={item}
-                  index={index}
-                  onOpen={() => setOpen(false)}
-                />
+                <InboxRow key={item.session_id} item={item} index={index} onOpen={() => setOpen(false)} />
               ))}
             </ol>
           )}

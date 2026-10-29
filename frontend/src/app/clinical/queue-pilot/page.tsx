@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import { SimpleNurseQueueWorkspace } from "@/components/clinical/nurse-simple/SimpleNurseQueueWorkspace";
+import { QueueSkeleton } from "@/components/clinical/nurse-simple/queue/QueueStates";
 
 export const metadata: Metadata = {
   title: "Hàng đợi Triage Agent | AI Triage",
@@ -8,5 +10,11 @@ export const metadata: Metadata = {
 };
 
 export default function SimpleNurseQueuePage() {
-  return <SimpleNurseQueueWorkspace />;
+  // Workspace đọc `?tab=` bằng useSearchParams: đặt ranh giới Suspense ngay
+  // quanh nó (khuyến nghị của Next 16), khung chờ đúng hình hàng ca thật.
+  return (
+    <Suspense fallback={<QueueSkeleton />}>
+      <SimpleNurseQueueWorkspace />
+    </Suspense>
+  );
 }
