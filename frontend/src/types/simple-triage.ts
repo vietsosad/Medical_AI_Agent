@@ -75,6 +75,32 @@ export interface SimpleTriageDecisionDTO {
   // turn whose message named a danger sign: a reason to keep the 115 action
   // in view, never an ESI.
   safety_alert?: SimpleSafetyAlertDTO;
+  // Display-only hints (src/simple_agent/answer_hints.py). A quick reply sends
+  // the same text the patient could have typed; nothing here drives a
+  // decision. Absent on rows persisted before these fields existed.
+  question_input?: SimpleQuestionInputDTO | null;
+  recorded_facts?: SimpleRecordedFactDTO[];
+  recorded_symptoms?: SimpleRecordedSymptomDTO[];
+}
+
+/** "YES_NO" | "SCALE_0_10" | "CONFIRM" today; kept as `string` so a new kind
+ * from the server degrades to free text instead of failing the turn. */
+export interface SimpleQuestionInputDTO {
+  kind: string;
+}
+
+export interface SimpleRecordedFactDTO {
+  fact_target_id: string;
+  name: string;
+  /** Raw corpus value: a number, or an enum code such as "YES". Optional
+   * only because zod infers `unknown` fields as optional; the server always
+   * sends it. */
+  value?: unknown;
+}
+
+export interface SimpleRecordedSymptomDTO {
+  concept_id: string;
+  label: string;
 }
 
 export interface SimpleSafetyAlertDTO {

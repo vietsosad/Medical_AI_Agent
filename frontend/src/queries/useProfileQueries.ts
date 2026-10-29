@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient, UseQueryResult } from "@tanstack/react-query";
+import { CLINICAL_QUERY_KEYS } from "@/hooks/queries/use-clinical-profile";
 import { profileService, ProfileResponseDTO, CreateProfileRequestDTO, UpdateProfileRequestDTO } from "@/services/profile.service";
 
 // ============================================================================
@@ -80,6 +81,8 @@ export function useUpdateProfile() {
     onSuccess: (updated, variables) => {
       queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEYS.all });
       queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEYS.detail(variables.id) });
+      // Trang EHR Lite đọc lại tên, tuổi, giới tính từ khóa riêng của nó.
+      queryClient.invalidateQueries({ queryKey: CLINICAL_QUERY_KEYS.ehrLite(variables.id) });
     },
   });
 }

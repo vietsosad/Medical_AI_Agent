@@ -7,8 +7,18 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans, "Inter", system-ui, -apple-system, sans-serif);
-  --font-heading: var(--font-sans, "Inter", system-ui, -apple-system, sans-serif);
+  /* --font-be-vietnam is set on <html> by next/font in app/layout.tsx. */
+  --font-sans: var(--font-be-vietnam, system-ui), system-ui, -apple-system, sans-serif;
+  --font-heading: var(--font-be-vietnam, system-ui), system-ui, -apple-system, sans-serif;
+
+  /* Màu thương hiệu của các màn đã thiết kế lại (người bệnh và trạm điều
+     phối). Đổi giá trị ở :root/.dark là đổi cả hệ, không sửa từng component. */
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-edge: var(--brand-edge);
+  --color-brand-ink: var(--brand-ink);
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
   /* 🏥 Clinical Trust Palette & Specialty Tokens */
@@ -89,6 +99,13 @@
   
   --primary: #0284c7;
   --primary-foreground: #ffffff;
+  /* Teal 700 giữ chữ trắng trên nền ở mức 5.5:1 (WCAG AA). */
+  --brand: #0f766e;
+  --brand-strong: #115e59;
+  --brand-foreground: #ffffff;
+  --brand-soft: #f0fdfa;
+  --brand-edge: #99f6e4;
+  --brand-ink: #134e4a;
   --secondary: #f1f5f9;
   --secondary-foreground: #0f172a;
   --muted: #f1f5f9;
@@ -151,6 +168,12 @@
   
   --primary: #38bdf8;
   --primary-foreground: #082f49;
+  --brand: #14b8a6;
+  --brand-strong: #2dd4bf;
+  --brand-foreground: #042f2e;
+  --brand-soft: rgb(20 184 166 / 0.12);
+  --brand-edge: rgb(45 212 191 / 0.4);
+  --brand-ink: #99f6e4;
   --secondary: #1e293b;
   --secondary-foreground: #f8fafc;
   --muted: #1e293b;
@@ -295,20 +318,23 @@
     display: none;
   }
 
+  /* Dòng ảnh tràn viền: hai mép mờ dần để thẻ trôi vào và trôi ra khỏi tầm
+     nhìn thay vì bị cắt phẳng ở mép màn hình. */
   .health-topic-stream {
+    --stream-fade: clamp(24px, 7vw, 120px);
     overscroll-behavior-inline: contain;
     -webkit-mask-image: linear-gradient(
       90deg,
       transparent 0,
-      #000 40px,
-      #000 calc(100% - 40px),
+      #000 var(--stream-fade),
+      #000 calc(100% - var(--stream-fade)),
       transparent 100%
     );
     mask-image: linear-gradient(
       90deg,
       transparent 0,
-      #000 40px,
-      #000 calc(100% - 40px),
+      #000 var(--stream-fade),
+      #000 calc(100% - var(--stream-fade)),
       transparent 100%
     );
   }
@@ -610,7 +636,55 @@
   }
 }
 
-@keyframes health-topic-progress {
+/* ==========================================================================
+   CHUYỂN ĐỘNG CỦA CÁC MÀN ĐÃ THIẾT KẾ LẠI
+   Cùng thời lượng và đường cong với @/lib/motion (dùng cho framer-motion):
+   vào 280 ms theo cubic-bezier(.22,1,.36,1), không nảy, không đàn hồi. Bản
+   CSS dùng cho những gì phải chạy ngay từ HTML máy chủ, trước khi hydrate.
+   ========================================================================== */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes typing-dot {
+  0%,
+  60%,
+  100% {
+    transform: none;
+    opacity: 0.35;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+@keyframes ring-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgb(225 29 72 / 0.5);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 12px rgb(225 29 72 / 0);
+  }
+}
+
+/* Chỉ có `from`: màu tự nhạt về đúng nền vốn có của phần tử (kể cả khi phần
+   tử có nền riêng), không kẹt lại ở một màu đích cố định. */
+@keyframes fact-flash {
+  from {
+    background-color: var(--brand-edge);
+  }
+}
+
+@keyframes bar-grow {
   from {
     transform: scaleX(0);
   }
@@ -619,10 +693,367 @@
   }
 }
 
-.health-topic-progress {
-  width: 100%;
-  transform-origin: left center;
-  animation: health-topic-progress 7s linear forwards;
+/* TRANG CHỦ: chấm sáng đi dọc đường nối và vệt quét trong các sơ đồ minh họa.
+   Mỗi lần chạy là một lần dựng lại phần tử (đổi `key`), nên chỉ cần chạy một
+   lượt; nhịp lặp do đồng hồ phiên mẫu (use-demo-timeline) quyết định. */
+@keyframes lp-travel-x {
+  from {
+    left: 0%;
+    opacity: 0;
+  }
+  12%,
+  88% {
+    opacity: 1;
+  }
+  to {
+    left: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes lp-travel-y {
+  from {
+    top: 0%;
+    opacity: 0;
+  }
+  12%,
+  88% {
+    opacity: 1;
+  }
+  to {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes lp-fork {
+  from {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  12%,
+  88% {
+    opacity: 1;
+  }
+  to {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes lp-scan {
+  from {
+    transform: translateY(-120%);
+    opacity: 0;
+  }
+  15%,
+  85% {
+    opacity: 1;
+  }
+  to {
+    transform: translateY(340%);
+    opacity: 0;
+  }
+}
+
+/* TRANG CHỦ: bức tường ảnh phía sau đầu trang (HeroBackdrop). Ảnh đơn sắc, các
+   cột trôi lên xuống rất chậm, màn hình theo dõi chạy liên tục. Lớp phủ mang đúng
+   màu nền đầu trang: đặc ở vùng chữ, mỏng dần ra hai bên, để ảnh làm phông chứ
+   không tranh chỗ với chữ và phiên mẫu. */
+@keyframes hero-wall-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, -12%, 0);
+  }
+}
+
+@keyframes hero-monitor-trace {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.hero-wall {
+  --wall-veil: var(--brand-soft);
+  --wall-wash: 52%;
+  --wall-focus: calc(50% - 14rem);
+}
+
+@media (min-width: 80rem) {
+  .hero-wall {
+    --wall-focus: calc(50% - 22.25rem);
+  }
+}
+
+/* Ở chế độ tối, nền đầu trang là lớp teal trong suốt trên nền trang; lớp phủ cần
+   màu đặc tương đương, nếu không ảnh sẽ sáng nguyên. */
+.dark .hero-wall {
+  --wall-veil: color-mix(in srgb, var(--brand) 12%, var(--background));
+  --wall-wash: 54%;
+}
+
+/* Tâm hình elip đặt đúng giữa cột chữ: bên phải là phiên mẫu rộng cố định
+   (25rem, từ 1280px là 41.5rem) cộng 3rem khoảng cách, nên giữa cột chữ luôn
+   cách giữa màn hình một nửa phần đó: 14rem, rồi 22.25rem. */
+.hero-wall-veil {
+  background:
+    radial-gradient(ellipse 46rem 42rem at var(--wall-focus) 42%, var(--wall-veil) 46%, transparent 82%),
+    linear-gradient(to bottom, var(--wall-veil), transparent 14%, transparent 80%, var(--wall-veil)),
+    color-mix(in srgb, var(--wall-veil) var(--wall-wash), transparent);
+}
+
+.hero-monitor {
+  background-image:
+    linear-gradient(rgb(13 148 136 / 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(13 148 136 / 0.08) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+.dark .hero-monitor {
+  background-image:
+    linear-gradient(rgb(94 234 212 / 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(94 234 212 / 0.07) 1px, transparent 1px);
+}
+
+/* TRANG CHỦ: nền "không đoán" (EvidenceBackdrop). Lưới ô kẻ như giấy điện tim,
+   một vạch quét đi 2400 px quanh giữa khối với tốc độ đều trong 70% nhịp 12 giây
+   rồi nghỉ, vài ô sáng lên lúc vạch đi qua. Đường lưới thẳng hàng với giữa khối
+   để các ô sáng (đặt theo bội số 40 px từ giữa) nằm đúng trong ô. */
+@keyframes evidence-scan {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  4%,
+  66% {
+    opacity: 1;
+  }
+  70%,
+  100% {
+    transform: translate3d(2400px, 0, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes evidence-cell {
+  0% {
+    opacity: 0;
+  }
+  2%,
+  24% {
+    opacity: 1;
+  }
+  36%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.evidence-grid {
+  --grid-major: rgb(13 148 136 / 0.09);
+  --grid-minor: rgb(13 148 136 / 0.045);
+  background-image:
+    linear-gradient(to right, var(--grid-major) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-major) 1px, transparent 1px),
+    linear-gradient(to right, var(--grid-minor) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-minor) 1px, transparent 1px);
+  background-size: 200px 200px, 200px 200px, 40px 40px, 40px 40px;
+  background-position: calc(50% + 100px) 0, calc(50% + 100px) 0, calc(50% + 20px) 0, calc(50% + 20px) 0;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent);
+}
+
+.dark .evidence-grid {
+  --grid-major: rgb(45 212 191 / 0.08);
+  --grid-minor: rgb(45 212 191 / 0.04);
+}
+
+/* Vạch quét: mép phải là nét mảnh, phía sau là một dải nhạt dần. Bắt đầu với mép
+   phải ở giữa khối lùi 1200 px. */
+.evidence-scan {
+  left: calc(50% - 1200px - 15rem);
+  border-right: 1px solid rgb(13 148 136 / 0.35);
+  background: linear-gradient(to right, transparent, rgb(20 184 166 / 0.06));
+  opacity: 0;
+}
+
+.evidence-cell {
+  background: rgb(20 184 166 / 0.12);
+  box-shadow: inset 0 0 0 1px rgb(13 148 136 / 0.25);
+  opacity: 0;
+}
+
+/* Trên nền tối, nét xanh ngọc đậm chìm mất: dùng sắc sáng của cùng màu. */
+.dark .evidence-scan {
+  border-right-color: rgb(45 212 191 / 0.35);
+  background: linear-gradient(to right, transparent, rgb(45 212 191 / 0.06));
+}
+
+.dark .evidence-cell {
+  background: rgb(45 212 191 / 0.1);
+  box-shadow: inset 0 0 0 1px rgb(45 212 191 / 0.22);
+}
+
+/* TRANG CHỦ: nền "hai màn hình" (CareLoopBackdrop). Vòng sóng tỏa ra từ điện
+   thoại người bệnh, hai vùng sáng rất nhẹ sau hai màn hình, chấm nhỏ chạy dọc
+   đường nối từ trái sang phải. Tâm điện thoại: cột 18.75rem sát mép trái khung
+   nội dung (giữa màn hình lùi 38rem, tối thiểu 2rem), cao giữa khung 37.5rem. */
+@keyframes care-ring {
+  from {
+    transform: scale(0.35);
+    opacity: 0.85;
+  }
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes care-signal {
+  from {
+    stroke-dashoffset: 60;
+  }
+  to {
+    stroke-dashoffset: -1000;
+  }
+}
+
+.care-zones {
+  background:
+    radial-gradient(circle 30rem at max(11.375rem, calc(50% - 28.625rem)) 39rem, rgb(20 184 166 / 0.09), transparent 70%),
+    radial-gradient(ellipse 40rem 24rem at calc(50% + 12.375rem) 29rem, rgb(20 184 166 / 0.07), transparent 70%);
+}
+
+.care-ring {
+  left: max(11.375rem, calc(50% - 28.625rem));
+  top: 39rem;
+  border: 1px solid rgb(13 148 136 / 0.4);
+  opacity: 0;
+}
+
+.care-signal-track {
+  stroke: rgb(13 148 136 / 0.18);
+  stroke-width: 1.5;
+  stroke-dasharray: 2 10;
+  stroke-linecap: round;
+}
+
+.care-signal-pulse {
+  stroke: rgb(13 148 136 / 0.6);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 60 1000;
+  stroke-dashoffset: 60;
+}
+
+.dark .care-ring {
+  border-color: rgb(45 212 191 / 0.32);
+}
+
+.dark .care-signal-track {
+  stroke: rgb(45 212 191 / 0.16);
+}
+
+.dark .care-signal-pulse {
+  stroke: rgb(45 212 191 / 0.55);
+}
+
+/* Lớp nền mờ đi theo khối chữ đặt trên nền ảnh: một mảng màu nền nhòe ngay phía
+   sau phần tử, nên chữ luôn đọc được dù ảnh nằm đâu. Chỉ cần từ lg, nơi có nền
+   ảnh. Màu lấy từ --landing-scrim (mặc định màu thẻ). */
+@media (min-width: 64rem) {
+  .landing-scrim {
+    position: relative;
+  }
+
+  .landing-scrim::before {
+    content: "";
+    position: absolute;
+    inset: -2.5rem -3rem;
+    z-index: -10;
+    border-radius: 4rem;
+    background: color-mix(in srgb, var(--landing-scrim, var(--card)) 92%, transparent);
+    filter: blur(40px);
+    pointer-events: none;
+  }
+}
+
+@layer utilities {
+  .page-enter {
+    animation: page-enter 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .typing-dot {
+    animation: typing-dot 1.2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  }
+
+  /* Ba nhịp rồi dừng: đủ kéo mắt tới nút gọi 115, không nhấp nháy mãi. */
+  .ring-pulse {
+    animation: ring-pulse 1.6s cubic-bezier(0.4, 0, 0.6, 1) 3;
+  }
+
+  .fact-flash {
+    animation: fact-flash 900ms ease-out both;
+  }
+
+  .bar-grow {
+    transform-origin: left center;
+    animation: bar-grow 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .lp-travel-x {
+    animation: lp-travel-x 900ms cubic-bezier(0.65, 0, 0.35, 1) both;
+  }
+
+  .lp-travel-y {
+    animation: lp-travel-y 900ms cubic-bezier(0.65, 0, 0.35, 1) both;
+  }
+
+  .lp-fork {
+    offset-rotate: 0deg;
+    animation: lp-fork 1000ms cubic-bezier(0.65, 0, 0.35, 1) both;
+  }
+
+  .lp-scan {
+    animation: lp-scan 1600ms cubic-bezier(0.65, 0, 0.35, 1) both;
+  }
+
+  .hero-wall-column {
+    will-change: transform;
+    animation: hero-wall-drift 26s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+  }
+
+  .hero-monitor-trace {
+    animation: hero-monitor-trace 2.6s linear infinite;
+  }
+
+  .evidence-scan {
+    animation: evidence-scan 12s linear infinite;
+  }
+
+  .evidence-cell {
+    animation: evidence-cell 12s ease-out infinite both;
+  }
+
+  /* Nở và nhạt đều tay như sóng âm, để vòng còn thấy được suốt quãng đường. */
+  .care-ring {
+    animation: care-ring 7.8s linear infinite;
+  }
+
+  .care-signal-pulse {
+    animation: care-signal 6.6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  }
+
+  /* Nút dừng của từng khối dừng mọi chuyển động trong nền của khối đó. */
+  .landing-backdrop[data-paused] *,
+  .landing-backdrop[data-paused] *::after {
+    animation-play-state: paused;
+  }
 }
 
 /* ==========================================================================
@@ -705,18 +1136,39 @@
     animation: none;
   }
 
-  .rise-in {
+  .rise-in,
+  .page-enter,
+  .ring-pulse,
+  .fact-flash,
+  .bar-grow {
     animation: none;
+  }
+
+  .lp-travel-x,
+  .lp-travel-y,
+  .lp-fork,
+  .lp-scan {
+    animation: none;
+    opacity: 0;
+  }
+
+  .hero-wall-column,
+  .hero-monitor-trace,
+  .evidence-scan,
+  .evidence-cell,
+  .care-ring,
+  .care-signal-pulse {
+    animation: none;
+  }
+
+  .typing-dot {
+    animation: none;
+    opacity: 0.6;
   }
 
   .skeleton-sweep::after {
     animation: none;
     opacity: 0;
-  }
-
-  .health-topic-progress {
-    animation: none;
-    transform: scaleX(1);
   }
 
   .spot-beam::before {

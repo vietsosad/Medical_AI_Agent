@@ -55,6 +55,15 @@ export const simpleTriageDecisionSchema = z.object({
     .array(z.object({ atom_id: z.string(), score: z.number(), confident_enough_to_ask: z.boolean() }))
     .optional(),
   retrieval_query: z.string().nullable().optional(),
+  // Gợi ý hiển thị cho người bệnh (src/simple_agent/answer_hints.py): chỉ để
+  // vẽ nút trả lời nhanh và khung "Mình đã ghi nhận". `kind` và `value` cố ý
+  // để lỏng -- một giá trị mới từ máy chủ không được làm hỏng cả lượt chat,
+  // giao diện tự bỏ qua thứ nó không biết vẽ.
+  question_input: z.object({ kind: z.string() }).nullable().optional(),
+  recorded_facts: z
+    .array(z.object({ fact_target_id: z.string(), name: z.string(), value: z.unknown() }))
+    .optional(),
+  recorded_symptoms: z.array(z.object({ concept_id: z.string(), label: z.string() })).optional(),
   // Backend pre-LLM emergency screen hit -- see SimpleSafetyAlertDTO.
   safety_alert: z
     .object({
