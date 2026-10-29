@@ -35,6 +35,7 @@ import numpy as np
 from openai import OpenAI
 
 from . import skills
+from .answer_hints import question_input, recorded_facts, recorded_symptoms
 from .confirmation_intent import classify_confirmation_reply
 from .corpus import REPO_ROOT, Corpus, CorpusError, fold, validate_fact
 from .deepagent_understanding import (
@@ -1363,9 +1364,8 @@ class SimpleTriageAgent:
             matched_atoms=matched_atoms,
         )
 
-    @staticmethod
     def _result(
-        message: str, *, route: str, action: str, reason: str, session: Session, retrieved: int,
+        self, message: str, *, route: str, action: str, reason: str, session: Session, retrieved: int,
         supported: int = 0, missing: int = 0, question_target: str | None = None,
         matched_esi_levels: list[int] | None = None, matched_atoms: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
@@ -1392,6 +1392,10 @@ class SimpleTriageAgent:
                 "question_target_id": question_target,
                 "matched_esi_levels": matched_esi_levels or [],
                 "matched_atoms": matched_atoms or [],
+                # Patient-UI hints, display-only -- see answer_hints.py.
+                "question_input": question_input(self.corpus, action, question_target),
+                "recorded_facts": recorded_facts(self.corpus, session),
+                "recorded_symptoms": recorded_symptoms(self.corpus, session),
                 # Debug-only fields below -- never read by decision.py/agent.py
                 # itself, purely for SimpleDecisionDebugPanel. See session.py's
                 # turn_tool_log/turn_retrieved_atoms for what populates them.
