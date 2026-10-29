@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient, UseMutationResult } from "@tanstack/react-query";
 import { axiosClient } from "@/lib/api/axios.client";
 import { CLINICAL_QUERY_KEYS } from "@/hooks/queries/use-clinical-profile";
+import { PROFILE_QUERY_KEYS } from "@/queries/useProfileQueries";
 import { EhrLiteSchema, EmergencyContactSchema } from "@/schemas/clinical-profile.schema";
 import type { EhrLiteDTO, EmergencyContactDTO } from "@/types/clinical-profile";
 import { toast } from "sonner";
@@ -72,6 +73,8 @@ export const useUpdateEhrLite = (customProfileId?: string | null): UseMutationRe
       if (profileId) {
         queryClient.invalidateQueries({ queryKey: CLINICAL_QUERY_KEYS.ehrLite(profileId) });
       }
+      // Bệnh nền, dị ứng và nhóm máu cũng hiện trên thẻ hồ sơ gia đình.
+      queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEYS.all });
     },
   });
 };
@@ -143,6 +146,8 @@ export const useUpdateEmergencyContacts = (customProfileId?: string | null): Use
       if (profileId) {
         queryClient.invalidateQueries({ queryKey: CLINICAL_QUERY_KEYS.emergencyContacts(profileId) });
       }
+      // Người liên hệ khẩn cấp cũng hiện trên thẻ hồ sơ gia đình.
+      queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEYS.all });
     },
   });
 };

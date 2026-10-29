@@ -1,208 +1,195 @@
 "use client";
 
-import React from "react";
-import { CheckCircle2, Droplet, Pencil, Phone, PhoneOff, Trash2, User } from "lucide-react";
+import Link from "next/link";
+import { motion, type Variants } from "framer-motion";
+import { ChevronRight, FileHeart, Pencil, Plus, Trash2, TriangleAlert } from "lucide-react";
 
+import { genderLabel, relationTitle } from "@/components/patient/family-identity";
 import { formatVietnamPhoneForDisplay } from "@/lib/validations/account-contact.schema";
-import { cn } from "@/lib/utils";
-import type { ProfileResponseDTO, RelationshipType } from "@/services/profile.service";
-
-/** Nhãn tiếng Việt cho quan hệ gia đình. */
-export function formatRelation(relation: RelationshipType | string, isPrimary: boolean): string {
-  if (isPrimary || relation === "SELF") return "Chính chủ";
-  switch (relation) {
-    case "CHILD":
-      return "Con cái";
-    case "SPOUSE":
-      return "Vợ / Chồng";
-    case "PARENT":
-      return "Cha mẹ";
-    case "SIBLING":
-      return "Anh / Chị em";
-    default:
-      return "Người thân";
-  }
-}
-
-function formatGender(gender: string | null): string | null {
-  if (gender === "MALE") return "Nam";
-  if (gender === "FEMALE") return "Nữ";
-  if (gender === "OTHER") return "Khác";
-  return null;
-}
+import { enterTransition, staggerDelay } from "@/lib/motion";
+import type { ProfileResponseDTO } from "@/services/profile.service";
 
 interface FamilyMemberCardProps {
   member: ProfileResponseDTO;
-  isSelected: boolean;
-  onSelect: () => void;
+  /** id gắn vào tiêu đề tên, để vùng bao ngoài trỏ aria-labelledby về đây. */
+  headingId: string;
   onEdit: () => void;
+  /** Null với hồ sơ của chính chủ tài khoản: hồ sơ đó không xóa được. */
   onDelete: (() => void) | null;
+}
+
+/** Các chip nổi lên lần lượt sau khi thẻ đã hiện, theo thứ tự đọc. */
+const chipVariants: Variants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: (index: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { ...enterTransition, delay: 0.12 + staggerDelay(index) },
+  }),
+};
+
+function uniqueValues(values: string[] | null | undefined): string[] {
+  return Array.from(new Set((values ?? []).map((value) => value.trim()).filter(Boolean)));
 }
 
 /**
  * ============================================================================
- * [FAMILY MEMBER CARD] THẺ THÀNH VIÊN TRONG HỒ SƠ GIA ĐÌNH
+ * [FAMILY MEMBER CARD] THẺ HỒ SƠ CỦA NGƯỜI ĐANG ĐƯỢC CHỌN
  * ============================================================================
- * Một thẻ = một người: danh tính, chỉ số cơ bản, số liên lạc riêng và hành động.
- * Màu teal/sky cho hành động lâm sàng, emerald cho trạng thái tốt, rose chỉ dành
- * cho hành động phá hủy (xóa hồ sơ).
+ * Đúng những gì điều dưỡng thấy khi nhận một ca sàng lọc của người này: tên,
+ * quan hệ, tuổi, giới, nhóm máu, số liên lạc, bệnh nền và dị ứng. Dị ứng mang
+ * màu hồng đỏ kèm biểu tượng cảnh báo; "chưa ghi nhận" luôn để trung tính vì
+ * chưa khai báo không có nghĩa là không có.
  */
-export function FamilyMemberCard({
-  member,
-  isSelected,
-  onSelect,
-  onEdit,
-  onDelete,
-}: FamilyMemberCardProps) {
-  const relationTitle = formatRelation(member.relationship_type, member.is_primary);
-  const genderLabel = formatGender(member.gender);
-  const metaParts = [
-    member.age !== null && member.age !== undefined ? `${member.age} tuổi` : null,
-    genderLabel,
-    member.blood_type && member.blood_type !== "UNKNOWN" ? member.blood_type : null,
-  ].filter(Boolean) as string[];
+export function FamilyMemberCard({ member, headingId, onEdit, onDelete }: FamilyMemberCardProps) {
+  const meta = [relationTitle(member), genderLabel(member.gender), member.age != null ? `${member.age} tuổi` : null]
+    .filter(Boolean)
+    .join(" · ");
+  const bloodType = member.blood_type && member.blood_type !== "UNKNOWN" ? member.blood_type : null;
+  const conditions = uniqueValues(member.chronic_conditions);
+  const allergies = uniqueValues(member.allergies);
 
   return (
-    <article
-      onClick={onSelect}
-      aria-current={isSelected ? "true" : undefined}
-      className={cn(
-        "group relative flex cursor-pointer flex-col rounded-2xl border bg-card p-5 shadow-xs transition-all duration-200",
-        isSelected
-          ? "border-teal-500 ring-2 ring-teal-500/15"
-          : "border-border hover:border-teal-300 hover:shadow-md",
-      )}
-    >
-      <header className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <span
-            className={cn(
-              "flex size-11 shrink-0 items-center justify-center rounded-xl text-base font-bold",
-              member.is_primary
-                ? "bg-teal-600 text-white"
-                : "bg-muted text-slate-700 dark:text-slate-200",
-            )}
-            aria-hidden="true"
-          >
-            {member.full_name?.charAt(0)?.toUpperCase() || <User className="size-5" />}
-          </span>
-
-          <div className="min-w-0">
-            <h3 className="truncate text-base font-bold tracking-tight text-foreground">
-              {member.full_name}
-            </h3>
-            <span
-              className={cn(
-                "mt-0.5 inline-block rounded-md px-2 py-0.5 text-xs font-semibold",
-                member.is_primary
-                  ? "bg-teal-50 text-teal-800"
-                  : "bg-muted text-slate-600 dark:text-slate-300",
-              )}
-            >
-              {relationTitle}
-            </span>
-          </div>
+    <section aria-labelledby={headingId} className="rounded-3xl border border-border bg-card p-4 shadow-xs sm:p-6">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h2 id={headingId} className="truncate text-xl font-extrabold tracking-tight text-foreground">
+            {member.full_name}
+          </h2>
+          {meta && <p className="text-sm leading-6 text-muted-foreground">{meta}</p>}
         </div>
-
-        {isSelected && (
-          <CheckCircle2
-            className="size-5 shrink-0 text-teal-600"
-            aria-label="Hồ sơ đang được chọn"
-          />
-        )}
-      </header>
-
-      {metaParts.length > 0 && (
-        <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-600 dark:text-slate-300">
-          {metaParts.map((part, index) => (
-            <React.Fragment key={part}>
-              {index > 0 && <span aria-hidden="true" className="text-slate-300">·</span>}
-              <span className={part === member.blood_type ? "inline-flex items-center gap-1" : undefined}>
-                {part === member.blood_type && (
-                  <Droplet className="size-3.5 shrink-0 text-rose-500" aria-hidden="true" />
-                )}
-                {part}
-              </span>
-            </React.Fragment>
-          ))}
-        </p>
-      )}
-
-      {/* Số liên lạc riêng của thành viên này */}
-      <div className="mt-3">
-        {member.phone_number ? (
-          <a
-            href={`tel:${member.phone_number}`}
-            onClick={(event) => event.stopPropagation()}
-            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 bg-background px-3 text-sm font-semibold text-slate-800 transition-colors hover:border-teal-300 hover:bg-teal-50 hover:text-teal-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600"
-          >
-            <Phone className="size-4 shrink-0 text-teal-600" aria-hidden="true" />
-            {formatVietnamPhoneForDisplay(member.phone_number)}
-          </a>
-        ) : (
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              onEdit();
-            }}
-            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-dashed border-slate-300 bg-card px-3 text-sm font-medium text-muted-foreground transition-colors hover:border-teal-400 hover:text-teal-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 dark:border-slate-700"
-          >
-            <PhoneOff className="size-4 shrink-0" aria-hidden="true" />
-            Chưa cập nhật — Thêm số điện thoại
-          </button>
-        )}
-      </div>
-
-      <div className="mt-4 space-y-1.5 border-t border-slate-100 pt-3">
-        <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-          Tiền sử ghi nhận
-        </span>
-        {member.chronic_conditions && member.chronic_conditions.length > 0 ? (
-          <ul className="flex flex-wrap gap-1.5">
-            {member.chronic_conditions.slice(0, 3).map((condition) => (
-              <li
-                key={condition}
-                className="rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-900"
-              >
-                {condition}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-xs font-medium text-emerald-700">Chưa ghi nhận bệnh mạn tính</p>
-        )}
-      </div>
-
-      <div className="mt-4 flex items-center gap-2 border-t border-slate-100 pt-3">
         <button
           type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-            onEdit();
-          }}
-          aria-label={`Chỉnh sửa hồ sơ ${member.full_name}`}
-          className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-card px-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 dark:text-slate-200 dark:border-slate-700"
+          onClick={onEdit}
+          aria-label={`Sửa hồ sơ của ${member.full_name}`}
+          className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-foreground transition duration-[180ms] hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-card active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
         >
-          <Pencil className="size-4 shrink-0" aria-hidden="true" />
-          Chỉnh sửa
+          <Pencil className="size-4" aria-hidden="true" />
         </button>
+      </div>
 
-        {onDelete && (
+      <dl className="mt-4 grid grid-cols-2 gap-2">
+        <div className="rounded-2xl bg-muted/70 px-4 py-2">
+          <dt className="text-sm font-semibold text-muted-foreground">Nhóm máu</dt>
+          <dd className="flex min-h-11 items-center">
+            {bloodType ? (
+              <span className="text-lg font-extrabold text-foreground">{bloodType}</span>
+            ) : (
+              <span className="text-base font-semibold text-muted-foreground">Chưa rõ</span>
+            )}
+          </dd>
+        </div>
+        <div className="min-w-0 rounded-2xl bg-muted/70 px-4 py-2">
+          <dt className="text-sm font-semibold text-muted-foreground">Điện thoại</dt>
+          <dd className="flex min-h-11 items-center">
+            {member.phone_number ? (
+              <a
+                href={`tel:${member.phone_number}`}
+                className="truncate rounded-lg text-base font-bold text-foreground underline-offset-4 hover:text-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              >
+                {formatVietnamPhoneForDisplay(member.phone_number)}
+              </a>
+            ) : (
+              <button
+                type="button"
+                onClick={onEdit}
+                className="inline-flex min-h-11 items-center gap-2 rounded-lg text-sm font-semibold text-brand hover:text-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              >
+                <Plus className="size-4" aria-hidden="true" />
+                Thêm số
+              </button>
+            )}
+          </dd>
+        </div>
+      </dl>
+
+      <div className="mt-6 space-y-4">
+        <div>
+          <h3 className="text-sm font-bold text-muted-foreground">Bệnh nền</h3>
+          {conditions.length > 0 ? (
+            <ul className="mt-2 flex flex-wrap gap-2">
+              {conditions.map((condition, index) => (
+                <motion.li
+                  key={condition}
+                  custom={index}
+                  variants={chipVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="rounded-full border border-border bg-muted px-4 text-sm font-semibold leading-8 text-foreground"
+                >
+                  {condition}
+                </motion.li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">Chưa ghi nhận bệnh nền.</p>
+          )}
+        </div>
+
+        <div>
+          <h3 className="text-sm font-bold text-muted-foreground">Dị ứng</h3>
+          {allergies.length > 0 ? (
+            <ul className="mt-2 flex flex-wrap gap-2">
+              {allergies.map((allergy, index) => (
+                <motion.li
+                  key={allergy}
+                  custom={conditions.length + index}
+                  variants={chipVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-4 text-sm font-bold leading-8 text-rose-900 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-100"
+                >
+                  <TriangleAlert className="size-4 shrink-0" aria-hidden="true" />
+                  <span className="sr-only">Dị ứng: </span>
+                  {allergy}
+                </motion.li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">Chưa ghi nhận dị ứng.</p>
+          )}
+        </div>
+      </div>
+
+      {/* Lối vào chính của hồ sơ: chiều cao, cân nặng, BMI, bệnh nền, dị ứng và thuốc
+          được khai báo ở /profile/ehr cho đúng người đang chọn (cùng activeProfileId).
+          Từng chỉ là một dòng chữ nhỏ và người bệnh bỏ sót, nên giờ là nút đặc màu chủ
+          đạo, nói rõ bên trong có gì. */}
+      <Link
+        href="/profile/ehr"
+        className="group mt-6 flex min-h-16 items-center gap-4 rounded-2xl bg-brand px-4 py-3 text-brand-foreground shadow-[0_14px_28px_-18px_rgba(15,118,110,0.9)] transition duration-200 hover:bg-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-card active:scale-[0.99] motion-reduce:transition-none motion-reduce:active:scale-100"
+      >
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-foreground/15">
+          <FileHeart className="size-[22px]" strokeWidth={2.2} aria-hidden="true" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-base font-extrabold leading-6 text-balance">
+            Cập nhật <span className="whitespace-nowrap">hồ sơ</span> <span className="whitespace-nowrap">sức khỏe</span>
+          </span>
+          <span className="block text-sm leading-5 text-pretty text-brand-foreground/90">
+            {/* Từ ghép nối bằng dấu cách không ngắt, để chỉ xuống dòng sau dấu phẩy. */}
+            {"Chiều cao, cân nặng, BMI, bệnh nền, dị ứng, thuốc"}
+          </span>
+        </span>
+        <ChevronRight
+          className="size-5 shrink-0 transition-transform duration-200 group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
+          aria-hidden="true"
+        />
+      </Link>
+
+      {onDelete && (
+        <div className="mt-2 flex justify-end">
           <button
             type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              onDelete();
-            }}
-            aria-label={`Xóa hồ sơ ${member.full_name}`}
-            className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-rose-200 bg-card text-rose-600 transition-colors hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-600"
+            onClick={onDelete}
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl px-2 text-sm font-semibold text-rose-700 transition-colors hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-600 dark:text-rose-300 dark:hover:bg-rose-950/40"
           >
             <Trash2 className="size-4" aria-hidden="true" />
+            Xóa hồ sơ
           </button>
-        )}
-      </div>
-    </article>
+        </div>
+      )}
+    </section>
   );
 }
 

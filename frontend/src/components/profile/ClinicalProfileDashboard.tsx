@@ -1,22 +1,17 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { useForm, FormProvider, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Activity,
-  PhoneCall,
-  Save,
-  RotateCcw,
-  AlertTriangle,
-  RefreshCw,
-  FileText,
-} from "lucide-react";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
+import { Activity, ArrowLeft, PhoneCall, Save, RotateCcw, TriangleAlert, RefreshCw, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DURATION, EASE_IN_OUT, EASE_OUT, enterTransition, exitTransition } from "@/lib/motion";
 import { useEhrLite, EMPTY_EHR_LITE } from "@/queries/use-clinical-profile";
 import { useUpdateEhrLite } from "@/queries/use-profile-mutations";
 import { EhrLiteSchema, type EhrLiteFormValues } from "@/schemas/clinical-profile.schema";
+import { useActiveProfileStore } from "@/store/useActiveProfileStore";
 
 // Import toàn bộ các component con của Hồ sơ Lâm sàng (Nhóm 2)
 import { VitalsBmiCard } from "@/components/profile/VitalsBmiCard";
@@ -24,7 +19,7 @@ import { ChronicConditionsSelector } from "@/components/profile/ChronicCondition
 import { AllergiesMedicationsInput } from "@/components/profile/AllergiesMedicationsInput";
 import { VerifiedClinicalContextPreview } from "@/components/profile/VerifiedClinicalContextPreview";
 import { EmergencySosManager } from "@/components/profile/EmergencySosManager";
-import FamilyProfilePills from "@/components/profile/FamilyProfilePills";
+import FamilyProfilePills, { EHR_SUBJECT_PANEL_ID } from "@/components/profile/FamilyProfilePills";
 import { toast } from "sonner";
 
 // ============================================================================
@@ -34,12 +29,36 @@ export interface ClinicalProfileDashboardProps {
   className?: string;
 }
 
+type DashboardTab = "EHR" | "SOS";
+
+const TAB_HIGHLIGHT_TRANSITION = { duration: DURATION.quick, ease: EASE_IN_OUT };
+
+/** Đổi nhóm thông tin: nhóm cũ mờ đi, nhóm mới nổi lên 8px. */
+const tabPanelVariants: Variants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: { opacity: 1, y: 0, transition: enterTransition },
+  exit: { opacity: 0, transition: exitTransition },
+};
+
+/** Thanh lưu trượt lên khi có thay đổi chưa lưu, không nảy. */
+const saveBarVariants: Variants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0, transition: { duration: DURATION.gentle, ease: EASE_OUT } },
+  exit: { opacity: 0, y: 24, transition: exitTransition },
+};
+
+const TABS: Array<{ value: DashboardTab; label: string; icon: typeof Activity }> = [
+  { value: "EHR", label: "Thông tin sức khỏe", icon: Activity },
+  { value: "SOS", label: "Liên hệ khẩn cấp", icon: PhoneCall },
+];
+
 /**
  * Hồ sơ sức khỏe để người dùng tự khai báo và rà soát thông tin của mình.
  */
 export const ClinicalProfileDashboard: React.FC<ClinicalProfileDashboardProps> = ({ className }) => {
   // Tab State
-  const [activeTab, setActiveTab] = useState<"EHR" | "SOS">("EHR");
+  const [activeTab, setActiveTab] = useState<DashboardTab>("EHR");
+  const activeProfileId = useActiveProfileStore((state) => state.activeProfileId);
 
   // TanStack Query & Mutation Hooks cho EHR Lite
   const { data: ehrData, isLoading, isError, refetch } = useEhrLite();
@@ -77,59 +96,49 @@ export const ClinicalProfileDashboard: React.FC<ClinicalProfileDashboardProps> =
   }, [ehrData, form]);
 
   // ==========================================================================
-  // STATE 1: LOADING STATE (SKELETON SHIMMER SANG TRỌNG)
+  // STATE 1: LOADING STATE
   // ==========================================================================
   if (isLoading) {
     return (
-      <div className={cn("space-y-8 animate-pulse p-4 md:p-6 max-w-7xl mx-auto", className)}>
-        {/* Skeleton Tabs Header */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-6 border-b border-border">
-          <div className="space-y-2 w-full sm:w-1/3">
-            <div className="h-8 bg-slate-200 rounded-xl w-3/4 dark:bg-slate-700" />
-            <div className="h-4 bg-slate-200/70 rounded-lg w-full dark:bg-slate-700" />
-          </div>
-          <div className="h-12 bg-slate-200 border border-slate-300/60 rounded-2xl w-full sm:w-80 dark:bg-slate-700 dark:border-slate-700" />
+      <div aria-busy="true" aria-label="Đang tải hồ sơ sức khỏe" className={cn("mx-auto max-w-6xl space-y-6", className)}>
+        <div className="space-y-2">
+          <div className="h-8 w-64 rounded-xl bg-muted" />
+          <div className="h-4 w-full max-w-md rounded-lg bg-muted" />
         </div>
-
-        {/* Skeleton Card Component */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-7 h-96 bg-card border border-border rounded-3xl shadow-sm" />
-          <div className="lg:col-span-5 h-96 bg-card border border-border rounded-3xl shadow-sm" />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          <div className="skeleton-sweep relative h-96 overflow-hidden rounded-3xl border border-border bg-card lg:col-span-7" />
+          <div className="skeleton-sweep relative h-96 overflow-hidden rounded-3xl border border-border bg-card lg:col-span-5" />
         </div>
-        <div className="h-72 bg-card border border-border rounded-3xl shadow-sm" />
       </div>
     );
   }
 
   // ==========================================================================
-  // STATE 2: ERROR STATE (ALERTBOX KÈM NÚT RETRY QUERY)
+  // STATE 2: ERROR STATE (KÈM NÚT TẢI LẠI)
   // ==========================================================================
   if (isError) {
     return (
-      <div className={cn("p-6 md:p-12 max-w-4xl mx-auto", className)}>
-        <div className="bg-rose-50 border border-rose-200 rounded-3xl p-8 md:p-12 text-center space-y-6 shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-rose-200/30 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="w-16 h-16 rounded-2xl bg-rose-100 border border-rose-200 flex items-center justify-center mx-auto shadow-sm">
-            <AlertTriangle className="w-8 h-8 text-rose-600 animate-bounce" />
-          </div>
-
-          <div className="space-y-2 max-w-xl mx-auto">
-            <h2 className="text-xl md:text-2xl font-extrabold text-foreground tracking-tight">
-              Không thể tải hồ sơ sức khỏe
-            </h2>
-            <p className="text-xs md:text-sm text-slate-600 leading-relaxed font-normal dark:text-slate-300">
+      <div className={cn("mx-auto max-w-2xl", className)}>
+        <div
+          role="alert"
+          className="space-y-4 rounded-3xl border border-rose-200 bg-rose-50 p-6 text-center text-rose-950 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-100 md:p-8"
+        >
+          <span className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300">
+            <TriangleAlert className="size-7" aria-hidden="true" />
+          </span>
+          <div className="space-y-2">
+            <h2 className="text-xl font-extrabold tracking-tight">Không thể tải hồ sơ sức khỏe</h2>
+            <p className="text-sm leading-6">
               Vui lòng kiểm tra kết nối mạng rồi thử lại. Nếu lỗi vẫn tiếp diễn, hãy liên hệ bộ phận hỗ trợ.
             </p>
           </div>
-
           <button
             type="button"
             onClick={() => refetch()}
-            className="px-6 py-3 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm inline-flex items-center gap-2 shadow-lg shadow-rose-600/25 transition-all duration-200 active:scale-95"
+            className="mx-auto flex min-h-11 items-center gap-2 rounded-xl bg-rose-600 px-6 text-sm font-bold text-white transition-colors hover:bg-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-600 focus-visible:ring-offset-2"
           >
-            <RefreshCw className="w-4 h-4 animate-spin-slow" />
-            <span>Thử lại</span>
+            <RefreshCw className="size-4" aria-hidden="true" />
+            Thử lại
           </button>
         </div>
       </div>
@@ -141,161 +150,158 @@ export const ClinicalProfileDashboard: React.FC<ClinicalProfileDashboardProps> =
   return (
     <FormProvider {...form}>
       <div className={cn("mx-auto max-w-6xl space-y-8 pb-28", className)}>
-        <header className="flex flex-col gap-6 rounded-3xl border border-sky-100 bg-card p-6 shadow-sm md:flex-row md:items-center md:justify-between md:p-8">
-          <div className="flex items-start gap-4">
-            <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-sky-50 text-sky-700">
-              <FileText className="size-6" aria-hidden="true" />
-            </span>
-            <div>
-              <p className="text-sm font-semibold text-sky-700">Hồ sơ sức khỏe</p>
-              <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground md:text-3xl">
-                Thông tin sức khỏe của bạn
-              </h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
-                Lưu những thông tin bạn biết để tiện chia sẻ khi cần. Bạn có thể cập nhật bất cứ lúc nào.
-              </p>
-            </div>
+        <header className="page-enter flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+          <div className="space-y-2">
+            <Link
+              href="/profile"
+              className="-ml-2 inline-flex min-h-11 items-center gap-2 rounded-xl px-2 text-sm font-semibold text-brand transition-colors hover:text-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+            >
+              <ArrowLeft className="size-4" aria-hidden="true" />
+              Hồ sơ gia đình
+            </Link>
+            <h1 className="text-2xl font-extrabold tracking-tight text-foreground md:text-3xl">
+              Thông tin sức khỏe của bạn
+            </h1>
+            <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+              Lưu những thông tin bạn biết để tiện chia sẻ khi cần. Bạn có thể cập nhật bất cứ lúc nào.
+            </p>
           </div>
 
-          {/* Tabs Control Board (Bright Medical Card Switcher) */}
+          {/* Hai nhóm thông tin; nền trắng trượt sang nhóm vừa chọn. */}
           <div
             role="tablist"
             aria-label="Chọn nhóm thông tin y khoa"
-            className="flex w-full items-center rounded-2xl bg-muted p-2 md:w-auto"
+            className="flex w-full items-center rounded-2xl border border-border bg-muted md:w-auto"
           >
-            {/* Tab 1 Button: EHR Lite */}
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === "EHR"}
-              onClick={() => setActiveTab("EHR")}
-              className={cn(
-                "relative flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-2 md:flex-none",
-                activeTab === "EHR" ? "text-sky-800 font-extrabold" : "text-slate-600 hover:text-foreground hover:bg-card/50 dark:text-slate-300"
-              )}
-            >
-              {activeTab === "EHR" && (
-                <motion.div
-                  layoutId="active-profile-tab"
-                  className="absolute inset-0 -z-10 rounded-xl bg-card shadow-sm"
-                  transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                />
-              )}
-              <Activity className={cn("size-4 shrink-0", activeTab === "EHR" ? "text-sky-600" : "text-muted-foreground")} />
-              <span>Thông tin sức khỏe</span>
-            </button>
-
-            {/* Tab 2 Button: SOS Contacts */}
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === "SOS"}
-              onClick={() => setActiveTab("SOS")}
-              className={cn(
-                "relative flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-2 md:flex-none",
-                activeTab === "SOS" ? "text-sky-800" : "text-slate-600 hover:text-foreground hover:bg-card/50 dark:text-slate-300"
-              )}
-            >
-              {activeTab === "SOS" && (
-                <motion.div
-                  layoutId="active-profile-tab"
-                  className="absolute inset-0 -z-10 rounded-xl bg-card shadow-sm"
-                  transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                />
-              )}
-              <PhoneCall className={cn("size-4 shrink-0", activeTab === "SOS" ? "text-sky-600" : "text-muted-foreground")} />
-              <span>Liên hệ khẩn cấp</span>
-            </button>
+            {TABS.map((tab) => {
+              const selected = activeTab === tab.value;
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.value}
+                  id={`ehr-tab-${tab.value}`}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  aria-controls={`ehr-tabpanel-${tab.value}`}
+                  onClick={() => setActiveTab(tab.value)}
+                  className={cn(
+                    "relative flex min-h-11 flex-1 items-center justify-center gap-2 rounded-2xl px-4 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background md:flex-none",
+                    selected ? "font-bold text-foreground" : "font-semibold text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {selected && (
+                    <motion.span
+                      layoutId="ehr-dashboard-tab-highlight"
+                      transition={TAB_HIGHLIGHT_TRANSITION}
+                      aria-hidden="true"
+                      className="absolute inset-0 rounded-2xl border-2 border-muted bg-card shadow-sm dark:bg-slate-700"
+                    />
+                  )}
+                  <Icon className={cn("relative size-4 shrink-0", selected ? "text-brand" : "text-muted-foreground")} aria-hidden="true" />
+                  <span className="relative">{tab.label}</span>
+                </button>
+              );
+            })}
           </div>
         </header>
 
         {/* =================================================================== */}
-        {/* THANH BENTO CHỌN ĐỐI TƯỢNG HỒ SƠ GIA ĐÌNH (MULTI-PROFILE TABS)         */}
+        {/* BỘ CHỌN NGƯỜI TRONG GIA ĐÌNH (cùng hàng vòng tròn với trang Hồ sơ)  */}
         {/* =================================================================== */}
         <FamilyProfilePills />
 
         {/* =================================================================== */}
-        {/* NỘI DUNG TABS CHUYỂN HOẠT TRANG THÁI (TAB CONTENT ASSEMBLY)          */}
+        {/* NỘI DUNG CỦA NGƯỜI ĐANG CHỌN                                         */}
         {/* =================================================================== */}
-        <AnimatePresence mode="wait">
-          {activeTab === "EHR" ? (
-            <motion.div
-              key="tab-ehr-content"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
-              className="space-y-10"
-            >
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
-                {/* 1. Bảng Sinh Hiệu & Thanh Đọc BMI Động */}
-                <section aria-label="Thông số Sinh hiệu & BMI">
-                  <VitalsBmiCard form={form} />
-                </section>
-                <section aria-label="Tình trạng sức khỏe đã biết">
-                  <ChronicConditionsSelector form={form} />
-                </section>
+        <div
+          id={EHR_SUBJECT_PANEL_ID}
+          role="tabpanel"
+          aria-labelledby={activeProfileId ? `ehr-subject-${activeProfileId}` : undefined}
+        >
+          <AnimatePresence mode="wait" initial={false}>
+            {activeTab === "EHR" ? (
+              <motion.div
+                key="tab-ehr-content"
+                id="ehr-tabpanel-EHR"
+                role="tabpanel"
+                aria-labelledby="ehr-tab-EHR"
+                variants={tabPanelVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="space-y-10"
+              >
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
+                  {/* 1. Bảng Sinh Hiệu & Thanh Đọc BMI Động */}
+                  <section aria-label="Thông số Sinh hiệu & BMI">
+                    <VitalsBmiCard form={form} />
+                  </section>
+                  <section aria-label="Tình trạng sức khỏe đã biết">
+                    <ChronicConditionsSelector form={form} />
+                  </section>
 
-                {/* 3. Quản Trị Dị Ứng & Thuốc Đang Dùng */}
-                <section aria-label="Dị ứng & Thuốc hằng ngày">
-                  <AllergiesMedicationsInput form={form} />
-                </section>
+                  {/* 3. Quản Trị Dị Ứng & Thuốc Đang Dùng */}
+                  <section aria-label="Dị ứng & Thuốc hằng ngày">
+                    <AllergiesMedicationsInput form={form} />
+                  </section>
 
-                <section aria-label="Tóm tắt thông tin đã khai báo">
-                  <VerifiedClinicalContextPreview form={form} />
-                </section>
-              </form>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="tab-sos-content"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
-              className="space-y-10"
-            >
-              {/* Trung Tâm Liên Hệ Khẩn Cấp SOS & PII Shield */}
-              <section aria-label="Quản trị số điện thoại cấp cứu 115">
+                  <section aria-label="Tóm tắt thông tin đã khai báo">
+                    <VerifiedClinicalContextPreview form={form} />
+                  </section>
+                </form>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="tab-sos-content"
+                id="ehr-tabpanel-SOS"
+                role="tabpanel"
+                aria-labelledby="ehr-tab-SOS"
+                variants={tabPanelVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+              >
                 <EmergencySosManager />
-              </section>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* =================================================================== */}
-        {/* FLOATING SAVE BAR (BAY LÊN NHẸ NHÀNG KHI PHÁT HIỆN FORM ISDIRTY)    */}
+        {/* THANH LƯU: TRƯỢT LÊN KHI CÓ THAY ĐỔI CHƯA LƯU                        */}
+        {/* Trên điện thoại nằm trên thanh điều hướng đáy, không đè lên nó.      */}
         {/* =================================================================== */}
         <AnimatePresence>
           {activeTab === "EHR" && isDirty && (
             <motion.div
-              initial={{ y: 100, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 100, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 350, damping: 28 }}
-              className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-4xl bg-card/95 backdrop-blur-2xl border border-border/90 rounded-3xl p-4 md:px-6 md:py-4 shadow-[0_20px_60px_rgba(14,165,233,0.18),0_4px_25px_rgba(0,0,0,0.06)] flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-foreground"
+              variants={saveBarVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              role="region"
+              aria-label="Thay đổi chưa lưu"
+              className="fixed inset-x-4 bottom-[calc(5rem_+_env(safe-area-inset-bottom))] z-50 mx-auto flex max-w-4xl flex-col justify-between gap-4 rounded-3xl border border-border bg-card/95 p-4 text-foreground shadow-xl backdrop-blur-xl sm:flex-row sm:items-center md:bottom-6 md:px-6"
             >
-              <div className="flex items-center gap-3.5">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-sky-50 text-sky-600 border border-sky-200 animate-pulse shadow-sm">
-                  <FileText className="w-5 h-5" />
-                </div>
+              <div className="flex items-center gap-4">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-brand-edge bg-brand-soft text-brand">
+                  <FileText className="size-5" aria-hidden="true" />
+                </span>
                 <div>
-                  <div className="text-sm font-extrabold text-foreground">
-                    Bạn có thay đổi chưa lưu
-                  </div>
-                  <div className="text-sm text-slate-600 hidden md:block dark:text-slate-300">
+                  <p className="text-sm font-extrabold text-foreground">Bạn có thay đổi chưa lưu</p>
+                  <p className="hidden text-sm text-muted-foreground md:block">
                     Nhấn Lưu thay đổi để cập nhật hồ sơ của bạn.
-                  </div>
+                  </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 shrink-0 self-end sm:self-center w-full sm:w-auto justify-end">
+              <div className="flex w-full shrink-0 items-center justify-end gap-2 sm:w-auto">
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="h-10 px-4 rounded-xl bg-muted hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all border border-slate-300/80 shadow-xs dark:text-slate-200 dark:hover:bg-slate-700 dark:border-slate-700"
+                  className="flex min-h-11 items-center gap-2 rounded-xl border border-border bg-card px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 >
-                  <RotateCcw className="w-3.5 h-3.5" />
+                  <RotateCcw className="size-4" aria-hidden="true" />
                   <span>Hoàn tác</span>
                 </button>
 
@@ -303,12 +309,12 @@ export const ClinicalProfileDashboard: React.FC<ClinicalProfileDashboardProps> =
                   type="button"
                   onClick={form.handleSubmit(onSubmit)}
                   disabled={updateMutation.isPending}
-                  className="h-11 rounded-xl bg-sky-600 px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-sky-700 disabled:opacity-50"
+                  className="flex min-h-11 items-center gap-2 rounded-xl bg-brand px-6 text-sm font-bold text-brand-foreground shadow-sm transition duration-[180ms] hover:bg-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-card active:scale-[0.97] disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100"
                 >
                   {updateMutation.isPending ? (
-                    <RefreshCw className="w-4 h-4 animate-spin-slow stroke-[2.5]" />
+                    <RefreshCw className="size-4 animate-spin" aria-hidden="true" />
                   ) : (
-                    <Save className="w-4 h-4 stroke-[2.5]" />
+                    <Save className="size-4" aria-hidden="true" />
                   )}
                   <span>Lưu thay đổi</span>
                 </button>

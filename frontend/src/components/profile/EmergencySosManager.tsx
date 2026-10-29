@@ -1,39 +1,35 @@
 "use client";
 
 import React, { useCallback, useMemo, useState } from "react";
-import { useForm, Controller, type SubmitHandler } from "react-hook-form";
+import { Controller, useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  PhoneCall,
-  UserPlus,
-  Edit3,
-  Trash2,
-  ShieldAlert,
-  Phone,
-  User,
-  MapPin,
-  CheckCircle2,
-  AlertTriangle,
-  X,
-  ShieldCheck,
-  AlertOctagon,
-  Users,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useEmergencyContacts } from "@/queries/use-clinical-profile";
-import { useUpdateEmergencyContacts } from "@/queries/use-profile-mutations";
-import {
-  EmergencyContactSchema,
-  type EmergencyContactFormValues,
-} from "@/schemas/clinical-profile.schema";
-import type { EmergencyContactDTO, RelationshipType } from "@/types/clinical-profile";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
+import { Check, Loader2, MapPin, Pencil, Phone, Plus, Trash2, TriangleAlert, X } from "lucide-react";
 import { toast } from "sonner";
 
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { avatarInitial } from "@/components/patient/family-identity";
+import { enterTransition, exitTransition, layoutTransition } from "@/lib/motion";
+import { cn } from "@/lib/utils";
+import { formatVietnamPhoneForDisplay } from "@/lib/validations/account-contact.schema";
+import { useEmergencyContacts } from "@/queries/use-clinical-profile";
+import { useUpdateEmergencyContacts } from "@/queries/use-profile-mutations";
+import { EmergencyContactSchema, type EmergencyContactFormValues } from "@/schemas/clinical-profile.schema";
+import type { EmergencyContactDTO, RelationshipType } from "@/types/clinical-profile";
+
 // ============================================================================
-// 1. CONSTANTS FOR RELATIONSHIPS
+// 1. CONSTANTS
 // ============================================================================
-const RELATIONSHIP_OPTIONS: Array<{ value: RelationshipType; label: string; icon?: React.ElementType }> = [
+const MAX_CONTACTS = 3;
+
+const RELATIONSHIP_OPTIONS: Array<{ value: RelationshipType; label: string }> = [
   { value: "SPOUSE", label: "Vợ / Chồng" },
   { value: "PARENT", label: "Cha / Mẹ" },
   { value: "CHILD", label: "Con cái" },
@@ -42,43 +38,66 @@ const RELATIONSHIP_OPTIONS: Array<{ value: RelationshipType; label: string; icon
   { value: "OTHER", label: "Người thân khác" },
 ];
 
+function relationshipLabel(value: RelationshipType): string {
+  return RELATIONSHIP_OPTIONS.find((option) => option.value === value)?.label ?? "Người thân khác";
+}
+
+/** `tel:` chỉ nhận chữ số và dấu +, bỏ khoảng trắng hay gạch người dùng gõ vào. */
+function telHref(phoneNumber: string): string {
+  return `tel:${phoneNumber.replace(/[^\d+]/g, "")}`;
+}
+
+/** Người liên hệ mới nổi lên, người bị xóa mờ đi, những người còn lại dời chỗ. */
+const contactVariants: Variants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: { opacity: 1, y: 0, transition: enterTransition },
+  exit: { opacity: 0, transition: exitTransition },
+};
+
+const FIELD_INPUT =
+  "min-h-12 w-full rounded-xl border bg-background px-4 text-base text-foreground outline-none transition-colors placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-card";
+
 export interface EmergencySosManagerProps {
   className?: string;
+  /** Tên người đang được chọn, để câu mô tả nói rõ đây là liên hệ của ai. */
+  subjectName?: string;
 }
 
 /**
- * Trung Tâm Liên Hệ Khẩn Cấp SOS & Quản Lý Danh Bạ 115 (EmergencySosManager)
- * - Tối đa 3 thẻ, trong đó thẻ cờ is_primary === true là NGUỒN LIÊN HỆ CẤP CỨU SỐ 1
- *   với đường viền chớp chớp nhịp thở lộng lẫy và huy hiệu nổi bật.
- * - Thẩm mỹ: Chuẩn Y tế Hiện Đại Sáng Sủa (Pristine Bright Medical Theme).
+ * Người liên hệ khẩn cấp của hồ sơ đang chọn (tối đa 3). Người số 1 là người
+ * nhân viên y tế thấy khi thẩm định ca sàng lọc của hồ sơ này
+ * (`routes_nurse_simple.py` chỉ trả về liên hệ số 1); hệ thống không tự gọi số
+ * nào và không tự điều xe 115. Mọi câu chữ ở đây phải khớp đúng điều đó.
  */
-export const EmergencySosManager: React.FC<EmergencySosManagerProps> = ({ className }) => {
+export const EmergencySosManager: React.FC<EmergencySosManagerProps> = ({ className, subjectName }) => {
   const { data: contactsData, isLoading, isError, refetch } = useEmergencyContacts();
   const updateMutation = useUpdateEmergencyContacts();
 
   const contacts = useMemo(() => contactsData ?? [], [contactsData]);
-  const isMaxReached = contacts.length >= 3;
+  const isMaxReached = contacts.length >= MAX_CONTACTS;
 
-  // State quản lý Dialog Thêm / Sửa
-  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-
-  // State quản lý AlertDialog xác nhận trước khi xóa người liên hệ Ưu Tiên 1
+  // Xóa người liên hệ số 1 luôn phải xác nhận lại; người khác xóa ngay.
   const [contactToDelete, setContactToDelete] = useState<EmergencyContactDTO | null>(null);
 
-  // React Hook Form cho 1 thẻ SOS
   const form = useForm<EmergencyContactFormValues>({
     resolver: zodResolver(EmergencyContactSchema),
     defaultValues: {
       full_name: "",
       relationship: "SPOUSE",
       phone_number: "",
-      is_primary: contacts.length === 0, // Mặc định là số 1 nếu là thẻ đầu tiên
+      is_primary: contacts.length === 0,
       address: "",
     },
   });
+  const { errors } = form.formState;
 
-  // Mở modal thêm mới
+  const closeDialog = useCallback(() => {
+    setIsDialogOpen(false);
+    setEditingId(null);
+  }, []);
+
   const handleOpenAdd = useCallback(() => {
     if (isMaxReached) {
       toast.warning("Đã đạt giới hạn tối đa 3 người liên hệ khẩn cấp.");
@@ -89,13 +108,12 @@ export const EmergencySosManager: React.FC<EmergencySosManagerProps> = ({ classN
       full_name: "",
       relationship: "SPOUSE",
       phone_number: "",
-      is_primary: contacts.length === 0 || !contacts.some((c) => c.is_primary),
+      is_primary: contacts.length === 0 || !contacts.some((contact) => contact.is_primary),
       address: "",
     });
     setIsDialogOpen(true);
   }, [isMaxReached, contacts, form]);
 
-  // Mở modal sửa
   const handleOpenEdit = useCallback(
     (contact: EmergencyContactDTO) => {
       setEditingId(contact.id || null);
@@ -108,561 +126,469 @@ export const EmergencySosManager: React.FC<EmergencySosManagerProps> = ({ classN
       });
       setIsDialogOpen(true);
     },
-    [form]
+    [form],
   );
 
-  // Xử lý khi Submit Form
   const onSubmit: SubmitHandler<EmergencyContactFormValues> = useCallback(
     (values) => {
       let nextContacts: EmergencyContactDTO[] = [...contacts];
 
-      // Nếu người dùng tick chọn is_primary = true, lập tức gán is_primary = false cho toàn bộ thẻ khác
+      // Chỉ có đúng một người số 1: chọn người này thì bỏ cờ của mọi người khác.
       if (values.is_primary) {
-        nextContacts = nextContacts.map((c) => ({ ...c, is_primary: false }));
+        nextContacts = nextContacts.map((contact) => ({ ...contact, is_primary: false }));
       }
 
       if (editingId) {
-        // Cập nhật liên hệ hiện có
-        nextContacts = nextContacts.map((c) =>
-          c.id === editingId
-            ? { ...c, ...values, id: editingId }
-            : c
+        nextContacts = nextContacts.map((contact) =>
+          contact.id === editingId ? { ...contact, ...values, id: editingId } : contact,
         );
       } else {
-        // Thêm liên hệ mới
-        const newContact: EmergencyContactDTO = {
-          id: `sos-${crypto.randomUUID()}`,
-          ...values,
-        };
-        // Nếu trong danh sách chưa có primary nào, mặc định thẻ mới làm primary
-        if (!nextContacts.some((c) => c.is_primary)) {
-          newContact.is_primary = true;
-        }
+        const newContact: EmergencyContactDTO = { id: `sos-${crypto.randomUUID()}`, ...values };
+        if (!nextContacts.some((contact) => contact.is_primary)) newContact.is_primary = true;
         nextContacts.push(newContact);
       }
 
-      // Đảm bảo luôn có đúng 1 primary nếu danh sách không rỗng
-      if (nextContacts.length > 0 && !nextContacts.some((c) => c.is_primary)) {
+      // Danh sách không rỗng thì luôn có đúng một người số 1.
+      if (nextContacts.length > 0 && !nextContacts.some((contact) => contact.is_primary)) {
         nextContacts[0].is_primary = true;
       }
 
       updateMutation.mutate(nextContacts, {
         onSuccess: () => {
-          setIsDialogOpen(false);
-          setEditingId(null);
+          closeDialog();
           form.reset();
         },
       });
     },
-    [contacts, editingId, updateMutation, form]
+    [contacts, editingId, updateMutation, form, closeDialog],
   );
 
   const executeDelete = useCallback(
     (id?: string) => {
       if (!id) return;
-      const filtered = contacts.filter((c) => c.id !== id);
-
-      // Nếu sau khi xóa mà không còn thẻ primary nào, gán thẻ đầu tiên làm primary
-      if (filtered.length > 0 && !filtered.some((c) => c.is_primary)) {
+      const filtered = contacts.filter((contact) => contact.id !== id);
+      // Xóa người số 1 thì người kế tiếp lên làm số 1.
+      if (filtered.length > 0 && !filtered.some((contact) => contact.is_primary)) {
         filtered[0] = { ...filtered[0], is_primary: true };
       }
-
       updateMutation.mutate(filtered, {
-        onSuccess: () => {
-          toast.info("Đã xóa thẻ liên hệ SOS khỏi hệ thống AI Triage.");
-          setContactToDelete(null);
-        },
+        onSuccess: () => setContactToDelete(null),
       });
     },
-    [contacts, updateMutation]
+    [contacts, updateMutation],
   );
 
-  // Xử lý Xóa liên hệ
-  const handleTriggerDelete = useCallback((contact: EmergencyContactDTO) => {
-    // Nếu là Người liên hệ số 1 (Primary Target Card), mở AlertDialog xác nhận nghiêm ngặt
-    if (contact.is_primary) {
-      setContactToDelete(contact);
-    } else {
-      // Xóa thông thường
-      executeDelete(contact.id);
-    }
-  }, [executeDelete]);
+  const handleTriggerDelete = useCallback(
+    (contact: EmergencyContactDTO) => {
+      if (contact.is_primary) setContactToDelete(contact);
+      else executeDelete(contact.id);
+    },
+    [executeDelete],
+  );
 
-  // Render Loading Skeleton Shimmer
-  if (isLoading) {
-    return (
-      <div className={cn("space-y-6 animate-pulse", className)}>
-        <div className="h-12 bg-slate-200 border border-slate-300 rounded-2xl w-1/3 dark:bg-slate-700 dark:border-slate-700" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="h-56 bg-card border border-border rounded-3xl shadow-sm" />
-          <div className="h-56 bg-card border border-border rounded-3xl shadow-sm" />
-          <div className="h-56 bg-card border border-border rounded-3xl shadow-sm" />
-        </div>
-        <div className="h-32 bg-slate-900 rounded-3xl shadow-md" />
-      </div>
-    );
-  }
-
-  // Render Error State
-  if (isError) {
-    return (
-      <div className={cn("bg-rose-50 border border-rose-200 rounded-3xl p-8 text-center max-w-2xl mx-auto space-y-4 shadow-sm", className)}>
-        <AlertTriangle className="w-12 h-12 text-rose-600 mx-auto" aria-hidden="true" />
-        <h3 className="text-lg font-extrabold text-foreground">Không thể kết nối danh bạ khẩn cấp SOS</h3>
-        <p className="text-xs text-slate-600 font-medium dark:text-slate-300">
-          Có lỗi xảy ra khi đồng bộ dữ liệu từ máy chủ. Vui lòng kiểm tra kết nối mạng và thử lại.
-        </p>
-        <button
-          type="button"
-          onClick={() => refetch()}
-          className="px-6 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs transition-all shadow-md shadow-rose-600/25 active:scale-95"
-        >
-          Thử lại (Retry Query)
-        </button>
-      </div>
-    );
-  }
+  const sectionDescription = (
+    <>
+      Khi thẩm định ca sàng lọc của {subjectName ?? "hồ sơ này"}, nhân viên y tế thấy người liên hệ số 1 để gọi khi
+      cần. Hệ thống không tự gọi số này và không tự điều xe 115.
+    </>
+  );
 
   return (
-    <div className={cn("space-y-8", className)}>
-      {/* Header Trung Tâm SOS */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-border">
-        <div className="flex items-center gap-3.5">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-50 border border-amber-200 shadow-sm">
-            <PhoneCall className="h-6 w-6 text-amber-600 animate-pulse" />
-          </div>
-          <div>
-            <h2 className="text-xl font-black text-foreground tracking-tight flex items-center gap-2.5">
-              <span>Trung Tâm Liên Hệ Khẩn Cấp SOS</span>
-              <span className="text-xs font-mono px-2.5 py-0.5 rounded-md bg-amber-50 border border-amber-300 text-amber-900 font-extrabold shadow-2xs">
-                {contacts.length} / 3
-              </span>
-            </h2>
-            <p className="text-xs text-slate-600 font-medium mt-0.5 dark:text-slate-300">
-              Định danh người thân hoặc bác sĩ cá nhân để Điều dưỡng điều xe cấp cứu 115 trong thời gian vàng
-            </p>
-          </div>
+    <section
+      aria-labelledby="sos-contacts-title"
+      className={cn("rounded-3xl border border-border bg-card p-4 shadow-xs sm:p-6", className)}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h2 id="sos-contacts-title" className="text-lg font-extrabold tracking-tight text-foreground">
+            Người liên hệ khẩn cấp
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">{sectionDescription}</p>
         </div>
-
-        {/* Nút Thêm Liên Hệ Khẩn Cấp */}
-        <button
-          type="button"
-          onClick={handleOpenAdd}
-          disabled={isMaxReached || updateMutation.isPending}
-          className={cn(
-            "h-11 px-5 rounded-2xl font-extrabold text-xs flex items-center justify-center gap-2 transition-all duration-200 shadow-md shrink-0 self-start sm:self-center",
-            isMaxReached
-              ? "bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed dark:bg-slate-700 dark:border-slate-700"
-              : "bg-amber-500 hover:bg-amber-400 text-amber-950 shadow-amber-500/25 active:scale-95 font-black"
-          )}
-        >
-          <UserPlus className="w-4 h-4 stroke-[3]" />
-          <span>Thêm Người Liên Hệ Khẩn Cấp</span>
-        </button>
+        {!isLoading && !isError && (
+          <span className="shrink-0 text-sm font-semibold tabular-nums text-muted-foreground">
+            {contacts.length}/{MAX_CONTACTS}
+          </span>
+        )}
       </div>
 
-      {/* ===================================================================== */}
-      {/* 1. LƯỚI THẺ SOS CỐ ĐỊNH & THẺ ƯU TIÊN 1 (PRIMARY TARGET CARD)       */}
-      {/* ===================================================================== */}
-      {contacts.length === 0 ? (
-        <div className="p-10 rounded-3xl border border-dashed border-slate-300 bg-background text-center space-y-4 max-w-xl mx-auto shadow-sm dark:border-slate-700">
-          <div className="w-16 h-16 rounded-2xl bg-amber-100 border border-amber-200 flex items-center justify-center mx-auto shadow-2xs">
-            <ShieldAlert className="w-8 h-8 text-amber-600" />
-          </div>
-          <div className="space-y-1">
-            <h4 className="text-base font-black text-foreground">Danh bạ cấp cứu SOS hiện trống</h4>
-            <p className="text-xs text-slate-600 leading-relaxed font-normal dark:text-slate-300">
-              Khi hệ thống AI Triage phát hiện bệnh nhân chuyển sang trạng thái Báo Động Đỏ (ESI 1 hoặc ESI 2), cần có ít nhất 01 số điện thoại liên hệ lập tức để cứu thâu thời gian vàng.
-            </p>
-          </div>
+      {isLoading ? (
+        <div aria-busy="true" aria-label="Đang tải người liên hệ khẩn cấp" className="mt-4 space-y-2">
+          {[0, 1].map((item) => (
+            <div key={item} className="skeleton-sweep relative flex items-center gap-4 overflow-hidden rounded-2xl p-2">
+              <div className="size-12 shrink-0 rounded-full bg-muted" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 w-1/2 rounded-lg bg-muted" />
+                <div className="h-4 w-1/3 rounded-lg bg-muted" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : isError ? (
+        <div
+          role="alert"
+          className="mt-4 space-y-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-900 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-100"
+        >
+          <p className="text-sm font-semibold leading-6">
+            Không tải được danh sách người liên hệ khẩn cấp. Vui lòng kiểm tra kết nối mạng và thử lại.
+          </p>
+          <button
+            type="button"
+            onClick={() => void refetch()}
+            className="flex min-h-11 items-center gap-2 rounded-xl border border-rose-300 bg-card px-4 text-sm font-semibold text-rose-800 transition-colors hover:bg-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-600 dark:border-rose-800 dark:text-rose-200 dark:hover:bg-rose-950"
+          >
+            Thử lại
+          </button>
+        </div>
+      ) : contacts.length === 0 ? (
+        <div className="mt-4 space-y-4 rounded-2xl border border-dashed border-border p-4 text-center">
+          <p className="text-sm leading-6 text-muted-foreground">
+            Chưa có người liên hệ khẩn cấp. Thêm ít nhất một người để nhân viên y tế có số gọi khi cần.
+          </p>
           <button
             type="button"
             onClick={handleOpenAdd}
-            className="px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-amber-950 font-black text-xs inline-flex items-center gap-2 shadow-lg shadow-amber-500/25 transition-all active:scale-95"
+            className="mx-auto flex min-h-11 items-center gap-2 rounded-xl bg-brand px-4 text-sm font-bold text-brand-foreground transition duration-[180ms] hover:bg-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-card active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
           >
-            <UserPlus className="w-4 h-4 stroke-[3]" />
-            <span>Khởi Tạo Liên Hệ Đầu Tiên</span>
+            <Plus className="size-4" aria-hidden="true" />
+            Thêm người liên hệ
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <AnimatePresence mode="popLayout">
-            {contacts.map((contact) => {
-              const isPrimary = contact.is_primary;
-
-              return (
-                <motion.div
+        <>
+          <ul className="mt-4 divide-y divide-border">
+            <AnimatePresence initial={false}>
+              {contacts.map((contact) => (
+                <motion.li
                   key={contact.id || contact.phone_number}
-                  layout
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                  transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                  className={cn(
-                    "p-6 rounded-3xl border transition-all duration-300 relative overflow-hidden flex flex-col justify-between group/sos h-full min-h-[230px]",
-                    isPrimary
-                      ? "bg-gradient-to-br from-amber-50/95 via-amber-50/40 to-white border-2 border-amber-400 text-foreground shadow-[0_10px_35px_rgba(245,158,11,0.15)] ring-1 ring-amber-500/20 animate-pulse-subtle"
-                      : "bg-card border-border/90 hover:border-sky-300 hover:shadow-lg text-foreground shadow-sm"
-                  )}
+                  layout="position"
+                  variants={contactVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  transition={{ layout: layoutTransition }}
+                  className="py-4 first:pt-0 last:pb-0"
                 >
-                  {/* Ambient illumination for Primary Card */}
-                  {isPrimary && (
-                    <div className="absolute -top-12 -right-12 h-36 w-36 rounded-full bg-amber-400/20 blur-2xl pointer-events-none" />
-                  )}
-
-                  <div>
-                    {/* Top row: Badge & Action buttons */}
-                    <div className="flex items-start justify-between gap-2 pb-4 border-b border-border/80">
-                      <div>
-                        {isPrimary ? (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500 text-amber-950 font-mono text-[10px] font-black tracking-wider shadow-md shadow-amber-500/35 uppercase">
-                            <AlertOctagon className="w-3.5 h-3.5 fill-slate-950 text-amber-500 shrink-0" />
-                            <span>NGUỒN LIÊN HỆ CẤP CỨU SỐ 1</span>
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-muted text-slate-700 font-mono text-[10px] font-extrabold tracking-wider uppercase border border-slate-300/80 shadow-2xs dark:text-slate-200 dark:border-slate-700">
-                            <Users className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                            <span>LIÊN HỆ BỔ TRỢ</span>
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Edit & Delete Actions */}
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEdit(contact)}
-                          className="h-8 w-8 rounded-xl bg-muted hover:bg-slate-200 text-slate-700 hover:text-slate-950 flex items-center justify-center transition-colors border border-slate-300/70 shadow-2xs dark:text-slate-200 dark:hover:bg-slate-700 dark:border-slate-700"
-                          title="Chỉnh sửa liên hệ"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleTriggerDelete(contact)}
-                          className="h-8 w-8 rounded-xl bg-muted hover:bg-rose-50 text-muted-foreground hover:text-rose-600 flex items-center justify-center transition-colors border border-slate-300/70 hover:border-rose-300 shadow-2xs"
-                          title="Xóa liên hệ này"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Contact details */}
-                    <div className="mt-4.5 space-y-3">
-                      <div className="flex items-baseline justify-between gap-2">
-                        <h3 className="text-lg font-black text-foreground tracking-tight flex items-center gap-2 min-w-0">
-                          <User className={cn("w-4 h-4 shrink-0", isPrimary ? "text-amber-600" : "text-muted-foreground")} />
-                          <span className="truncate">{contact.full_name}</span>
-                        </h3>
-                        <span className="text-xs font-extrabold px-2.5 py-0.5 rounded-md bg-muted text-slate-800 border border-slate-300/80 shrink-0 font-mono shadow-2xs dark:text-slate-100 dark:border-slate-700">
-                          {RELATIONSHIP_OPTIONS.find((r) => r.value === contact.relationship)?.label || contact.relationship}
+                  <div className="flex items-center gap-4">
+                    <span
+                      aria-hidden="true"
+                      className="flex size-12 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-base font-extrabold text-indigo-900 dark:bg-indigo-950 dark:text-indigo-200"
+                    >
+                      {avatarInitial(contact.full_name)}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-base font-bold leading-6 text-foreground">
+                        {contact.full_name}
+                        <span className="font-semibold text-muted-foreground">
+                          {" "}
+                          · {relationshipLabel(contact.relationship).toLocaleLowerCase("vi-VN")}
                         </span>
-                      </div>
-
-                      <div className={cn(
-                        "flex items-center gap-2.5 p-3.5 rounded-2xl font-mono font-extrabold text-base shadow-inner transition-colors",
-                        isPrimary ? "bg-card border border-amber-300/90 text-emerald-800 shadow-xs" : "bg-background border border-border/90 text-emerald-700"
-                      )}>
-                        <Phone className="w-4 h-4 text-emerald-600 shrink-0" aria-hidden="true" />
-                        <span className="tracking-wider">{contact.phone_number}</span>
-                      </div>
-
+                      </p>
+                      <p className="text-sm leading-6 tabular-nums text-muted-foreground">
+                        {formatVietnamPhoneForDisplay(contact.phone_number)}
+                      </p>
+                      {contact.is_primary && (
+                        <span className="mt-2 inline-flex items-center gap-2 rounded-full border border-brand-edge bg-brand-soft px-2 text-sm font-semibold leading-6 text-brand-ink">
+                          Liên hệ số 1
+                        </span>
+                      )}
                       {contact.address && (
-                        <div className="flex items-start gap-2 text-xs text-slate-600 font-sans pt-0.5 dark:text-slate-300">
-                          <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
-                          <span className="line-clamp-2 leading-relaxed font-medium">{contact.address}</span>
-                        </div>
+                        <p className="mt-2 flex items-start gap-2 text-sm leading-6 text-muted-foreground">
+                          <MapPin className="mt-1 size-4 shrink-0" aria-hidden="true" />
+                          <span className="line-clamp-2">{contact.address}</span>
+                        </p>
                       )}
                     </div>
+                    <a
+                      href={telHref(contact.phone_number)}
+                      aria-label={`Gọi ${contact.full_name}`}
+                      className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-brand-edge bg-brand-soft text-brand transition duration-[180ms] hover:bg-brand hover:text-brand-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-card active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
+                    >
+                      <Phone className="size-5" aria-hidden="true" />
+                    </a>
                   </div>
+                  <div className="mt-2 flex gap-2 pl-16">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEdit(contact)}
+                      aria-label={`Sửa người liên hệ ${contact.full_name}`}
+                      className="inline-flex min-h-11 items-center gap-2 rounded-xl px-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                    >
+                      <Pencil className="size-4" aria-hidden="true" />
+                      Sửa
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleTriggerDelete(contact)}
+                      disabled={updateMutation.isPending}
+                      aria-label={`Xóa người liên hệ ${contact.full_name}`}
+                      className="inline-flex min-h-11 items-center gap-2 rounded-xl px-2 text-sm font-semibold text-rose-700 transition-colors hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-600 disabled:opacity-50 dark:text-rose-300 dark:hover:bg-rose-950/40"
+                    >
+                      <Trash2 className="size-4" aria-hidden="true" />
+                      Xóa
+                    </button>
+                  </div>
+                </motion.li>
+              ))}
+            </AnimatePresence>
+          </ul>
 
-                  {/* Card Footer */}
-                  <div className="mt-5 pt-3 border-t border-border/80 flex items-center justify-between text-xs font-mono text-muted-foreground">
-                    <span className="uppercase font-semibold">Trạng thái: Đã lưu</span>
-                    <span className={cn("font-bold flex items-center gap-1", isPrimary ? "text-amber-700 font-extrabold" : "text-emerald-700 font-extrabold")}>
-                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                      <span>Sẵn sàng ESI 115</span>
-                    </span>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
-        </div>
+          <div className="mt-4 border-t border-border pt-4">
+            {isMaxReached ? (
+              <p className="text-sm leading-6 text-muted-foreground">
+                Đã đủ {MAX_CONTACTS} người liên hệ. Xóa bớt một người nếu muốn thêm người khác.
+              </p>
+            ) : (
+              <button
+                type="button"
+                onClick={handleOpenAdd}
+                disabled={updateMutation.isPending}
+                className="flex min-h-11 items-center gap-2 rounded-xl border border-dashed border-border px-4 text-sm font-semibold text-brand transition-colors hover:border-brand-edge hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-50"
+              >
+                <Plus className="size-4" aria-hidden="true" />
+                Thêm người liên hệ
+              </button>
+            )}
+          </div>
+        </>
       )}
 
       {/* ===================================================================== */}
-      {/* 2. HỘP BẢO MẬT LÂM SÀNG PII/PHI NOTICE SHIELD                       */}
+      {/* HỘP THOẠI THÊM / SỬA (React Hook Form + Zod, cùng schema như trước)   */}
       {/* ===================================================================== */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white border border-slate-700 rounded-3xl p-6 md:p-8 shadow-xl relative overflow-hidden group transition-all duration-500">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-amber-400/10 to-transparent pointer-events-none" />
-        <div className="absolute -left-20 -bottom-20 h-48 w-48 rounded-full bg-sky-500/10 blur-[80px] pointer-events-none" />
-
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 relative z-10">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-amber-500/20 border border-amber-400/50 shadow-[0_0_30px_rgba(245,158,11,0.3)] group-hover:scale-105 transition-transform duration-300">
-            <ShieldCheck className="h-9 w-9 text-amber-400 animate-pulse" />
-          </div>
-
-          <div className="space-y-2.5 flex-1">
-            <div className="flex flex-wrap items-center gap-2.5">
-              {/* Nội dung phải khớp đúng những gì hệ thống làm: số điện thoại
-                  được lưu và trả về dạng văn bản thường cho nhân viên y tế xem
-                  ca (routes_nurse_simple.py), không có tầng mã hoá nào, và
-                  không có cơ chế tự gọi hay điều xe 115. */}
-              <span className="text-xs font-mono font-black px-3 py-1 rounded-md bg-amber-500 text-amber-950 uppercase tracking-wider shadow-sm">
-                Ai được xem số này
-              </span>
-            </div>
-            <p className="text-sm md:text-base text-slate-200 font-normal leading-relaxed">
-              <strong className="text-amber-300 font-extrabold">Chỉ nhân viên y tế đang xem ca sàng lọc của bạn.</strong> Số điện thoại người thân được lưu trong hồ sơ của bạn và hiển thị cho nhân viên y tế khi họ thẩm định ca, để liên lạc khi cần. Hệ thống không tự gọi số này và không tự điều xe 115.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* ===================================================================== */}
-      {/* 3. MODAL FORM SÁT KÉP (DIALOG THÊM/SỬA LIÊN HỆ)                        */}
-      {/* ===================================================================== */}
-      <AnimatePresence>
-        {isDialogOpen && (
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="sos-modal-title"
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ type: "spring", stiffness: 350, damping: 25 }}
-              className="bg-card border border-border rounded-3xl shadow-[0_25px_70px_rgba(0,0,0,0.2)] w-full max-w-lg p-6 md:p-8 relative overflow-hidden text-foreground"
+      <Dialog
+        open={isDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) closeDialog();
+        }}
+      >
+        <DialogContent
+          hideCloseButton
+          overlayClassName="bg-slate-950/55 backdrop-blur-sm"
+          className="max-h-[calc(100dvh-32px)] max-w-lg gap-0 overflow-y-auto rounded-3xl border-border bg-card p-0 text-foreground shadow-xl"
+        >
+          <DialogHeader className="space-y-2 border-b border-border p-6 pr-16 text-left">
+            <DialogTitle className="text-xl font-bold text-foreground">
+              {editingId ? "Sửa người liên hệ khẩn cấp" : "Thêm người liên hệ khẩn cấp"}
+            </DialogTitle>
+            <DialogDescription className="text-sm leading-6 text-muted-foreground">
+              Người liên hệ số 1 được hiển thị cho nhân viên y tế khi họ thẩm định ca sàng lọc.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogClose asChild>
+            <button
+              type="button"
+              aria-label="Đóng hộp thoại"
+              className="absolute right-4 top-4 flex size-11 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
             >
-              <div className="absolute top-0 right-0 w-48 h-48 bg-amber-50 rounded-full blur-3xl pointer-events-none -z-10" />
+              <X className="size-5" aria-hidden="true" />
+            </button>
+          </DialogClose>
 
-              <div className="flex items-center justify-between pb-4 border-b border-border">
-                <div className="flex items-center gap-3">
-                  <div className="h-11 w-11 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shadow-sm">
-                    {editingId ? <Edit3 className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
-                  </div>
-                  <h3 id="sos-modal-title" className="text-lg font-black text-foreground">
-                    {editingId ? "Cập Nhật Liên Hệ Khẩn Cấp" : "Thêm Người Liên Hệ Khẩn Cấp"}
-                  </h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsDialogOpen(false)}
-                  className="h-8 w-8 rounded-xl bg-muted hover:bg-slate-200 text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors shadow-2xs dark:hover:bg-slate-700"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+          <form id="sos-contact-form" noValidate onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-6">
+            <div className="space-y-2">
+              <label htmlFor="input-sos-name" className="block text-sm font-semibold text-foreground">
+                Họ và tên người liên hệ
+              </label>
+              <input
+                id="input-sos-name"
+                type="text"
+                autoComplete="name"
+                placeholder="Ví dụ: Nguyễn Văn Hùng"
+                aria-invalid={Boolean(errors.full_name)}
+                aria-describedby={errors.full_name ? "input-sos-name-error" : undefined}
+                className={cn(
+                  FIELD_INPUT,
+                  errors.full_name
+                    ? "border-rose-500 focus-visible:ring-rose-600"
+                    : "border-border focus-visible:border-brand focus-visible:ring-brand",
+                )}
+                {...form.register("full_name")}
+              />
+              {errors.full_name?.message && (
+                <p id="input-sos-name-error" className="flex items-center gap-2 text-sm font-medium text-rose-700 dark:text-rose-300">
+                  <TriangleAlert className="size-4 shrink-0" aria-hidden="true" />
+                  {errors.full_name.message}
+                </p>
+              )}
+            </div>
+
+            <fieldset className="space-y-2">
+              <legend className="text-sm font-semibold text-foreground">Mối quan hệ</legend>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {RELATIONSHIP_OPTIONS.map((option) => (
+                  <label
+                    key={option.value}
+                    className="relative flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-border bg-background px-2 text-center text-sm font-semibold text-foreground transition-colors focus-within:ring-2 focus-within:ring-brand focus-within:ring-offset-2 focus-within:ring-offset-card hover:bg-muted has-[:checked]:border-brand-edge has-[:checked]:bg-brand-soft has-[:checked]:text-brand-ink"
+                  >
+                    <input type="radio" value={option.value} className="sr-only" {...form.register("relationship")} />
+                    {option.label}
+                  </label>
+                ))}
               </div>
+            </fieldset>
 
-              {/* Form Nội Dung */}
-              <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 space-y-5">
-                {/* Họ và tên */}
-                <div className="space-y-2">
-                  <label htmlFor="input-sos-name" className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5 dark:text-slate-100">
-                    <User className="w-3.5 h-3.5 text-amber-600" />
-                    <span>Họ và tên người liên hệ:</span>
-                  </label>
-                  <input
-                    id="input-sos-name"
-                    type="text"
-                    placeholder="Vd: Nguyễn Văn Hùng (Cha)"
-                    className={cn(
-                      "w-full h-11 px-4 bg-background border rounded-xl text-sm text-foreground font-bold focus:outline-none focus:bg-card focus:ring-2 focus:ring-amber-500/40 transition-all shadow-inner",
-                      form.formState.errors.full_name ? "border-rose-500 bg-rose-50/50 text-rose-900" : "border-slate-300 focus:border-amber-500 dark:border-slate-700"
-                    )}
-                    {...form.register("full_name")}
-                  />
-                  {form.formState.errors.full_name && (
-                    <p className="text-xs font-bold text-rose-600 flex items-center gap-1 mt-1">
-                      <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-                      <span>{form.formState.errors.full_name.message}</span>
+            <div className="space-y-2">
+              <label htmlFor="input-sos-phone" className="block text-sm font-semibold text-foreground">
+                Số điện thoại
+              </label>
+              <input
+                id="input-sos-phone"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="Ví dụ: 0901234567 hoặc +84901234567"
+                aria-invalid={Boolean(errors.phone_number)}
+                aria-describedby={errors.phone_number ? "input-sos-phone-error" : undefined}
+                className={cn(
+                  FIELD_INPUT,
+                  "tabular-nums",
+                  errors.phone_number
+                    ? "border-rose-500 focus-visible:ring-rose-600"
+                    : "border-border focus-visible:border-brand focus-visible:ring-brand",
+                )}
+                {...form.register("phone_number")}
+              />
+              {errors.phone_number?.message && (
+                <p id="input-sos-phone-error" className="flex items-center gap-2 text-sm font-medium text-rose-700 dark:text-rose-300">
+                  <TriangleAlert className="size-4 shrink-0" aria-hidden="true" />
+                  {errors.phone_number.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="input-sos-address" className="block text-sm font-semibold text-foreground">
+                Địa chỉ <span className="font-normal text-muted-foreground">(không bắt buộc)</span>
+              </label>
+              <input
+                id="input-sos-address"
+                type="text"
+                autoComplete="street-address"
+                placeholder="Ví dụ: 12 Nguyễn Trãi, Thanh Xuân, Hà Nội"
+                className={cn(FIELD_INPUT, "border-border focus-visible:border-brand focus-visible:ring-brand")}
+                {...form.register("address")}
+              />
+            </div>
+
+            <Controller
+              control={form.control}
+              name="is_primary"
+              render={({ field }) => (
+                <div className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-muted/60 p-4">
+                  <div className="min-w-0">
+                    <p id="sos-primary-label" className="text-sm font-bold text-foreground">
+                      Đặt làm người liên hệ số 1
                     </p>
-                  )}
-                </div>
-
-                {/* Mối quan hệ */}
-                <div className="space-y-2">
-                  <label className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5 dark:text-slate-100">
-                    <Users className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Mối quan hệ (Relationship):</span>
-                  </label>
-                  <Controller
-                    control={form.control}
-                    name="relationship"
-                    render={({ field }) => (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        {RELATIONSHIP_OPTIONS.map((opt) => (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => field.onChange(opt.value)}
-                            className={cn(
-                              "h-9 px-2 rounded-xl border text-xs transition-all flex items-center justify-center shadow-2xs",
-                              field.value === opt.value
-                                ? "bg-amber-500 text-amber-950 border-amber-500 font-black shadow-md shadow-amber-500/25"
-                                : "bg-muted text-slate-700 border-slate-300 hover:bg-slate-200/60 font-bold dark:text-slate-200 dark:hover:bg-slate-700 dark:border-slate-700"
-                            )}
-                          >
-                            <span>{opt.label}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  />
-                </div>
-
-                {/* Số điện thoại (Zod validation) */}
-                <div className="space-y-2">
-                  <label htmlFor="input-sos-phone" className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5 dark:text-slate-100">
-                    <Phone className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Số điện thoại di động:</span>
-                  </label>
-                  <input
-                    id="input-sos-phone"
-                    type="tel"
-                    placeholder="Vd: 0901234567 hoặc +84901234567"
-                    className={cn(
-                      "w-full h-11 px-4 bg-background border rounded-xl text-sm font-mono font-black text-foreground focus:outline-none focus:bg-card focus:ring-2 focus:ring-emerald-500/40 transition-all placeholder:text-slate-400 shadow-inner",
-                      form.formState.errors.phone_number ? "border-rose-500 bg-rose-50/50 text-rose-900" : "border-slate-300 focus:border-emerald-500 dark:border-slate-700"
-                    )}
-                    {...form.register("phone_number")}
-                  />
-                  {form.formState.errors.phone_number && (
-                    <p className="text-xs font-bold text-rose-600 flex items-center gap-1 mt-1">
-                      <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-                      <span>{form.formState.errors.phone_number.message}</span>
+                    <p id="sos-primary-hint" className="text-sm leading-6 text-muted-foreground">
+                      Nhân viên y tế thấy người này đầu tiên khi cần liên lạc.
                     </p>
-                  )}
-                </div>
-
-                {/* Địa chỉ (tuỳ chọn) */}
-                <div className="space-y-2">
-                  <label htmlFor="input-sos-address" className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5 dark:text-slate-100">
-                    <MapPin className="w-3.5 h-3.5 text-sky-600" />
-                    <span>Địa chỉ / Căn hộ (Hỗ trợ xe cấp cứu 115):</span>
-                  </label>
-                  <input
-                    id="input-sos-address"
-                    type="text"
-                    placeholder="Vd: Vinhomes Central Park, Q. Bình Thạnh, TP.HCM"
-                    className="w-full h-11 px-4 bg-background border border-slate-300 rounded-xl text-sm font-semibold text-foreground focus:outline-none focus:bg-card focus:ring-2 focus:ring-sky-500/40 focus:border-sky-500 transition-all placeholder:text-slate-400 shadow-inner dark:border-slate-700"
-                    {...form.register("address")}
-                  />
-                </div>
-
-                {/* Cờ ưu tiên số 1 (Is Primary) */}
-                <div className="p-4 rounded-2xl bg-amber-50/90 border border-amber-300/80 flex items-center justify-between shadow-xs">
-                  <div className="flex items-center gap-3">
-                    <AlertOctagon className="w-6 h-6 text-amber-600 shrink-0 animate-pulse" />
-                    <div className="text-xs">
-                      <div className="font-extrabold text-amber-950">Đặt làm Nguồn liên hệ cấp cứu số 1</div>
-                      <div className="text-slate-600 text-xs font-medium mt-0.5 dark:text-slate-300">Số này được hiển thị đầu tiên cho nhân viên y tế khi cần liên lạc</div>
-                    </div>
                   </div>
-                  <Controller
-                    control={form.control}
-                    name="is_primary"
-                    render={({ field }) => (
-                      <button
-                        type="button"
-                        onClick={() => field.onChange(!field.value)}
-                        className={cn(
-                          "w-12 h-7 rounded-full transition-colors relative p-1 shrink-0 flex items-center shadow-inner",
-                          field.value ? "bg-amber-500" : "bg-slate-300"
-                        )}
-                      >
-                        <span
-                          className={cn(
-                            "w-5 h-5 rounded-full bg-card shadow-md transform transition-transform duration-200",
-                            field.value ? "translate-x-5 bg-slate-950" : "translate-x-0"
-                          )}
-                        />
-                      </button>
-                    )}
-                  />
-                </div>
-
-                {/* Submit actions */}
-                <div className="pt-5 flex items-center justify-end gap-3 border-t border-border">
                   <button
                     type="button"
-                    onClick={() => setIsDialogOpen(false)}
-                    className="h-10 px-5 rounded-xl bg-muted hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors shadow-2xs dark:text-slate-200 dark:hover:bg-slate-700"
+                    role="switch"
+                    aria-checked={field.value}
+                    aria-labelledby="sos-primary-label"
+                    aria-describedby="sos-primary-hint"
+                    onClick={() => field.onChange(!field.value)}
+                    className={cn(
+                      "relative flex h-8 w-14 shrink-0 items-center rounded-full p-1 transition-colors duration-[180ms] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-card",
+                      field.value ? "bg-brand" : "bg-slate-300 dark:bg-slate-600",
+                    )}
                   >
-                    Hủy Bỏ
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={updateMutation.isPending}
-                    className="h-10 px-6 rounded-xl bg-amber-500 hover:bg-amber-400 text-amber-950 font-black text-xs flex items-center gap-2 shadow-lg shadow-amber-500/25 transition-all active:scale-95 disabled:opacity-50"
-                  >
-                    <CheckCircle2 className="w-4 h-4 stroke-[3]" />
-                    <span>{editingId ? "Lưu Cập Nhật" : "Xác Nhận Thêm"}</span>
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        "size-6 rounded-full bg-white shadow-sm transition-transform duration-[180ms] motion-reduce:transition-none",
+                        field.value ? "translate-x-6" : "translate-x-0",
+                      )}
+                    />
                   </button>
                 </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+              )}
+            />
+          </form>
 
-      {/* ===================================================================== */}
-      {/* 4. ALERT DIALOG XÁC NHẬN XÓA NGUỒN LIÊN HỆ CẤP CỨU SỐ 1              */}
-      {/* ===================================================================== */}
-      <AnimatePresence>
-        {contactToDelete && (
-          <div
-            role="alertdialog"
-            aria-modal="true"
-            aria-labelledby="alert-dialog-title"
-            aria-describedby="alert-dialog-desc"
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-md"
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-card border-2 border-rose-500 rounded-3xl p-6 md:p-8 max-w-md w-full text-foreground shadow-[0_20px_60px_rgba(244,63,94,0.25)] relative overflow-hidden"
+          <footer className="flex flex-col-reverse gap-2 border-t border-border p-4 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              onClick={closeDialog}
+              className="flex min-h-12 items-center justify-center rounded-xl border border-border bg-card px-6 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
             >
-              <div className="flex items-center gap-3 text-rose-600 mb-4">
-                <div className="h-12 w-12 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center shrink-0 shadow-sm">
-                  <AlertTriangle className="w-6 h-6 text-rose-600" aria-hidden="true" />
-                </div>
-                <h3 id="alert-dialog-title" className="text-lg font-black text-foreground leading-tight">
-                  CẢNH BÁO: Xóa Nguồn Liên Hệ Số 1 (Primary Target)?
-                </h3>
-              </div>
+              Hủy
+            </button>
+            <button
+              type="submit"
+              form="sos-contact-form"
+              disabled={updateMutation.isPending}
+              className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand px-6 text-base font-bold text-brand-foreground transition duration-[180ms] hover:bg-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-card active:scale-[0.97] disabled:opacity-60 motion-reduce:transition-none motion-reduce:active:scale-100"
+            >
+              {updateMutation.isPending ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Check className="size-4" aria-hidden="true" />
+              )}
+              {editingId ? "Lưu thay đổi" : "Thêm người liên hệ"}
+            </button>
+          </footer>
+        </DialogContent>
+      </Dialog>
 
-              <p id="alert-dialog-desc" className="text-xs md:text-sm text-slate-600 leading-relaxed font-normal mb-6 dark:text-slate-300">
-                Bạn đang xóa liên hệ <strong className="text-amber-900 font-extrabold bg-amber-50 px-1 py-0.5 rounded">{contactToDelete.full_name}</strong>. Đây là số điện thoại ưu tiên mà điều dưỡng lâm sàng sẽ liên lạc đầu tiên khi ca khám chuyển sang <strong className="text-rose-700 font-bold bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">Báo Động Đỏ (ESI 1 hoặc ESI 2)</strong>. Bạn có chắc chắn muốn ngừng ghi nhận số này?
-              </p>
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
-                <button
-                  type="button"
-                  onClick={() => setContactToDelete(null)}
-                  className="px-5 py-2.5 rounded-xl bg-muted hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all shadow-2xs dark:text-slate-200 dark:hover:bg-slate-700"
-                >
-                  Hủy Bỏ An Toàn
-                </button>
-                <button
-                  type="button"
-                  onClick={() => executeDelete(contactToDelete.id)}
-                  disabled={updateMutation.isPending}
-                  className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs transition-all shadow-lg shadow-rose-600/25 flex items-center gap-1.5 active:scale-95"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  <span>Xác Nhận Xóa Ngay</span>
-                </button>
-              </div>
-            </motion.div>
+      {/* ===================================================================== */}
+      {/* XÁC NHẬN XÓA NGƯỜI LIÊN HỆ SỐ 1                                        */}
+      {/* ===================================================================== */}
+      <Dialog
+        open={contactToDelete !== null}
+        onOpenChange={(open) => {
+          if (!open && !updateMutation.isPending) setContactToDelete(null);
+        }}
+      >
+        <DialogContent
+          role="alertdialog"
+          hideCloseButton
+          overlayClassName="bg-slate-950/55 backdrop-blur-sm"
+          className="max-w-md gap-0 rounded-3xl border-border bg-card p-0 text-foreground shadow-xl"
+        >
+          <DialogHeader className="space-y-4 border-b border-border p-6 text-left">
+            <div className="flex items-center gap-4">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300">
+                <TriangleAlert className="size-5" aria-hidden="true" />
+              </span>
+              <DialogTitle className="text-lg font-bold text-foreground">Xóa người liên hệ số 1?</DialogTitle>
+            </div>
+            <DialogDescription className="text-sm leading-6 text-muted-foreground">
+              Bạn đang xóa <strong className="text-foreground">{contactToDelete?.full_name}</strong>, người nhân viên y tế
+              thấy đầu tiên khi cần liên lạc trong lúc thẩm định ca.
+              {contacts.length > 1
+                ? " Người liên hệ kế tiếp trong danh sách sẽ thành số 1."
+                : " Sau khi xóa, hồ sơ này sẽ không còn người liên hệ khẩn cấp nào."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col-reverse gap-2 p-4 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              onClick={() => setContactToDelete(null)}
+              disabled={updateMutation.isPending}
+              className="flex min-h-11 items-center justify-center rounded-xl border border-border bg-card px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-50"
+            >
+              Giữ lại
+            </button>
+            <button
+              type="button"
+              onClick={() => executeDelete(contactToDelete?.id)}
+              disabled={updateMutation.isPending}
+              className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 text-sm font-bold text-white transition-colors hover:bg-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-600 focus-visible:ring-offset-2 disabled:opacity-60"
+            >
+              {updateMutation.isPending ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Trash2 className="size-4" aria-hidden="true" />
+              )}
+              Xóa người này
+            </button>
           </div>
-        )}
-      </AnimatePresence>
-    </div>
+        </DialogContent>
+      </Dialog>
+    </section>
   );
 };

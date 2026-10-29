@@ -5,7 +5,8 @@ import { ClinicalProfileDashboard } from "@/components/profile/ClinicalProfileDa
  * ============================================================================
  * NEXT.JS SERVER COMPONENT BOUNDARY - PATIENT HEALTH PROFILE PAGE
  * ============================================================================
- * Trang hồ sơ sức khỏe và liên hệ khẩn cấp của người dùng.
+ * Trang hồ sơ sức khỏe và liên hệ khẩn cấp của người dùng. Layout nhóm
+ * (patient) đã có thẻ <main> và lề trang, nên ở đây chỉ là một khối bao.
  */
 
 export const metadata: Metadata = {
@@ -21,10 +22,8 @@ export const metadata: Metadata = {
 
 export default function ClinicalProfileEhrPage() {
   return (
-    <main className="min-h-screen bg-background px-4 py-8 text-slate-800 selection:bg-sky-500/20 selection:text-sky-900 md:px-8 lg:px-12 dark:text-slate-100">
-      <div className="mx-auto max-w-7xl">
-        <ClinicalProfileDashboard />
-      </div>
-    </main>
+    <div className="w-full text-foreground">
+      <ClinicalProfileDashboard />
+    </div>
   );
 }
