@@ -3,7 +3,7 @@
 import React, { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { getHomeRouteForRole } from "@/lib/auth-routing";
 
 export interface GuestGuardProps {
@@ -40,26 +40,35 @@ export const GuestGuard: React.FC<GuestGuardProps> = ({ children }) => {
     return <>{children}</>;
   }
 
-  // Nếu đang kiểm tra phiên hoặc đang chuẩn bị điều hướng vì phát hiện đã log in
+  // Đang kiểm tra phiên (mọi lần mở trang, kể cả khách chưa đăng nhập) hoặc đã
+  // biết là đã đăng nhập và đang chuyển trang. Hai trường hợp nói hai câu khác
+  // nhau: lúc đang kiểm tra thì chưa thể nói ai đã đăng nhập.
   if (isLoading || isAuthenticated) {
+    const redirecting = isAuthenticated && !isLoading;
     return (
-      <div className="flex flex-col items-center justify-center min-h-[350px] p-6 text-center space-y-5 bg-background/80 border border-border/80 rounded-2xl backdrop-blur-xl animate-pulse">
-        <div className="w-14 h-14 rounded-2xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-600 shadow-md">
-          <Loader2 className="w-7 h-7 animate-spin" />
-        </div>
-
-        <div className="space-y-1.5 max-w-sm">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-mono text-[11px] font-extrabold mb-1">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            <span>PHIÊN LÀM VIỆC AN TOÀN ĐANG HOẠT ĐỘNG</span>
-          </div>
-          <h3 className="text-base font-extrabold text-foreground">
-            Đang đồng bộ điều hướng lâm sàng...
-          </h3>
-          <p className="text-xs text-slate-600 leading-relaxed font-normal dark:text-slate-300">
-            Hệ thống phát hiện tài khoản <strong className="text-sky-700 font-bold">{user?.name || user?.email || "của bạn"}</strong> đã đăng nhập. Đang chuyển tới không gian làm việc phù hợp với vai trò.
-          </p>
-        </div>
+      <div
+        role="status"
+        aria-live="polite"
+        className="flex min-h-80 flex-col items-center justify-center gap-4 p-6 text-center"
+      >
+        <span className="flex size-12 items-center justify-center rounded-2xl bg-brand-soft text-brand" aria-hidden="true">
+          <Loader2 className="size-6 motion-safe:animate-spin" />
+        </span>
+        <p className="max-w-sm text-base leading-7 text-muted-foreground">
+          {redirecting ? (
+            <>
+              Bạn đã đăng nhập
+              {user?.name || user?.email ? (
+                <>
+                  {" "}với tài khoản <strong className="font-semibold text-foreground">{user?.name || user?.email}</strong>
+                </>
+              ) : null}
+              . Đang chuyển tới trang của bạn…
+            </>
+          ) : (
+            "Đang kiểm tra phiên đăng nhập…"
+          )}
+        </p>
       </div>
     );
   }

@@ -12,10 +12,12 @@
  * `className`.
  */
 
+import { cn } from "@/lib/utils";
+
 /** Logo "G" bốn màu của Google. */
 export function GoogleMark({ className = "size-5" }: { className?: string }) {
   return (
-    <svg className={`${className} shrink-0`} viewBox="0 0 18 18" aria-hidden="true" focusable="false">
+    <svg className={cn("shrink-0", className)} viewBox="0 0 18 18" aria-hidden="true" focusable="false">
       <path
         fill="#4285F4"
         d="M17.64 9.2045c0-.6381-.0573-1.2518-.1636-1.8409H9v3.4814h4.8436c-.2086 1.125-.8427 2.0782-1.7959 2.7164v2.2581h2.9086c1.7018-1.5668 2.6836-3.874 2.6836-6.615z"
@@ -43,7 +45,7 @@ export function GoogleMark({ className = "size-5" }: { className?: string }) {
 export function GitHubMark({ className = "size-5" }: { className?: string }) {
   return (
     <svg
-      className={`${className} shrink-0`}
+      className={cn("shrink-0", className)}
       viewBox="0 0 16 16"
       fill="currentColor"
       aria-hidden="true"

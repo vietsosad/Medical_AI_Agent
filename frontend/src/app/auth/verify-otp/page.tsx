@@ -5,14 +5,16 @@ import Link from "next/link";
 import { authService } from "@/services/auth.service";
 import { useAuthStore } from "@/store/useAuthStore";
 import { toast } from "sonner";
-import {
-  ShieldCheck,
-  Loader2,
-  RotateCw,
-  AlertCircle,
-  ArrowLeft,
-  CheckCircle2
-} from "lucide-react";
+import { CheckCircle2, TriangleAlert } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { AuthBackLink } from "@/components/auth/auth-actions";
+import { AuthHeading } from "@/components/auth/auth-heading";
+import { AuthStatusIcon, AuthSwap } from "@/components/auth/auth-status";
+import { enterDelay, primaryButtonClass, textLinkClass } from "@/components/auth/auth-styles";
+import { OtpCodeInput, OtpFeedback, ResendCodeButton } from "@/components/auth/otp-code-input";
+import { useLocationSearch } from "@/components/auth/use-location-search";
+
+const CODE_RULES = "Mã có hiệu lực 15 phút và bị hủy sau 5 lần nhập sai.";
 
 export default function VerifyOtpPage() {
   const loginSuccess = useAuthStore((state) => state.loginSuccess);
@@ -49,7 +51,7 @@ export default function VerifyOtpPage() {
     setErrorMessage(null);
     try {
       const emailParam = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("email") || undefined : undefined;
-      
+
       const res = await authService.verifyOtp({
         email: emailParam,
         code: code,
@@ -169,156 +171,134 @@ export default function VerifyOtpPage() {
   /* =========================================================================
    * LOGIC 6: HÀM GỬI LẠI MÃ OTP (RESEND OTP)
    * ========================================================================= */
-  const resendOTP = () => {
+  const resendOTP = async () => {
     if (timeLeft > 0 || isVerifying) return;
+    // Cùng nguồn email với lệnh xác minh ở trên: mã chỉ được cấp lại cho đúng
+    // email đã đăng ký.
+    const email = new URLSearchParams(window.location.search).get("email");
+    if (!email) {
+      toast.error("Đường dẫn thiếu email nên chưa gửi lại được mã. Vui lòng đăng ký lại.");
+      return;
+    }
     setTimeLeft(60);
     setErrorMessage(null);
     setOtp(new Array(6).fill(""));
     inputRefs.current[0]?.focus();
-    alert("Mã bảo mật mới (6 chữ số) đã được phát lại tới thư mục Hộp thư đến của bạn.");
+    try {
+      const response = await authService.resendRegistrationOtp({ email });
+      toast.info(response.message);
+    } catch (error: unknown) {
+      // Chưa gửi được thì cho bấm lại ngay, không bắt chờ hết 60 giây.
+      setTimeLeft(0);
+      toast.error(error instanceof Error ? error.message : "Chưa gửi lại được mã. Vui lòng thử lại sau.");
+    }
   };
 
+  // Chỉ để hiển thị email người dùng đã nhập. Lệnh xác minh ở trên vẫn tự đọc
+  // email từ URL như trước. null = chưa biết (đang hydrate), "" = URL thiếu email.
+  const locationSearch = useLocationSearch();
+  const emailFromUrl =
+    locationSearch === null ? null : new URLSearchParams(locationSearch).get("email") ?? "";
+
   return (
-    <div className="flex flex-col justify-center w-full font-sans">
-      
-      {!isSuccess ? (
-        /* ================================================================
-         * GIAO DIỆN CHÍNH: FORM NHẬP MÃ OTP 6 PIN (PRISTINE LIGHT THEME)
-         * ================================================================ */
-        <div className="space-y-6 animate-in fade-in duration-300">
-          
-          {/* HEADER SECTION */}
-          <div className="text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 text-sky-700 text-xs font-bold mb-3 shadow-xs">
-              <ShieldCheck className="w-3.5 h-3.5 text-sky-600 animate-pulse" />
-              <span>Bảo Mật Xác Thực 2 Lớp (2FA)</span>
+    <div className="flex w-full flex-col">
+      <AuthSwap stateKey={isSuccess ? "verified" : "enter-code"}>
+        {!isSuccess ? (
+          <div className="flex flex-col">
+            <AuthHeading
+              className="page-enter"
+              title="Nhập mã xác minh"
+              description={
+                emailFromUrl ? (
+                  <>
+                    Chúng tôi đã gửi mã 6 chữ số tới{" "}
+                    <strong className="font-semibold break-words text-foreground">{emailFromUrl}</strong>.{" "}
+                    {CODE_RULES}
+                  </>
+                ) : (
+                  `Mã 6 chữ số đã được gửi tới email bạn dùng để đăng ký. ${CODE_RULES}`
+                )
+              }
+            />
+
+            {/* Máy chủ chỉ chấp nhận mã đi kèm đúng email; thiếu email thì mã nào cũng bị từ chối. */}
+            {emailFromUrl === "" ? (
+              <p className="page-enter mt-6 flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-medium text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-100">
+                <span className="flex h-5 shrink-0 items-center">
+                  <TriangleAlert className="size-4" aria-hidden="true" />
+                </span>
+                <span>
+                  Đường dẫn này thiếu địa chỉ email nên chưa thể xác minh mã. Hãy{" "}
+                  <Link href="/auth/register" className={textLinkClass}>
+                    đăng ký lại
+                  </Link>{" "}
+                  để nhận mã mới.
+                </span>
+              </p>
+            ) : null}
+
+            <div className="page-enter mt-8" style={enterDelay(1)}>
+              <p id="otp-label" className="mb-2 text-sm font-semibold text-foreground">
+                Mã xác minh
+              </p>
+              <OtpCodeInput
+                digits={otp}
+                labelId="otp-label"
+                errorId="otp-error"
+                invalid={Boolean(errorMessage)}
+                disabled={isVerifying}
+                registerInput={(index, element) => {
+                  inputRefs.current[index] = element;
+                }}
+                onDigitChange={handleInput}
+                onDigitKeyDown={handleKeyDown}
+                onPaste={handlePaste}
+              />
+              <OtpFeedback verifying={isVerifying} error={errorMessage} errorId="otp-error" />
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
-              Xác Thực Danh Tính
-            </h2>
-            <p className="mt-2 text-sm text-muted-foreground font-normal leading-relaxed">
-              Mã bảo mật 6 chữ số (OTP) đã được gửi đến email y khoa của bạn. Vui lòng điền mã bên dưới để hoàn tất đăng ký.
-            </p>
-          </div>
 
-          {/* BỘ 6 Ô VUÔNG NHẬP MÃ (6-DIGIT OTP INPUT BOXES) */}
-          <div className="space-y-4 pt-2">
-            <div className="flex items-center justify-between gap-2 sm:gap-3 max-w-sm mx-auto sm:mx-0">
-              {otp.map((digit, idx) => (
-                <input
-                  key={idx}
-                  ref={(el) => {
-                    inputRefs.current[idx] = el;
-                  }}
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  maxLength={1}
-                  value={digit}
-                  disabled={isVerifying}
-                  onChange={(e) => handleInput(idx, e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(idx, e)}
-                  onPaste={handlePaste}
-                  className={`w-11 h-13 sm:w-13 sm:h-16 text-center text-xl sm:text-2xl font-black font-mono rounded-2xl bg-slate-50 hover:bg-slate-100/80 focus:bg-white text-slate-900 border transition-all duration-200 outline-none shadow-sm focus:ring-4 focus:ring-offset-2 focus:ring-offset-white ${
-                    errorMessage
-                      ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/20 text-rose-700 bg-rose-50/50"
-                      : "border-border/90 focus:border-sky-500 focus:ring-sky-500/20"
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
-                />
-              ))}
-            </div>
-
-            {/* THÔNG BÁO LỖI NẾU CÓ */}
-            {errorMessage && (
-              <div className="p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold flex items-center gap-2 animate-in slide-in-from-top-2 duration-200">
-                <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
-                <span>{errorMessage}</span>
-              </div>
-            )}
-
-            {/* HIỆN TRƯỜNG LOADING THẨM ĐỊNH */}
-            {isVerifying && (
-              <div className="flex items-center justify-center gap-2.5 py-3 text-sm font-extrabold text-sky-700 bg-sky-50/80 rounded-2xl border border-sky-100 animate-pulse">
-                <Loader2 className="w-5 h-5 animate-spin text-sky-600" />
-                <span>Đang thẩm định mã xác minh lâm sàng...</span>
-              </div>
-            )}
-          </div>
-
-          {/* ĐỒNG HỒ ĐẾM NGƯỢC 60S & NÚT GỬI LẠI MÃ */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-100 text-xs sm:text-sm font-medium">
-            <span className="text-muted-foreground font-normal">
-              Chưa nhận được email mã số?
-            </span>
-
-            <button
-              type="button"
-              onClick={resendOTP}
-              disabled={timeLeft > 0 || isVerifying}
-              className={`inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 ${
-                timeLeft > 0
-                  ? "bg-muted text-slate-400 cursor-not-allowed border border-border font-mono"
-                  : "bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 shadow-xs hover:scale-[1.02] active:scale-[0.98]"
-              }`}
+            <div
+              className="page-enter mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-6"
+              style={enterDelay(2)}
             >
-              <RotateCw className={`w-3.5 h-3.5 shrink-0 ${timeLeft > 0 ? "opacity-40" : "text-sky-600 animate-spin-slow"}`} />
-              <span>
-                {timeLeft > 0 ? `Gửi lại mã sau (${timeLeft}s)` : "Gửi lại mã OTP ngay"}
-              </span>
-            </button>
-          </div>
+              <p className="text-sm text-muted-foreground">Chưa nhận được mã?</p>
+              <ResendCodeButton
+                secondsLeft={timeLeft}
+                disabled={timeLeft > 0 || isVerifying}
+                onResend={resendOTP}
+              />
+            </div>
 
-          {/* LỰA CHỌN LUÂN CHUYỂN (CHANGE EMAIL) */}
-          <div className="text-center pt-2">
-            <p className="text-xs text-slate-400 font-medium">
-              Sai địa chỉ email y khoa?{" "}
-              <Link
-                href="/auth/register"
-                className="font-extrabold text-sky-600 hover:text-sky-700 underline decoration-sky-300 underline-offset-4 transition-colors ml-1"
-              >
-                Đăng ký lại tài khoản khác
+            <p
+              className="page-enter flex min-h-11 flex-wrap items-center gap-x-2 text-sm text-muted-foreground"
+              style={enterDelay(3)}
+            >
+              Sai email?
+              <Link href="/auth/register" className={cn(textLinkClass, "inline-flex min-h-11 items-center")}>
+                Đăng ký lại
               </Link>
             </p>
           </div>
-
-        </div>
-      ) : (
-        /* ================================================================
-         * TRẠNG THÁI THÀNH CÔNG (SUCCESS VERIFIED BANNER)
-         * ================================================================ */
-        <div className="text-center space-y-6 py-6 animate-in zoom-in-95 duration-400">
-          <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-3xl bg-emerald-50 border-2 border-emerald-300 text-emerald-600 shadow-[0_10px_35px_rgba(16,185,129,0.25)]">
-            <CheckCircle2 className="w-12 h-12 animate-in zoom-in-50 duration-300" />
+        ) : (
+          <div className="flex flex-col items-center gap-6 py-4 text-center">
+            <AuthStatusIcon tone="success">
+              <CheckCircle2 className="size-8" />
+            </AuthStatusIcon>
+            <AuthHeading
+              align="center"
+              title="Xác minh thành công"
+              description="Tài khoản của bạn đã được kích hoạt."
+            />
+            <Link href="/" className={primaryButtonClass}>
+              Vào trang chủ
+            </Link>
           </div>
-          <div className="space-y-2">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
-              Xác Thực Hoàn Tất!
-            </h2>
-            <p className="text-sm text-slate-600 leading-relaxed max-w-sm mx-auto font-normal dark:text-slate-300">
-              Danh tính và email của bạn đã được kiểm toán hợp lệ theo tiêu chuẩn y đức ACID. Hệ thống đang sẵn sàng.
-            </p>
-          </div>
-          <Link
-            href="/"
-            className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl text-sm font-extrabold text-white bg-gradient-to-r from-emerald-600 to-teal-600 shadow-[0_6px_25px_rgba(16,185,129,0.35)] hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02]"
-          >
-            <span>Vào Trang Chủ Hệ Thống AI Triage</span>
-          </Link>
-        </div>
-      )}
+        )}
+      </AuthSwap>
 
-
-      {/* FOOTER BACK TO LOGIN */}
-      <div className="mt-6 text-center">
-        <Link
-          href="/auth/login"
-          className="group inline-flex items-center justify-center gap-1.5 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors dark:hover:text-slate-300"
-        >
-          <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform duration-200" />
-          <span>Quay lại trang Đăng nhập</span>
-        </Link>
+      <div className="mt-6 flex justify-center">
+        <AuthBackLink />
       </div>
-
     </div>
   );
 }

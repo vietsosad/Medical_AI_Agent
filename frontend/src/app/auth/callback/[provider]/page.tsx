@@ -6,15 +6,24 @@ import Link from "next/link";
 import { authService } from "@/services/auth.service";
 import { useAuthStore } from "@/store/useAuthStore";
 import { toast } from "sonner";
-import {
-  Loader2,
-  CheckCircle2,
-  AlertCircle,
-  ArrowLeft,
-  ShieldCheck,
-} from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckCircle2, KeyRound, Loader2 } from "lucide-react";
 import { GitHubMark, GoogleMark } from "@/components/auth/provider-marks";
 import { getHomeRouteForRole } from "@/lib/auth-routing";
+import { AuthHeading } from "@/components/auth/auth-heading";
+import { AuthStatusIcon, AuthSwap } from "@/components/auth/auth-status";
+import { primaryButtonClass, secondaryButtonClass } from "@/components/auth/auth-styles";
+
+/** Tên hiển thị của nhà cung cấp; giá trị gửi lên máy chủ vẫn là tham số gốc của URL. */
+const PROVIDER_LABELS: Record<string, string> = {
+  google: "Google",
+  github: "GitHub",
+};
+
+function ProviderMark({ provider }: { provider: string }) {
+  if (provider === "google") return <GoogleMark className="size-8" />;
+  if (provider === "github") return <GitHubMark className="size-8" />;
+  return <KeyRound className="size-8 text-muted-foreground" />;
+}
 
 function OAuthCallbackContent() {
   const params = useParams<{ provider: string }>();
@@ -71,109 +80,83 @@ function OAuthCallbackContent() {
     processOAuth();
   }, [code, provider, loginSuccess, router]);
 
+  const providerKey = provider.toLowerCase();
+  const providerLabel = PROVIDER_LABELS[providerKey] ?? provider;
+
   return (
-    <div className="w-full max-w-md bg-card rounded-3xl p-8 shadow-[0_10px_40px_rgba(0,0,0,0.06)] border border-border/80 text-center relative overflow-hidden transition-all duration-300">
-
-      {/* HEADER BADGE */}
-      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 text-sky-700 text-xs font-bold mb-6 shadow-xs">
-        {provider.toLowerCase() === "google" ? (
-          <GoogleMark className="size-3.5" />
-        ) : (
-          <GitHubMark className="size-3.5" />
+    <div className="page-enter flex w-full flex-col">
+      <AuthSwap stateKey={status}>
+        {status === "loading" && (
+          <div className="flex flex-col items-center gap-6 py-4 text-center">
+            {/* Logo nhà cung cấp đứng yên, vòng xoay nhỏ ở góc báo hệ thống đang làm việc. */}
+            <AuthStatusIcon tone="neutral">
+              <ProviderMark provider={providerKey} />
+              <span className="absolute -right-2 -bottom-2 grid size-8 place-items-center rounded-full border border-border bg-card text-brand">
+                <Loader2 className="size-4 motion-safe:animate-spin" />
+              </span>
+            </AuthStatusIcon>
+            <AuthHeading
+              align="center"
+              title={`Đang hoàn tất đăng nhập với ${providerLabel}`}
+              description="Vui lòng giữ trang này mở trong lúc hệ thống xác nhận tài khoản của bạn."
+            />
+          </div>
         )}
-        <span className="uppercase font-mono font-black">Cổng Liên Thông {provider}</span>
-      </div>
 
-      {/* LOADING STATE */}
-      {status === "loading" && (
-        <div className="space-y-5 py-6 animate-in fade-in duration-300">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-sky-50 border border-sky-100 text-sky-600 shadow-sm animate-bounce">
-            <Loader2 className="w-10 h-10 animate-spin text-sky-600" />
-          </div>
-          <div className="space-y-1.5">
-            <h3 className="text-xl font-black text-foreground tracking-tight">
-              Đang Thẩm Định Hồ Sơ OAuth...
-            </h3>
-            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed font-medium">
-              Hệ thống AI20K đang kết nối an toàn với máy chủ {provider.toUpperCase()} để đồng bộ quyền hạn định danh y khoa.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* SUCCESS STATE */}
-      {status === "success" && (
-        <div className="space-y-5 py-6 animate-in zoom-in-95 duration-400">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-emerald-50 border-2 border-emerald-300 text-emerald-600 shadow-[0_10px_30px_rgba(16,185,129,0.25)]">
-            <CheckCircle2 className="w-10 h-10 animate-in zoom-in-50 duration-300" />
-          </div>
-          <div className="space-y-1.5">
-            <h3 className="text-xl font-black text-foreground tracking-tight">
-              Đăng Nhập Thành Công!
-            </h3>
-            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium dark:text-slate-300">
-              Danh tính {provider.toUpperCase()} hợp lệ. Bạn đang được tự động chuyển đến Trạm làm việc chính...
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* ERROR STATE */}
-      {status === "error" && (
-        <div className="space-y-5 py-4 animate-in fade-in duration-300">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-rose-50 border-2 border-rose-300 text-rose-600 shadow-[0_10px_30px_rgba(244,63,94,0.25)]">
-            <AlertCircle className="w-10 h-10 animate-in zoom-in-50 duration-300" />
-          </div>
-          <div className="space-y-2">
-            <h3 className="text-xl font-black text-foreground tracking-tight">
-              Xác Thực Ngoại Vi Thất Bại
-            </h3>
-            <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold flex items-center gap-2 text-left">
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
-              <span className="break-words">{errorMessage}</span>
+        {status === "success" && (
+          <div className="flex flex-col items-center gap-6 py-4 text-center">
+            <AuthStatusIcon tone="success">
+              <CheckCircle2 className="size-8" />
+            </AuthStatusIcon>
+            <div role="status">
+              <AuthHeading
+                align="center"
+                title="Đăng nhập thành công"
+                description="Đang chuyển bạn tới trang phù hợp với tài khoản…"
+              />
             </div>
           </div>
+        )}
 
-          <div className="pt-3 flex flex-col sm:flex-row gap-3">
-            <Link
-              href="/auth/login"
-              className="flex-1 py-3 px-5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-sm transition-all duration-200 flex items-center justify-center gap-2"
+        {status === "error" && (
+          <div className="flex flex-col items-center gap-6 py-4 text-center">
+            <AuthStatusIcon tone="error">
+              <AlertCircle className="size-8" />
+            </AuthStatusIcon>
+            <AuthHeading align="center" title={`Chưa đăng nhập được với ${providerLabel}`} />
+            <p
+              role="alert"
+              className="w-full rounded-xl border border-rose-200 bg-rose-50 p-4 text-left text-sm font-medium break-words text-rose-900 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-100"
             >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Thử Đăng Nhập Lại</span>
-            </Link>
-            <Link
-              href="/"
-              className="py-3 px-5 rounded-2xl bg-muted hover:bg-slate-200 text-slate-700 font-extrabold text-xs transition-all duration-200 flex items-center justify-center dark:text-slate-200 dark:hover:bg-slate-700"
-            >
-              Về Trang Chủ
-            </Link>
+              {errorMessage}
+            </p>
+            <div className="flex w-full flex-col gap-2">
+              <Link href="/auth/login" className={primaryButtonClass}>
+                <ArrowLeft className="size-5" aria-hidden="true" />
+                Thử đăng nhập lại
+              </Link>
+              <Link href="/" className={secondaryButtonClass}>
+                Về trang chủ
+              </Link>
+            </div>
           </div>
-        </div>
-      )}
-
-      {/* FOOTER NOTE */}
-      <div className="mt-6 pt-4 border-t border-slate-100 text-[11px] font-mono text-slate-400 flex items-center justify-center gap-1.5">
-        <ShieldCheck className="w-3.5 h-3.5 text-sky-500 shrink-0" />
-        <span>Thông tin định danh được che trong nhật ký hệ thống</span>
-      </div>
+        )}
+      </AuthSwap>
     </div>
   );
 }
 
 export default function OAuthCallbackPage() {
   return (
-    <div className="flex flex-col justify-center items-center w-full min-h-[65vh] px-4 font-sans text-slate-800 dark:text-slate-100">
-      <Suspense
-        fallback={
-          <div className="p-8 bg-card rounded-3xl shadow-sm border border-border text-center flex flex-col items-center gap-3">
-            <Loader2 className="w-8 h-8 animate-spin text-sky-600" />
-            <span className="text-xs font-bold text-muted-foreground">Đang khởi tạo kết nối OAuth...</span>
-          </div>
-        }
-      >
-        <OAuthCallbackContent />
-      </Suspense>
-    </div>
+    <Suspense
+      fallback={
+        <div className="flex flex-col items-center gap-4 py-8 text-center">
+          <Loader2 className="size-8 text-brand motion-safe:animate-spin" aria-hidden="true" />
+          <p className="text-sm font-medium text-muted-foreground">Đang khởi tạo kết nối…</p>
+        </div>
+      }
+    >
+      <OAuthCallbackContent />
+    </Suspense>
   );
 }
