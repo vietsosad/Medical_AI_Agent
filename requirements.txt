@@ -34,7 +34,7 @@ sentence-transformers>=2.2.2
 # service stores every timestamp as naive UTC (see test_red_flag_timestamps.py).
 # Lifting the cap means making each datetime field timezone-aware or annotating it
 # NaiveDatetime -- a data migration of its own, not a dependency bump.
-sqlmodel>=0.0.21,<0.0.45
+sqlmodel>=0.0.48,<0.0.49
 # [asyncio] pulls in greenlet. SQLAlchemy 2.1 stopped installing it by default, and
 # without it every async session fails at import (the app cannot start).
 sqlalchemy[asyncio]>=2.0.0
