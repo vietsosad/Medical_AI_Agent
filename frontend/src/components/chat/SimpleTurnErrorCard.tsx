@@ -1,9 +1,11 @@
 "use client";
 
 import React from "react";
-import { AlertTriangle, RefreshCw } from "lucide-react";
+import { motion } from "framer-motion";
+import { RefreshCw, WifiOff } from "lucide-react";
 
 import { EmergencyCallHint } from "@/components/chat/EmergencyCallHint";
+import { dropVariants } from "@/lib/motion";
 
 /**
  * Visible, in-transcript failure state for a pilot turn -- a toast alone
@@ -24,20 +26,28 @@ interface Props {
 
 export function SimpleTurnErrorCard({ message, onRetry }: Props) {
   return (
-    <div role="alert" className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm leading-6 text-rose-900">
-      <AlertTriangle className="mt-0.5 size-5 shrink-0 text-rose-700" aria-hidden="true" />
-      <div className="flex-1">
-        <p className="font-semibold">{message}</p>
-        <button
-          type="button"
-          onClick={onRetry}
-          className="mt-2 inline-flex min-h-11 items-center gap-2 rounded-lg border border-rose-300 bg-card px-4 text-sm font-semibold text-rose-800 transition-colors hover:bg-rose-100"
-        >
-          <RefreshCw className="size-4" aria-hidden="true" />
-          Gửi lại
-        </button>
-        <EmergencyCallHint className="mt-4" />
-      </div>
-    </div>
+    <motion.div
+      variants={dropVariants}
+      initial="hidden"
+      animate="visible"
+      role="alert"
+      className="rounded-2xl border border-amber-300 bg-card p-4 dark:border-amber-800"
+    >
+      <p className="flex items-center gap-2 text-base font-bold text-amber-900 dark:text-amber-200">
+        <WifiOff className="size-5 shrink-0" aria-hidden="true" />
+        Chưa gửi được tin nhắn
+      </p>
+      <p className="mt-2 text-base leading-7 text-foreground">{message}</p>
+      <motion.button
+        type="button"
+        onClick={onRetry}
+        whileTap={{ scale: 0.97 }}
+        className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 text-base font-bold text-brand-foreground transition-colors hover:bg-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 sm:w-auto"
+      >
+        <RefreshCw className="size-5" aria-hidden="true" />
+        Gửi lại
+      </motion.button>
+      <EmergencyCallHint className="mt-4 border-t border-border pt-4" />
+    </motion.div>
   );
 }

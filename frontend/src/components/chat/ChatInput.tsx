@@ -4,54 +4,13 @@ import React, { useState, useRef, useEffect } from "react";
 import { useTriageStore } from "@/store/useTriageStore";
 import { AudioLines, LoaderCircle, Lock, Mic, Send, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
-
-interface SpeechRecognitionErrorEvent extends Event {
-  error: string;
-  message?: string;
-}
-
-interface SpeechRecognitionEvent extends Event {
-  resultIndex: number;
-  results: SpeechRecognitionResultList;
-}
-
-interface ISpeechRecognition extends EventTarget {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  maxAlternatives: number;
-  start: () => void;
-  stop: () => void;
-  abort: () => void;
-  onstart: ((this: ISpeechRecognition, ev: Event) => void) | null;
-  onresult: ((this: ISpeechRecognition, ev: SpeechRecognitionEvent) => void) | null;
-  onerror: ((this: ISpeechRecognition, ev: SpeechRecognitionErrorEvent) => void) | null;
-  onend: ((this: ISpeechRecognition, ev: Event) => void) | null;
-}
-
-interface WindowWithSpeech extends Window {
-  SpeechRecognition?: new () => ISpeechRecognition;
-  webkitSpeechRecognition?: new () => ISpeechRecognition;
-}
+import { useSpeechDictation } from "@/hooks/useSpeechDictation";
 
 interface ChatInputProps {
   onSendMessage: (content: string) => void;
   placeholder?: string;
   isProcessing?: boolean;
   disabled?: boolean;
-}
-
-const SPEECH_SILENCE_TIMEOUT_MS = 8_000;
-
-function joinSpeechText(...parts: string[]): string {
-  return parts
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .join(" ")
-    .replace(/\s+([,.!?;:])/g, "$1")
-    .replace(/\s+/g, " ")
-    .trim();
 }
 
 /**
@@ -72,28 +31,16 @@ export function ChatInput({
 }: ChatInputProps) {
   const { isChatLocked, redFlagTriggered } = useTriageStore();
   const [inputText, setInputText] = useState("");
-  const [isRecording, setIsRecording] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const recognitionRef = useRef<ISpeechRecognition | null>(null);
-  const speechBaseTextRef = useRef("");
-  const finalTranscriptRef = useRef("");
-  const silenceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Stop active speech recognition on unmount
-  useEffect(() => {
-    return () => {
-      if (silenceTimeoutRef.current) {
-        clearTimeout(silenceTimeoutRef.current);
-      }
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.stop();
-        } catch {
-          // Ignore cleanup errors
-        }
-      }
-    };
-  }, []);
+  const {
+    isRecording,
+    toggle: toggleVoiceRecording,
+    stop: stopDictation,
+  } = useSpeechDictation({
+    text: inputText,
+    onTextChange: setInputText,
+    disabled: disabled || isChatLocked || isProcessing,
+  });
 
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -103,39 +50,12 @@ export function ChatInput({
     textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`;
   }, [inputText]);
 
-  const resetSilenceTimeout = (recognition: ISpeechRecognition) => {
-    if (silenceTimeoutRef.current) {
-      clearTimeout(silenceTimeoutRef.current);
-    }
-
-    silenceTimeoutRef.current = setTimeout(() => {
-      if (recognitionRef.current !== recognition) return;
-
-      try {
-        recognition.stop();
-        toast.info("Đã tự dừng sau 8 giây không phát hiện giọng nói.");
-      } catch {
-        // The browser may already have stopped recognition.
-      }
-    }, SPEECH_SILENCE_TIMEOUT_MS);
-  };
-
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (disabled || isChatLocked || isProcessing) return;
     if (!inputText.trim()) return;
 
-    if (isRecording && recognitionRef.current) {
-      if (silenceTimeoutRef.current) {
-        clearTimeout(silenceTimeoutRef.current);
-      }
-      try {
-        recognitionRef.current.stop();
-      } catch {
-        // Ignore stop error
-      }
-      setIsRecording(false);
-    }
+    if (isRecording) stopDictation();
 
     onSendMessage(inputText.trim());
     setInputText("");
@@ -146,114 +66,6 @@ export function ChatInput({
 
     event.preventDefault();
     handleSubmit();
-  };
-
-  const toggleVoiceRecording = () => {
-    if (disabled || isChatLocked || isProcessing) return;
-
-    // If currently recording, stop it
-    if (isRecording) {
-      if (silenceTimeoutRef.current) {
-        clearTimeout(silenceTimeoutRef.current);
-      }
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.stop();
-        } catch {
-          // Ignore error on stop
-        }
-      }
-      setIsRecording(false);
-      toast.success("Đã hoàn tất bóc băng âm thanh giọng nói Tiếng Việt.");
-      return;
-    }
-
-    // Check browser compatibility for Web Speech API
-    const win = typeof window !== "undefined" ? (window as unknown as WindowWithSpeech) : null;
-    const SpeechRecognitionConstructor = win?.SpeechRecognition || win?.webkitSpeechRecognition;
-
-    if (!SpeechRecognitionConstructor) {
-      toast.error(
-        "Trình duyệt của bạn chưa hỗ trợ Web Speech API. Vui lòng sử dụng Google Chrome, Microsoft Edge hoặc Safari."
-      );
-      return;
-    }
-
-    try {
-      const recognition = new SpeechRecognitionConstructor();
-      recognition.lang = "vi-VN"; // Vietnamese Speech-to-Text
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.maxAlternatives = 3;
-
-      recognition.onstart = () => {
-        speechBaseTextRef.current = inputText.trim();
-        finalTranscriptRef.current = "";
-        setIsRecording(true);
-        resetSilenceTimeout(recognition);
-        toast.info("Đang nghe tiếng Việt. Bạn có thể nói tự nhiên và ngắt câu ngắn.");
-      };
-
-      recognition.onresult = (event: SpeechRecognitionEvent) => {
-        resetSilenceTimeout(recognition);
-        const finalParts: string[] = [];
-        const interimParts: string[] = [];
-
-        // Rebuild the current session so interim hypotheses are replaced instead
-        // of appended repeatedly as the browser refines Vietnamese speech.
-        for (let i = 0; i < event.results.length; i += 1) {
-          const transcript = event.results[i][0]?.transcript.trim();
-          if (!transcript) continue;
-          if (event.results[i].isFinal) {
-            finalParts.push(transcript);
-          } else {
-            interimParts.push(transcript);
-          }
-        }
-
-        finalTranscriptRef.current = joinSpeechText(...finalParts);
-        setInputText(
-          joinSpeechText(
-            speechBaseTextRef.current,
-            finalTranscriptRef.current,
-            ...interimParts,
-          ),
-        );
-      };
-
-      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-        if (silenceTimeoutRef.current) {
-          clearTimeout(silenceTimeoutRef.current);
-        }
-        setIsRecording(false);
-        if (event.error === "not-allowed") {
-          toast.error("Vui lòng cho phép quyền truy cập Micro trong trình duyệt để sử dụng giọng nói.");
-        } else if (event.error === "no-speech") {
-          toast.warning("Không phát hiện được âm thanh giọng nói. Vui lòng thử lại.");
-        } else if (event.error !== "aborted") {
-          toast.error(`Lỗi nhận diện giọng nói: ${event.error}`);
-        }
-      };
-
-      recognition.onend = () => {
-        if (silenceTimeoutRef.current) {
-          clearTimeout(silenceTimeoutRef.current);
-        }
-        recognitionRef.current = null;
-        setIsRecording(false);
-      };
-
-      recognitionRef.current = recognition;
-      recognition.start();
-    } catch (err) {
-      if (silenceTimeoutRef.current) {
-        clearTimeout(silenceTimeoutRef.current);
-      }
-      recognitionRef.current = null;
-      setIsRecording(false);
-      toast.error("Không thể khởi động bộ thu âm giọng nói.");
-      console.error("[SpeechRecognition Error]:", err);
-    }
   };
 
   // Cảnh báo khẩn cấp KHÔNG tự khóa ô nhập: khi phiên đã bị chốt an toàn phía

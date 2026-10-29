@@ -68,8 +68,13 @@ function MessageBubble({ message }: { message: SimpleCareTeamMessageDTO }) {
 export function SimpleCareTeamDock({
   sessionId,
   initialOpen = false,
+  inline = false,
 }: {
   sessionId: string;
+  /** Đặt nút mở ngay trong thanh hành động của trang (cạnh "Gọi 115") thay vì
+   * nổi ở góc màn hình, nơi nó từng che mất nút gọi 115 trên điện thoại. Khung
+   * trò chuyện khi mở vẫn nổi như cũ. */
+  inline?: boolean;
   /** True when the page was reached via a notification-bell click
    * (`?openChat=1`, see PatientNotificationBell.tsx) -- opens the dock
    * immediately instead of requiring a second click, and lets the existing
@@ -110,6 +115,29 @@ export function SimpleCareTeamDock({
     );
   };
 
+  const inlineTrigger = inline ? (
+    <button
+      type="button"
+      onClick={() => setOpen((current) => !current)}
+      aria-label="Mở kênh trao đổi với nhân viên y tế"
+      aria-expanded={open}
+      className={cn(
+        "relative flex min-h-12 items-center justify-center gap-2 rounded-xl border bg-background px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 sm:px-6 sm:text-base",
+        unread > 0 ? "border-brand" : "border-border",
+      )}
+    >
+      <MessageCircle className="size-5 shrink-0 text-brand" aria-hidden="true" />
+      Nhắn nhân viên y tế
+      {unread > 0 && (
+        <span className="absolute -right-2 -top-2 flex size-6 items-center justify-center rounded-full bg-rose-600 text-xs font-bold text-white">
+          {unread > 9 ? "9+" : unread}
+        </span>
+      )}
+    </button>
+  ) : null;
+
+  if (!open && inlineTrigger) return inlineTrigger;
+
   if (!open) {
     return (
       <button
@@ -117,11 +145,11 @@ export function SimpleCareTeamDock({
         onClick={() => setOpen(true)}
         aria-label="Mở kênh trao đổi với nhân viên y tế"
         className={cn(
-          "fixed bottom-24 right-4 z-50 flex min-h-14 items-center gap-3 rounded-2xl border bg-card px-4 py-2.5 shadow-lg transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2 sm:right-6",
-          unread > 0 ? "border-teal-400 ring-2 ring-teal-500/40" : "border-slate-300 dark:border-slate-700",
+          "fixed bottom-24 right-4 z-50 flex size-14 items-center justify-center gap-4 rounded-full border bg-card shadow-lg transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 sm:right-6 sm:size-auto sm:min-h-14 sm:justify-start sm:rounded-2xl sm:px-4 sm:py-2",
+          unread > 0 ? "border-brand ring-2 ring-brand/40" : "border-border",
         )}
       >
-        <span className="relative flex size-10 shrink-0 items-center justify-center rounded-xl bg-teal-600 text-white">
+        <span className="relative flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand text-brand-foreground">
           <MessageCircle className="size-5 stroke-[2.2]" aria-hidden="true" />
           {unread > 0 && (
             <span className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-rose-600 text-xs font-bold text-white">
@@ -129,92 +157,95 @@ export function SimpleCareTeamDock({
             </span>
           )}
         </span>
-        <span className="flex flex-col text-left">
+        <span className="hidden flex-col text-left sm:flex">
           <span className="text-sm font-bold text-foreground">Nhân viên y tế</span>
-          <span className="text-xs font-semibold text-muted-foreground">Nhắn cho người thẩm định ca của bạn</span>
+          <span className="text-sm text-muted-foreground">Nhắn cho người thẩm định ca của bạn</span>
         </span>
       </button>
     );
   }
 
   return (
-    <section
-      aria-label="Kênh trao đổi với nhân viên y tế"
-      className="fixed inset-x-3 bottom-3 z-50 flex max-h-[70dvh] flex-col overflow-hidden rounded-2xl border border-slate-300 bg-card shadow-2xl sm:inset-x-auto sm:bottom-24 sm:right-6 sm:w-[26rem] dark:border-slate-700"
-    >
-      <header className="flex items-start justify-between gap-3 border-b border-slate-100 bg-background px-4 py-3">
-        <div className="flex min-w-0 items-start gap-3">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-teal-600 text-white">
-            <Stethoscope className="size-5 stroke-[2.2]" aria-hidden="true" />
-          </span>
-          <div className="min-w-0">
-            <h2 className="text-base font-bold text-foreground">Nhân viên y tế</h2>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              Ca của bạn đang chờ hoặc đang được thẩm định.
-            </p>
+    <>
+      {inlineTrigger}
+      <section
+        aria-label="Kênh trao đổi với nhân viên y tế"
+        className="fixed inset-x-3 bottom-3 z-50 flex max-h-[70dvh] flex-col overflow-hidden rounded-2xl border border-slate-300 bg-card shadow-2xl sm:inset-x-auto sm:bottom-24 sm:right-6 sm:w-[26rem] dark:border-slate-700"
+      >
+        <header className="flex items-start justify-between gap-3 border-b border-slate-100 bg-background px-4 py-3">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-teal-600 text-white">
+              <Stethoscope className="size-5 stroke-[2.2]" aria-hidden="true" />
+            </span>
+            <div className="min-w-0">
+              <h2 className="text-base font-bold text-foreground">Nhân viên y tế</h2>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                Ca của bạn đang chờ hoặc đang được thẩm định.
+              </p>
+            </div>
           </div>
-        </div>
-        <button
-          type="button"
-          onClick={() => setOpen(false)}
-          aria-label="Thu gọn kênh trao đổi"
-          className="flex size-11 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 dark:hover:bg-slate-700"
-        >
-          <ChevronDown className="size-5" aria-hidden="true" />
-        </button>
-      </header>
-
-      <ol ref={listRef} className="flex min-h-[9rem] flex-1 flex-col gap-4 overflow-y-auto px-4 py-4">
-        {thread.isLoading ? (
-          <li className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-            Đang tải kênh trao đổi...
-          </li>
-        ) : messages.length === 0 ? (
-          <li className="rounded-xl border border-border bg-background p-4 text-sm leading-6 text-slate-600 dark:text-slate-300">
-            Bạn nhắn được ngay bây giờ. Tin sẽ vào hàng đợi pilot và một y tá sẽ trả lời.
-          </li>
-        ) : (
-          messages.map((message) => <MessageBubble key={message.id} message={message} />)
-        )}
-      </ol>
-
-      <form onSubmit={handleSend} className="border-t border-slate-100 bg-background/70 p-3">
-        <label htmlFor="simple-care-team-input" className="sr-only">
-          Nhắn cho nhân viên y tế
-        </label>
-        <div className="flex items-end gap-2">
-          <textarea
-            id="simple-care-team-input"
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" && !event.shiftKey) handleSend(event);
-            }}
-            rows={2}
-            maxLength={2000}
-            placeholder="Nhắn cho nhân viên y tế..."
-            className="min-h-11 flex-1 resize-none rounded-xl border border-slate-300 bg-card px-3 py-2.5 text-base leading-6 text-foreground placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 dark:border-slate-700"
-          />
           <button
-            type="submit"
-            disabled={!draft.trim() || sendMessage.isPending}
-            aria-label="Gửi tin nhắn cho nhân viên y tế"
-            className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-teal-600 text-white transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2"
+            type="button"
+            onClick={() => setOpen(false)}
+            aria-label="Thu gọn kênh trao đổi"
+            className="flex size-11 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 dark:hover:bg-slate-700"
           >
-            {sendMessage.isPending ? (
-              <Loader2 className="size-5 animate-spin" aria-hidden="true" />
-            ) : (
-              <Send className="size-5" aria-hidden="true" />
-            )}
+            <ChevronDown className="size-5" aria-hidden="true" />
           </button>
-        </div>
-        {sendMessage.isError && (
-          <p role="alert" className="mt-2 text-sm font-semibold text-rose-700">
-            {sendMessage.error instanceof Error ? sendMessage.error.message : "Không gửi được tin nhắn."}
-          </p>
-        )}
-      </form>
-    </section>
+        </header>
+
+        <ol ref={listRef} className="flex min-h-[9rem] flex-1 flex-col gap-4 overflow-y-auto px-4 py-4">
+          {thread.isLoading ? (
+            <li className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              Đang tải kênh trao đổi...
+            </li>
+          ) : messages.length === 0 ? (
+            <li className="rounded-xl border border-border bg-background p-4 text-sm leading-6 text-slate-600 dark:text-slate-300">
+              Bạn nhắn được ngay bây giờ. Tin sẽ vào hàng đợi pilot và một y tá sẽ trả lời.
+            </li>
+          ) : (
+            messages.map((message) => <MessageBubble key={message.id} message={message} />)
+          )}
+        </ol>
+
+        <form onSubmit={handleSend} className="border-t border-slate-100 bg-background/70 p-3">
+          <label htmlFor="simple-care-team-input" className="sr-only">
+            Nhắn cho nhân viên y tế
+          </label>
+          <div className="flex items-end gap-2">
+            <textarea
+              id="simple-care-team-input"
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) handleSend(event);
+              }}
+              rows={2}
+              maxLength={2000}
+              placeholder="Nhắn cho nhân viên y tế..."
+              className="min-h-11 flex-1 resize-none rounded-xl border border-slate-300 bg-card px-3 py-2.5 text-base leading-6 text-foreground placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 dark:border-slate-700"
+            />
+            <button
+              type="submit"
+              disabled={!draft.trim() || sendMessage.isPending}
+              aria-label="Gửi tin nhắn cho nhân viên y tế"
+              className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-teal-600 text-white transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2"
+            >
+              {sendMessage.isPending ? (
+                <Loader2 className="size-5 animate-spin" aria-hidden="true" />
+              ) : (
+                <Send className="size-5" aria-hidden="true" />
+              )}
+            </button>
+          </div>
+          {sendMessage.isError && (
+            <p role="alert" className="mt-2 text-sm font-semibold text-rose-700">
+              {sendMessage.error instanceof Error ? sendMessage.error.message : "Không gửi được tin nhắn."}
+            </p>
+          )}
+        </form>
+      </section>
+    </>
   );
 }

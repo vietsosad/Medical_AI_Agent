@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import type { SimpleAgentCitationDTO, SimpleAgentSbarDTO } from "@/types/simple-nurse";
 import { ClinicalMarkdown } from "@/components/chat/ClinicalMarkdown";
 import { simpleTriageService } from "@/services/simple-triage.service";
+import { formatCriterionValue } from "@/components/chat/pilot/pilot-transcript";
 
 // EQ/NEQ/GT/GTE/LT/LTE -> ký hiệu toán học dễ đọc, mirror cách hiển thị điều
 // kiện đã dùng ở protocol_atoms.jsonl.
@@ -170,7 +171,8 @@ export function SimplePilotSbarAccordion({
                                 {citation.satisfied_requirements.map((req) => (
                                   <li key={req.fact_target_id}>
                                     {req.name} {OPERATOR_SYMBOLS[req.operator] ?? req.operator}{" "}
-                                    {String(req.expected_value)} — bạn báo cáo: {String(req.actual_value)}
+                                    {formatCriterionValue(req.expected_value)} — bạn báo cáo:{" "}
+                                    {formatCriterionValue(req.actual_value)}
                                   </li>
                                 ))}
                               </ul>
@@ -197,7 +199,7 @@ export function SimplePilotSbarAccordion({
           type="button"
           onClick={() => void handleDownloadPdf()}
           disabled={isDownloading}
-          className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-sky-300 bg-sky-50 px-4 text-sm font-bold text-sky-900 transition-colors hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-brand-edge bg-brand-soft px-4 text-sm font-bold text-brand-ink transition-colors hover:border-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isDownloading ? (
             <Loader2 className="size-5 shrink-0 animate-spin" aria-hidden="true" />
@@ -210,18 +212,18 @@ export function SimplePilotSbarAccordion({
         <button
           type="button"
           onClick={handleLocateHospital}
-          className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 text-sm font-bold text-white transition-colors hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-2"
+          className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand px-4 text-sm font-bold text-brand-foreground transition-colors hover:bg-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
         >
-          <MapPin className="size-5 shrink-0 text-sky-300" aria-hidden="true" />
+          <MapPin className="size-5 shrink-0" aria-hidden="true" />
           Tìm cơ sở y tế gần nhất
         </button>
 
         <Link
           href="/triage-pilot/history"
-          className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-card px-4 text-sm font-bold text-slate-800 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-2 dark:text-slate-100 dark:border-slate-700"
+          className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 text-sm font-bold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
         >
-          <FolderHeart className="size-5 shrink-0 text-sky-700" aria-hidden="true" />
-          Lịch sử khám pilot
+          <FolderHeart className="size-5 shrink-0 text-brand" aria-hidden="true" />
+          Lịch sử sàng lọc
         </Link>
       </div>
     </section>

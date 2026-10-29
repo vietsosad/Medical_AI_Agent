@@ -1,34 +1,43 @@
 "use client";
 
 import React, { useState } from "react";
-import { useTriageStore } from "@/store/useTriageStore";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { motion } from "framer-motion";
+import { ArrowRight, Bot, Scale, ShieldCheck, Siren } from "lucide-react";
+
 import { Checkbox } from "@/components/ui/checkbox";
-import { ShieldAlert, Bot, Scale, Siren, ArrowRight, ShieldCheck } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DURATION, EASE_OUT, STAGGER_SECONDS } from "@/lib/motion";
 import { cn } from "@/lib/utils";
-import { motion, type Variants } from "framer-motion";
+import { useTriageStore } from "@/store/useTriageStore";
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1, delayChildren: 0.1 },
+const list = {
+  hidden: {},
+  visible: { transition: { staggerChildren: STAGGER_SECONDS * 2, delayChildren: 0.1 } },
+};
+
+const item = {
+  hidden: { opacity: 0, y: 8 },
+  visible: { opacity: 1, y: 0, transition: { duration: DURATION.base, ease: EASE_OUT } },
+};
+
+const POINTS = [
+  {
+    icon: Bot,
+    title: "Trợ lý AI hỗ trợ ghi nhận",
+    body: "Mô hình ngôn ngữ đọc lời bạn kể để ghi nhận triệu chứng. Mức ESI đề xuất được đối chiếu với tiêu chí phác đồ, rồi chuyển cho nhân viên y tế thẩm định.",
   },
-};
-
-const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 15 },
-  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
-};
+  {
+    icon: Scale,
+    title: "Không thay thế bác sĩ",
+    body: "Đánh giá của AI không thay thế chẩn đoán y học chính thức hay y lệnh của bác sĩ.",
+  },
+] as const;
 
 /**
- * COMPONENT SCR-TRIAGE-01: MODAL CAM KẾT PHÁP LÝ Y ĐỨC
- * Giao diện Premium Clinical (Pristine Light Theme).
+ * Lưu ý trước phiên sàng lọc, hiện một lần mỗi lần mở trang khám.
+ *
+ * Trên điện thoại hộp thoại tự cuộn bên trong (không tràn khỏi màn hình), và
+ * ô đồng ý + nút bắt đầu luôn ghim ở đáy hộp thoại để không bị khuất.
  */
 export function DisclaimerConsentModal() {
   const { hasConsented, setConsent } = useTriageStore();
@@ -46,131 +55,85 @@ export function DisclaimerConsentModal() {
         hideCloseButton={true}
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
-        className="max-w-xl w-full p-0 bg-card/95 backdrop-blur-xl border border-border/60 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] text-slate-800 rounded-[2rem] font-sans overflow-hidden dark:text-slate-100"
+        className="flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg flex-col gap-0 overflow-hidden rounded-3xl border border-border bg-card p-0 text-foreground shadow-2xl"
       >
-        {/* Subtle top gradient bar */}
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-sky-400 via-indigo-500 to-sky-400 opacity-90" />
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <DialogHeader className="gap-2 px-6 pt-6 text-left">
+            <span className="mb-2 flex size-12 items-center justify-center rounded-2xl bg-brand-soft text-brand" aria-hidden="true">
+              <ShieldCheck className="size-6" />
+            </span>
+            <DialogTitle className="text-2xl font-extrabold tracking-tight text-foreground">Trước khi bắt đầu</DialogTitle>
+            <DialogDescription className="text-base leading-7 text-muted-foreground">
+              Ba điều bạn cần biết về trợ lý sàng lọc.
+            </DialogDescription>
+          </DialogHeader>
 
-        <DialogHeader className="px-6 pt-8 pb-5 border-b border-slate-100 bg-background/50">
-          <div className="flex flex-col items-center text-center gap-4">
-            <div className="relative">
-              <div className="absolute inset-0 bg-amber-400 blur-xl opacity-20 rounded-full" />
-              <div className="relative p-4 rounded-2xl bg-gradient-to-b from-white to-amber-50 border border-amber-200 shadow-sm">
-                <ShieldAlert className="w-8 h-8 text-amber-500 stroke-[2.2]" />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <DialogTitle className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
-                Cam Kết Y Đức Lâm Sàng
-              </DialogTitle>
-              <p className="text-sm text-muted-foreground font-medium max-w-[90%] mx-auto leading-relaxed">
-                Xin vui lòng xác nhận các quy chuẩn an toàn trước khi sử dụng AI Triage.
-              </p>
-            </div>
-          </div>
-        </DialogHeader>
-
-        <motion.div 
-          variants={containerVariants}
-          initial="hidden"
-          animate="show"
-          className="p-6 space-y-4 bg-card"
-        >
-          {/* Box 1 */}
-          <motion.div variants={itemVariants} className="group flex gap-4 items-start p-4 rounded-2xl bg-background/50 border border-slate-100 hover:border-sky-200 hover:bg-sky-50/30 transition-all duration-300">
-            <div className="p-2.5 rounded-xl bg-card border border-border shadow-sm shrink-0 group-hover:border-sky-300 group-hover:shadow-sky-100 transition-colors">
-              <Bot className="w-5 h-5 text-sky-600 stroke-[2.2]" />
-            </div>
-            <div className="space-y-1">
-              <h4 className="text-sm font-bold text-foreground tracking-tight">
-                AI Hỗ Trợ Ghi Nhận
-              </h4>
-              <p className="text-sm text-slate-600 font-medium leading-relaxed dark:text-slate-300">
-                Mô hình ngôn ngữ đọc lời bạn kể để ghi nhận triệu chứng. Mức ESI đề xuất được đối chiếu với tiêu chí phác đồ, rồi chuyển cho nhân viên y tế thẩm định.
-              </p>
-            </div>
-          </motion.div>
-
-          {/* Box 2 */}
-          <motion.div variants={itemVariants} className="group flex gap-4 items-start p-4 rounded-2xl bg-background/50 border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/30 transition-all duration-300">
-            <div className="p-2.5 rounded-xl bg-card border border-border shadow-sm shrink-0 group-hover:border-indigo-300 group-hover:shadow-indigo-100 transition-colors">
-              <Scale className="w-5 h-5 text-indigo-600 stroke-[2.2]" />
-            </div>
-            <div className="space-y-1">
-              <h4 className="text-sm font-bold text-foreground tracking-tight">
-                Không Thay Thế Bác Sĩ
-              </h4>
-              <p className="text-sm text-slate-600 font-medium leading-relaxed dark:text-slate-300">
-                Đánh giá của AI <span className="font-bold text-rose-600 uppercase text-xs px-1.5 py-0.5 bg-rose-100 rounded-md mx-1">Tuyệt đối không</span> thay thế chẩn đoán y học chính thức hay y lệnh từ bác sĩ.
-              </p>
-            </div>
-          </motion.div>
-
-          {/* Box 3 */}
-          <motion.div variants={itemVariants} className="group flex gap-4 items-start p-4 rounded-2xl bg-rose-50/30 border border-rose-100 hover:border-rose-200 hover:bg-rose-50/60 transition-all duration-300 relative overflow-hidden">
-            <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-rose-100/50 to-transparent pointer-events-none" />
-            <div className="p-2.5 rounded-xl bg-card border border-rose-200 shadow-sm shrink-0 group-hover:scale-110 transition-transform duration-300 relative z-10">
-              <Siren className="w-5 h-5 text-rose-500 stroke-[2.2]" />
-            </div>
-            <div className="space-y-1 relative z-10">
-              <h4 className="text-sm font-bold text-rose-900 tracking-tight">
-                Khi Có Dấu Hiệu Nguy Kịch
-              </h4>
-              {/* Không hứa điều hệ thống không làm: ứng dụng chỉ hiện nút gọi
-                  115 cho kết quả khẩn, không tự gọi hay điều xe thay ai. */}
-              <p className="text-sm text-rose-700/90 font-medium leading-relaxed">
-                Hệ thống <strong className="text-rose-700">không tự gọi 115</strong> thay bạn. Với kết quả ở mức khẩn cấp, màn hình hiện nút gọi 115 để bạn bấm. Nếu thấy nguy kịch, hãy gọi 115 ngay, không chờ AI trả lời.
-              </p>
-            </div>
-          </motion.div>
-        </motion.div>
-
-        <div className="px-6 py-5 border-t border-slate-100 bg-background/50 space-y-4 rounded-b-[2rem]">
-          <div 
-            className="flex items-start gap-3 p-3.5 rounded-xl border-2 border-transparent hover:bg-card hover:border-border transition-all cursor-pointer group"
-            onClick={() => setIsChecked(!isChecked)}
-          >
-            <div className="shrink-0 mt-0.5">
-              <Checkbox
-                id="clinical-consent"
-                checked={isChecked}
-                onCheckedChange={(val) => setIsChecked(val === true)}
-                className="rounded-md border-slate-300 data-[state=checked]:bg-sky-600 data-[state=checked]:border-sky-600 w-5 h-5 dark:border-slate-700"
-              />
-            </div>
-            <label
-              htmlFor="clinical-consent"
-              className="text-sm font-semibold text-slate-700 leading-snug cursor-pointer select-none dark:text-slate-200"
-              onClick={(e) => e.preventDefault()}
+          <motion.ul variants={list} initial="hidden" animate="visible" className="flex flex-col gap-2 px-6 py-6">
+            {POINTS.map(({ icon: Icon, title, body }) => (
+              <motion.li key={title} variants={item} className="flex items-start gap-4 rounded-2xl bg-muted/60 p-4">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-card text-brand" aria-hidden="true">
+                  <Icon className="size-5" />
+                </span>
+                <span>
+                  <span className="block text-base font-bold text-foreground">{title}</span>
+                  <span className="mt-1 block text-sm leading-6 text-muted-foreground">{body}</span>
+                </span>
+              </motion.li>
+            ))}
+            {/* Không hứa điều hệ thống không làm: ứng dụng chỉ hiện nút gọi
+                115 cho kết quả khẩn, không tự gọi hay điều xe thay ai. */}
+            <motion.li
+              variants={item}
+              className="flex items-start gap-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 dark:border-rose-900 dark:bg-rose-950/40"
             >
-              Tôi đã đọc kỹ và hoàn toàn đồng ý với các quy chuẩn an toàn lâm sàng nêu trên.
+              <span
+                className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-card text-rose-700 dark:text-rose-300"
+                aria-hidden="true"
+              >
+                <Siren className="size-5" />
+              </span>
+              <span>
+                <span className="block text-base font-bold text-rose-950 dark:text-rose-100">Khi có dấu hiệu nguy kịch</span>
+                <span className="mt-1 block text-sm leading-6 text-rose-900 dark:text-rose-200">
+                  Hệ thống <strong>không tự gọi 115</strong> thay bạn. Với kết quả ở mức khẩn cấp, màn hình hiện nút gọi
+                  115 để bạn bấm. Nếu thấy nguy kịch, hãy gọi 115 ngay, không chờ AI trả lời.
+                </span>
+              </span>
+            </motion.li>
+          </motion.ul>
+        </div>
+
+        <div className="flex shrink-0 flex-col gap-4 border-t border-border bg-card px-6 py-4">
+          <div className="flex items-start gap-4">
+            <Checkbox
+              id="clinical-consent"
+              checked={isChecked}
+              onCheckedChange={(val) => setIsChecked(val === true)}
+              className="mt-1 size-5 rounded-md border-border bg-card data-[state=checked]:border-brand data-[state=checked]:bg-none data-[state=checked]:bg-brand focus-visible:ring-brand focus-visible:ring-offset-card"
+            />
+            <label htmlFor="clinical-consent" className="cursor-pointer select-none text-base leading-7 text-foreground">
+              Tôi đã đọc và đồng ý với các lưu ý trên.
             </label>
           </div>
 
-          <button
+          <motion.button
             type="button"
             disabled={!isChecked}
             onClick={handleStartSession}
+            whileTap={isChecked ? { scale: 0.97 } : undefined}
             className={cn(
-              "w-full h-14 rounded-xl font-bold text-[15px] flex items-center justify-center gap-2 transition-all duration-300 transform select-none relative overflow-hidden",
-              {
-                "bg-slate-900 text-white hover:bg-slate-800 shadow-lg shadow-slate-900/20 active:scale-[0.98]": isChecked,
-                "bg-muted text-slate-400 cursor-not-allowed": !isChecked,
-              }
+              "flex min-h-12 w-full items-center justify-center gap-2 rounded-xl text-base font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-card",
+              isChecked
+                ? "bg-brand text-brand-foreground hover:bg-brand-strong"
+                : "cursor-not-allowed bg-muted text-muted-foreground",
             )}
           >
-            {isChecked && (
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] animate-[shimmer_2s_infinite]" />
-            )}
-            <ShieldCheck className={cn("w-5 h-5 transition-transform duration-300", isChecked ? "scale-100" : "scale-90 opacity-50")} />
-            <span>Tiến Vào Phòng Khám</span>
+            Bắt đầu sàng lọc
             <ArrowRight
-              className={cn("w-5 h-5 transition-transform duration-300", {
-                "translate-x-1": isChecked,
-                "opacity-50": !isChecked,
-              })}
+              className={cn("size-5 transition-transform duration-200", isChecked && "translate-x-1")}
+              aria-hidden="true"
             />
-          </button>
+          </motion.button>
         </div>
       </DialogContent>
     </Dialog>

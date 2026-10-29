@@ -68,7 +68,7 @@ const URGENT_GUIDANCE: Record<1 | 2 | 3, UrgentGuidance> = {
     body:
       "Tình trạng này có thể đe dọa tính mạng. Hãy gọi 115 trước tiên. Danh sách bên dưới để bạn hoặc người nhà đọc địa chỉ cho tổng đài, không phải để tự di chuyển.",
     callFirst: true,
-    bandClass: "bg-rose-50 text-rose-900",
+    bandClass: "bg-rose-50 text-rose-900 dark:bg-rose-950/40 dark:text-rose-100",
     accentClass: "bg-rose-700 hover:bg-rose-800 focus-visible:ring-rose-600",
   },
   2: {
@@ -76,7 +76,7 @@ const URGENT_GUIDANCE: Record<1 | 2 | 3, UrgentGuidance> = {
     body:
       "Hãy nhờ người khác chở đi hoặc gọi 115. Không tự lái xe, vì tình trạng có thể nặng lên trên đường.",
     callFirst: true,
-    bandClass: "bg-amber-50 text-amber-950",
+    bandClass: "bg-amber-50 text-amber-950 dark:bg-amber-950/40 dark:text-amber-100",
     accentClass: "bg-amber-700 hover:bg-amber-800 focus-visible:ring-amber-600",
   },
   3: {
@@ -84,7 +84,7 @@ const URGENT_GUIDANCE: Record<1 | 2 | 3, UrgentGuidance> = {
     body:
       "Bạn có thể chủ động di chuyển tới một trong các cơ sở bên dưới. Nếu triệu chứng nặng lên trên đường, hãy gọi 115.",
     callFirst: false,
-    bandClass: "bg-sky-50 text-sky-950",
+    bandClass: "bg-sky-50 text-sky-950 dark:bg-sky-950/40 dark:text-sky-100",
     accentClass: "bg-sky-600 hover:bg-sky-700 focus-visible:ring-sky-600",
   },
 };
@@ -155,7 +155,7 @@ function FacilityRow({ facility }: { facility: NearbyFacilityDTO }) {
           {facility.emergency_capability === "EMERGENCY_DEPARTMENT" && (
             <>
               <span aria-hidden="true">·</span>
-              <span className="rounded-lg bg-emerald-50 px-2 py-1 text-sm font-semibold text-emerald-800">
+              <span className="rounded-lg bg-emerald-50 px-2 py-1 text-sm font-semibold text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200">
                 Có khoa cấp cứu
               </span>
             </>
@@ -179,7 +179,7 @@ function FacilityRow({ facility }: { facility: NearbyFacilityDTO }) {
           href={facility.directions_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 text-sm font-bold text-white transition-colors hover:bg-sky-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-2"
+          className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand px-4 text-sm font-bold text-brand-foreground transition-colors hover:bg-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
           aria-label={`Chỉ đường tới ${facility.name} trên Google Maps`}
         >
           <Navigation className="size-4 shrink-0" aria-hidden="true" />
@@ -192,7 +192,7 @@ function FacilityRow({ facility }: { facility: NearbyFacilityDTO }) {
 
 function FacilitySkeleton() {
   return (
-    <ul className="divide-y divide-slate-200" aria-hidden="true">
+    <ul className="divide-y divide-border" aria-hidden="true">
       {[0, 1, 2].map((row) => (
         <li key={`facility-skeleton-${row}`} className="flex flex-col gap-2 p-4">
           <div className="h-4 w-1/2 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />

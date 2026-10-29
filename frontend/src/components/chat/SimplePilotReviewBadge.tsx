@@ -1,54 +1,84 @@
-import React from "react";
-import { CheckCircle2, Layers, Clock3 } from "lucide-react";
+import { Check, CirclePause, Clock3, MessageCircle, UserCheck, type LucideIcon } from "lucide-react";
 
-import type { SimpleTriageSessionSummaryDTO } from "@/types/simple-triage";
+import type { SessionStatusKind } from "@/components/patient/history-model";
+import { cn } from "@/lib/utils";
 
 /**
- * Small badge for `review_display_status` (see `routes_simple_triage.py`'s
- * `_map_pilot_review_status` -- the single source of truth this mirrors),
- * shared by the pilot history list cards and the detail page so the 3
- * colors/labels are defined exactly once. Deliberately only 3 states, unlike
- * production's `HitlReviewStatus` (4 states): the pilot has no equivalent of
- * a red-flag-locked/EMERGENCY_REJECTED case.
+ * Nhãn trạng thái của một phiên trên màn lịch sử và màn chi tiết, theo đúng
+ * ngôn ngữ người bệnh dùng: đang hỏi dở, chờ điều dưỡng, đã xác nhận, hay đã
+ * được điều chỉnh. Trạng thái thẩm định đến từ `review_display_status` của
+ * `routes_simple_triage.py` (`_map_pilot_review_status`), nguồn duy nhất; xem
+ * `sessionStatusKind` về lý do phiên đang hỏi dở không mang nhãn "chờ xác nhận".
  */
 
-export type PilotReviewDisplayStatus = SimpleTriageSessionSummaryDTO["review_display_status"];
-
-export function reviewBadgeConfig(status: PilotReviewDisplayStatus): {
+interface StatusChipConfig {
   label: string;
+  icon: LucideIcon;
   className: string;
-  icon: typeof CheckCircle2;
-} {
-  switch (status) {
-    case "APPROVED":
+}
+
+function statusChipConfig(kind: SessionStatusKind, aiProposedEsi: number | null): StatusChipConfig {
+  switch (kind) {
+    case "IN_PROGRESS":
       return {
-        label: "Điều dưỡng đã duyệt",
-        className: "border-emerald-200 bg-emerald-50 text-emerald-900",
-        icon: CheckCircle2,
+        label: "Đang hỏi dở",
+        icon: MessageCircle,
+        className: "border-brand-edge bg-brand-soft text-brand-ink",
       };
-    case "OVERRIDDEN":
+    case "STOPPED":
       return {
-        label: "Có can thiệp (Override)",
-        className: "border-amber-200 bg-amber-50 text-amber-900",
-        icon: Layers,
+        label: "Phiên đã dừng",
+        icon: CirclePause,
+        className: "border-border bg-muted text-slate-700 dark:text-slate-300",
       };
-    case "PENDING_REVIEW":
+    case "CONFIRMED":
+      return {
+        label: "Đã xác nhận",
+        icon: Check,
+        className:
+          "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200",
+      };
+    case "ADJUSTED":
+      return {
+        label:
+          aiProposedEsi !== null ? `Điều dưỡng điều chỉnh từ ESI ${aiProposedEsi}` : "Điều dưỡng đã đặt mức ưu tiên",
+        icon: UserCheck,
+        className:
+          "border-slate-300 bg-slate-100 text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200",
+      };
+    case "AWAITING_NURSE":
     default:
       return {
-        label: "Chưa duyệt",
-        className: "border-sky-200 bg-sky-50 text-sky-900",
+        label: "Chờ điều dưỡng xác nhận",
         icon: Clock3,
+        className:
+          "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-200",
       };
   }
 }
 
-export function SimplePilotReviewBadge({ status }: { status: PilotReviewDisplayStatus }) {
-  const { label, className, icon: Icon } = reviewBadgeConfig(status);
+export function SimplePilotReviewBadge({
+  kind,
+  aiProposedEsi = null,
+  className,
+}: {
+  kind: SessionStatusKind;
+  /** Mức AI đề xuất, chỉ dùng để ghi "điều chỉnh từ ESI x". */
+  aiProposedEsi?: number | null;
+  className?: string;
+}) {
+  const { label, icon: Icon, className: tone } = statusChipConfig(kind, aiProposedEsi);
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-bold ${className}`}
+      className={cn(
+        // rounded-2xl thay vì rounded-full: một dòng vẫn là viên thuốc, còn khi
+        // màn hẹp buộc nhãn xuống dòng thì thành khối bo tròn chứ không méo.
+        "inline-flex items-center gap-2 rounded-2xl border px-2 text-sm font-semibold leading-6",
+        tone,
+        className,
+      )}
     >
-      <Icon className="size-3.5" aria-hidden="true" />
+      <Icon className="size-4 shrink-0" aria-hidden="true" />
       {label}
     </span>
   );
