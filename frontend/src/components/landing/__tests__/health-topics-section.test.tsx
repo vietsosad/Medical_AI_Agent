@@ -59,7 +59,7 @@ describe("health topics section", () => {
     setState([topic]);
     render(<HealthTopicsSection />);
 
-    expect(screen.getByText("Sốt xuất huyết Dengue")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Sốt xuất huyết Dengue" })).toBeInTheDocument();
     expect(screen.getByText(/Nguồn: WHO/)).toBeInTheDocument();
     expect(screen.getByText(/Cập nhật 22\/08\/2026/)).toBeInTheDocument();
   });
@@ -88,7 +88,7 @@ describe("health topics section", () => {
   it("shows skeletons while loading", () => {
     setState(undefined, { isLoading: true });
     const { container } = render(<HealthTopicsSection />);
-    expect(container.querySelectorAll(".animate-pulse").length).toBeGreaterThan(0);
+    expect(container.querySelectorAll(".skeleton-sweep").length).toBeGreaterThan(0);
   });
 
   it("carries the disclaimer that this does not replace a clinician", () => {
