@@ -30,8 +30,14 @@ transformers>=5.5.0,<6.0.0
 sentence-transformers>=2.2.2
 
 # Database & SQLModel (Per FastAPI Production & Backend Rules)
-sqlmodel>=0.0.21
-sqlalchemy>=2.0.0
+# Capped below 0.0.45: from that release sqlmodel refuses naive datetimes, and this
+# service stores every timestamp as naive UTC (see test_red_flag_timestamps.py).
+# Lifting the cap means making each datetime field timezone-aware or annotating it
+# NaiveDatetime -- a data migration of its own, not a dependency bump.
+sqlmodel>=0.0.21,<0.0.45
+# [asyncio] pulls in greenlet. SQLAlchemy 2.1 stopped installing it by default, and
+# without it every async session fails at import (the app cannot start).
+sqlalchemy[asyncio]>=2.0.0
 psycopg2-binary>=2.9.0
 asyncpg>=0.30.0
 psycopg[binary,pool]>=3.2.0
