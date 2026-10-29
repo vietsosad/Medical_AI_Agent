@@ -33,7 +33,7 @@ on:
       - 'src/**'
       - 'tests/**'
       - 'scripts/**'
-      - 'evaluation/**'
+      - 'eval/**'
       - 'requirements.txt'
       - 'ruff.toml'
       - '.github/workflows/ci-backend.yml'
@@ -42,7 +42,7 @@ on:
       - 'src/**'
       - 'tests/**'
       - 'scripts/**'
-      - 'evaluation/**'
+      - 'eval/**'
       - 'requirements.txt'
       - 'ruff.toml'
       - '.github/workflows/ci-backend.yml'
@@ -58,7 +58,13 @@ permissions:
 jobs:
   backend:
     name: Invariants, lint and full suite
-    runs-on: [self-hosted, linux, x64]
+    # GitHub-hosted by default. Hard-coding [self-hosted, linux, x64] left every
+    # job in the public copy of this repository queued with runner_id 0 until
+    # GitHub cancelled it: no machine there carries those labels. A copy that has
+    # to run on its own machines (the org repository, whose GitHub-hosted jobs are
+    # blocked by billing) sets the repository variable CI_RUNS_ON to
+    # ["self-hosted","linux","x64"] instead of editing this file.
+    runs-on: ${{ vars.CI_RUNS_ON && fromJSON(vars.CI_RUNS_ON) || 'ubuntu-latest' }}
     timeout-minutes: 20
 
     env:
