@@ -55,7 +55,16 @@ jobs:
           pip install pip-audit
 
       - name: Audit installed packages
-        run: pip-audit --strict --desc
+        # Audit the installed set through its frozen list rather than the live
+        # environment. torch comes from the PyTorch CPU index as 2.13.0+cpu, a
+        # local version PyPI does not know, so --strict stopped every run on
+        # "Dependency not found on PyPI" before any advisory was looked up. The
+        # +cpu label only names the build; the public version carries the same
+        # advisories, so it is audited under that name and --strict still
+        # covers every other package.
+        run: |
+          pip freeze --all | sed -E 's/\+cpu$//' > audit-requirements.txt
+          pip-audit -r audit-requirements.txt --no-deps --disable-pip --strict --desc
 
   node:
     name: Frontend dependencies
