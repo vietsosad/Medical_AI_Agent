@@ -7,8 +7,8 @@ interface SimplePilotHistoryDetailPageProps {
 export default async function SimplePilotHistoryDetailPage({ params }: SimplePilotHistoryDetailPageProps) {
   const { id } = await params;
   return (
-    <div className="h-full w-full overflow-y-auto rounded-3xl bg-background">
-      <div className="w-full space-y-4 p-4 sm:p-6">
+    <div className="h-full w-full overflow-y-auto bg-background">
+      <div className="w-full px-4 pb-8 pt-6 sm:px-6">
         <SimplePilotHistoryDetail sessionId={id} />
       </div>
     </div>
