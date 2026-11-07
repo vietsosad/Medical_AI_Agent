@@ -64,20 +64,130 @@ export interface SimpleDailyPointDTO {
   decided: number;
 }
 
+/**
+ * Hàng của ma trận mức khẩn × thời gian chờ. "INSUFFICIENT" = agent kết luận
+ * chưa đủ dữ liệu; "IN_PROGRESS" = phiên đã bị bộ lọc khẩn cấp gắn cờ nhưng
+ * chưa sàng lọc xong, nên chưa có mức nào để xếp.
+ */
+export type SimpleMatrixRowKey = "1" | "2" | "3" | "4" | "5" | "INSUFFICIENT" | "IN_PROGRESS";
+
+export interface SimpleMatrixRowDTO {
+  key: SimpleMatrixRowKey;
+  /** Luôn đủ ba mốc chờ, theo thứ tự ngắn tới lâu. */
+  counts: SimpleWaitBucketDTO[];
+}
+
+/** Một giờ tròn trong dải 24 giờ qua; `hour_start` là giờ UTC không kèm hậu tố. */
+export interface SimpleHourPointDTO {
+  hour_start: string;
+  completed: number;
+  decided: number;
+}
+
+/** Số phiên kết thúc vào một giờ UTC trong ngày, cộng dồn trong cửa sổ. */
+export interface SimpleHourOfDayDTO {
+  hour_utc: number;
+  completed: number;
+}
+
+/** Các cửa sổ lịch sử backend nhận (`WINDOW_DAYS_CHOICES`). */
+export type SimpleDashboardWindow = 7 | 14 | 30 | 90;
+
+export type SimpleEsiLevel = 1 | 2 | 3 | 4 | 5;
+
+/**
+ * Mức AI đề xuất × mức điều dưỡng chốt, trên đúng tập ca của `agreement`.
+ * Vẫn là "điều dưỡng đã làm gì với đề xuất của AI", không phải độ chính xác.
+ * Thang ESI chạy ngược: `more_urgent` là các ô có mức chốt NHỎ hơn mức AI.
+ */
+export interface SimpleDecisionMatrixDTO {
+  decided_total: number;
+  kept: number;
+  more_urgent: number;
+  less_urgent: number;
+  /** Ca ở hàng "INSUFFICIENT" hoặc "IN_PROGRESS": không có mức AI để so. */
+  without_proposal: number;
+  /** Ca đã chốt mà không ghi mức nào (dữ liệu cũ): không nằm trong ô nào. */
+  without_final_esi: number;
+  /** Luôn đủ 7 hàng, mỗi hàng đủ 5 cột ESI 1..5. */
+  rows: Array<{ key: SimpleMatrixRowKey; counts: Array<{ final_esi: SimpleEsiLevel; count: number }> }>;
+}
+
+/** Một cột của phân bố thời gian nhận ca có cờ; `max_minutes` null = cột cuối, không có cận trên. */
+export interface SimpleClaimBinDTO {
+  min_minutes: number;
+  max_minutes: number | null;
+  count: number;
+}
+
+/**
+ * Ca bộ lọc khẩn cấp gắn cờ trong cửa sổ: từ lúc gắn cờ tới khi có người nhận
+ * (lần nhận đang ghi trên ca; ca chốt thẳng thì là lúc chốt). Không có chỉ
+ * tiêu nào: hai mốc tham chiếu là mốc tô màu sẵn có của bảng ca.
+ */
+export interface SimpleFlaggedClaimDTO {
+  /** Dưới số ca đã nhận này thì không nêu tỉ lệ, không vẽ phân bố. */
+  min_cases: number;
+  flagged_total: number;
+  claimed: number;
+  unclaimed: number;
+  untimed: number;
+  claimed_under_warning: number;
+  bins: SimpleClaimBinDTO[];
+}
+
+/** Trung vị số phút từ `waiting_since` của bảng ca tới lúc chốt, theo mức AI đề xuất. */
+export interface SimpleDecisionWaitDTO {
+  min_cases: number;
+  decided_total: number;
+  /** `median_minutes` null khi `count` < `min_cases`. */
+  rows: Array<{ key: SimpleMatrixRowKey; count: number; median_minutes: number | null }>;
+}
+
+/** Phiên kết thúc theo thứ × giờ GIỜ VIỆT NAM, trên `window_days` ngày theo lịch Việt Nam. */
+export interface SimpleWeekdayHourDTO {
+  utc_offset_hours: number;
+  /** Ngày theo lịch Việt Nam, "YYYY-MM-DD". */
+  first_day: string;
+  last_day: string;
+  total: number;
+  /** Thứ Hai (1) tới Chủ nhật (7); `hours` đủ 24 giờ 0..23 giờ Việt Nam. */
+  rows: Array<{ weekday: 1 | 2 | 3 | 4 | 5 | 6 | 7; days: number; hours: number[] }>;
+}
+
 export interface SimpleNurseDashboardDTO {
   generated_at: string;
+  window_days: number;
+  // --- Ảnh chụp hàng đợi, không phụ thuộc cửa sổ ---
   waiting: number;
   assigned_total: number;
   assigned_to_me: number;
   parked: number;
+  /** Tổng số ca đã chốt, mọi thời điểm (con số của tab "Đã quyết định"). */
   decided: number;
   insufficient_live: number;
+  /** Ca chưa đóng mà bộ lọc khẩn cấp đã gắn cờ "Cần xem ngay". */
+  attention_live: number;
+  /** Trong số đó, phiên còn đang sàng lọc. */
+  in_progress_live: number;
   longest_wait_minutes: number | null;
   esi_distribution: SimpleEsiBucketDTO[];
   wait_buckets: SimpleWaitBucketDTO[];
+  esi_wait_matrix: SimpleMatrixRowDTO[];
+  // --- Lịch sử trong cửa sổ `window_days` ngày ---
+  completed_in_window: number;
+  decided_in_window: number;
   agreement: SimpleAgreementDTO;
   reason_codes: SimpleReasonCountDTO[];
   daily_volume: SimpleDailyPointDTO[];
+  hour_of_day: SimpleHourOfDayDTO[];
+  recent_hours: SimpleHourPointDTO[];
+  // --- Chất lượng và xu hướng trong cửa sổ. Tùy chọn: máy chủ cũ chưa có
+  // các khối này thì bảng vẫn hiện phần còn lại, chỉ ẩn bốn khung tương ứng.
+  decision_matrix?: SimpleDecisionMatrixDTO;
+  flagged_claim?: SimpleFlaggedClaimDTO;
+  decision_wait?: SimpleDecisionWaitDTO;
+  weekday_hour?: SimpleWeekdayHourDTO;
 }
 
 /** `GET /nurse-simple/queue` query params -- see routes_nurse_simple.py's

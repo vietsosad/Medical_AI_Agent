@@ -28,24 +28,90 @@ export const simpleSatisfiedRequirementSchema = z.object({
   actual_value: z.union([z.string(), z.number(), z.boolean()]).nullable(),
 });
 
+const simpleWaitBucketSchema = z.object({
+  key: z.enum(["UNDER_WARNING", "WARNING", "CRITICAL"]),
+  count: z.number(),
+});
+
+const simpleMatrixRowKeySchema = z.enum(["1", "2", "3", "4", "5", "INSUFFICIENT", "IN_PROGRESS"]);
+const countSchema = z.number().int().nonnegative();
+
+const simpleDecisionMatrixSchema = z.object({
+  decided_total: countSchema,
+  kept: countSchema,
+  more_urgent: countSchema,
+  less_urgent: countSchema,
+  without_proposal: countSchema,
+  without_final_esi: countSchema,
+  rows: z.array(
+    z.object({
+      key: simpleMatrixRowKeySchema,
+      counts: z.array(z.object({ final_esi: esiLevelSchema, count: countSchema })),
+    }),
+  ),
+});
+
+const simpleFlaggedClaimSchema = z.object({
+  min_cases: countSchema,
+  flagged_total: countSchema,
+  claimed: countSchema,
+  unclaimed: countSchema,
+  untimed: countSchema,
+  claimed_under_warning: countSchema,
+  bins: z.array(
+    z.object({ min_minutes: countSchema, max_minutes: countSchema.nullable(), count: countSchema }),
+  ),
+});
+
+const simpleDecisionWaitSchema = z.object({
+  min_cases: countSchema,
+  decided_total: countSchema,
+  rows: z.array(
+    z.object({ key: simpleMatrixRowKeySchema, count: countSchema, median_minutes: countSchema.nullable() }),
+  ),
+});
+
+const simpleWeekdayHourSchema = z.object({
+  utc_offset_hours: z.number().int(),
+  first_day: z.string(),
+  last_day: z.string(),
+  total: countSchema,
+  rows: z.array(
+    z.object({
+      weekday: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6), z.literal(7)]),
+      days: countSchema,
+      // Đúng 24 giờ: thiếu một giờ là cả hàng lệch cột, xếp phiên vào sai giờ.
+      hours: z.array(countSchema).length(24),
+    }),
+  ),
+});
+
 export const simpleNurseDashboardSchema = z.object({
   generated_at: z.string(),
+  window_days: z.number().int().positive(),
   waiting: z.number(),
   assigned_total: z.number(),
   assigned_to_me: z.number(),
   parked: z.number(),
   decided: z.number(),
   insufficient_live: z.number(),
+  attention_live: z.number(),
+  in_progress_live: z.number(),
   longest_wait_minutes: z.number().nullable(),
   esi_distribution: z.array(
     z.object({ level: esiLevelSchema.nullable(), count: z.number() }),
   ),
-  wait_buckets: z.array(
+  wait_buckets: z.array(simpleWaitBucketSchema),
+  esi_wait_matrix: z.array(
     z.object({
-      key: z.enum(["UNDER_WARNING", "WARNING", "CRITICAL"]),
-      count: z.number(),
+      key: z.enum(["1", "2", "3", "4", "5", "INSUFFICIENT", "IN_PROGRESS"]),
+      counts: z.array(simpleWaitBucketSchema),
     }),
   ),
+  completed_in_window: z.number(),
+  decided_in_window: z.number(),
+  hour_of_day: z.array(z.object({ hour_utc: z.number().int().min(0).max(23), completed: z.number() })),
+  recent_hours: z.array(z.object({ hour_start: z.string(), completed: z.number(), decided: z.number() })),
   agreement: z.object({
     decided_total: z.number(),
     confirmed: z.number(),
@@ -57,6 +123,11 @@ export const simpleNurseDashboardSchema = z.object({
   daily_volume: z.array(
     z.object({ date: z.string(), completed: z.number(), decided: z.number() }),
   ),
+  // Chỉ cộng thêm: máy chủ chưa có các khối này vẫn qua được kiểm tra.
+  decision_matrix: simpleDecisionMatrixSchema.optional(),
+  flagged_claim: simpleFlaggedClaimSchema.optional(),
+  decision_wait: simpleDecisionWaitSchema.optional(),
+  weekday_hour: simpleWeekdayHourSchema.optional(),
 });
 
 /**
