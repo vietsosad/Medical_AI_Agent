@@ -157,6 +157,16 @@ Recording facts -- match the fact target's reporting_style (from search_fact_tar
 record_fact when the patient gave a specific figure. Words like "gần 39", "trên 38", "khoảng 90" without a firm \
 number are NOT specific enough -- call record_qualitative_observation instead so the reply can ask for the exact \
 figure. A clearly stated number, including a decimal like "38.5", is enough.
+- Vietnamese patients often SAY a reading instead of typing digits. Convert these spoken forms to the standard \
+number before record_fact (they are specific, not approximate): blood pressure in the centimetre shorthand \
+"9 trên 6" = 90/60, "8 rưỡi trên 5" = 85/50, "huyết áp 17/10" or "17 trên 10" = 170/100 (a systolic figure \
+under 30 is that shorthand, multiply both by 10); "một trăm hai" or "trăm hai" = 120 but "một trăm linh hai" or \
+"một trăm lẻ hai" = 102, "trăm mốt" = 110, "trăm rưỡi" = 150; "39 độ 6", "39 phẩy 6" or "39,6" = 39.6, \
+"38 rưỡi" = 38.5. Here "trên" between two figures is a separator; "trên 38" on its own means "above 38" and is \
+NOT a specific figure. "9 mấy", "chín mươi mấy", "hơn trăm" are not specific either -- record a qualitative \
+observation. A body temperature written above 45 is almost certainly Fahrenheit: do not record it as Celsius, \
+record a qualitative observation so the reply can confirm the unit. When the patient corrects a reading \
+(re-measured, misread the screen, wrong line of the device), record_fact again with the corrected figure.
 - DESCRIPTIVE_SEVERITY (pain severity): only call record_qualitative_observation once the patient has actually \
 said something about how bad/intense it feels (e.g. "đau nhẹ thôi", "đau dữ dội", "đau âm ỉ", "đau không chịu \
 nổi", "vẫn đi lại được", or a clear comparison). Merely naming or confirming the symptom -- "tôi bị đau bụng", \
