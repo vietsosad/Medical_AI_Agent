@@ -24,6 +24,7 @@ from __future__ import annotations
 import io
 import logging
 import uuid
+from datetime import timedelta
 from typing import Any
 
 from asyncer import asyncify
@@ -198,6 +199,60 @@ def _apply_emergency_signal(result: dict[str, Any], signal: EmergencySignal) -> 
     if decision.get("action") == "RETURN_MATCH" and levels and min(levels) <= 2:
         return
     result["message"] = f"{emergency_guidance(signal)}\n\n{result['message']}"
+
+
+_FAILED_START_DEDUP_MINUTES = 30
+
+
+async def _persist_flagged_failed_start(
+    session: SessionDep,
+    *,
+    session_id: str,
+    patient_id: str,
+    payload: StartSimpleTriageRequest,
+    signal: EmergencySignal,
+    engine_session: Session | None,
+) -> str | None:
+    """Keep a flagged opening whose model turn failed, ACTIVE in the nurse queue.
+
+    Returns the session id that was raised, or ``None`` when the same patient's
+    same opening is already queued from a failed retry in the last
+    ``_FAILED_START_DEDUP_MINUTES`` (a patient pressing "gửi lại" during an
+    outage must not flood the queue with copies of one case).
+    """
+    since = get_utc_now() - timedelta(minutes=_FAILED_START_DEDUP_MINUTES)
+    duplicate = (
+        await session.execute(
+            select(SimpleAgentChatSession.session_id).where(
+                SimpleAgentChatSession.patient_id == patient_id,
+                SimpleAgentChatSession.initial_message == payload.message,
+                SimpleAgentChatSession.status == "ACTIVE",
+                SimpleAgentChatSession.turn_count == 0,
+                SimpleAgentChatSession.attention_required.is_(True),
+                SimpleAgentChatSession.started_at >= since,
+            )
+        )
+    ).scalars().first()
+    if duplicate is not None:
+        return None
+
+    engine = engine_session or Session()
+    engine.remember_turn("patient", payload.message)
+    record = SimpleAgentSessionRecord(session_id=session_id, patient_id=patient_id)
+    _apply_session_dict_to_record(record, serialize_session(engine))
+    chat_session = SimpleAgentChatSession(
+        session_id=session_id, patient_id=patient_id, initial_message=payload.message, profile_id=payload.profile_id,
+    )
+    _raise_attention(chat_session, signal)
+    # turn_count stays 0: no agent turn happened, only the patient's message.
+    patient_row = SimpleAgentChatMessage(
+        session_id=session_id, turn_index=0, sender="PATIENT", content=payload.message,
+    )
+    session.add(record)
+    session.add(chat_session)
+    session.add(patient_row)
+    await session.commit()
+    return session_id
 
 
 async def _announce_attention(session_id: str) -> None:
@@ -375,7 +430,26 @@ async def start_simple_triage(
         result = await runtime.process_turn(session_id, payload.message, restore=initial_session)
     except Exception:
         logger.exception("simple_agent /start turn failed | session=%s", session_id)
-        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=_TURN_FAILED_DETAIL) from None
+        if signal is None:
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=_TURN_FAILED_DETAIL) from None
+        # A flagged FIRST message must still reach a nurse when the model is
+        # down. Observed 06-07/11/2026: OpenAI credits ran out, every /start
+        # failed, and since nothing was persisted the flagged cases never
+        # reached the queue (/chat already commits its flag before the model).
+        raised = await _persist_flagged_failed_start(
+            session,
+            session_id=session_id,
+            patient_id=current_user.id,
+            payload=payload,
+            signal=signal,
+            engine_session=initial_session,
+        )
+        if raised:
+            await _announce_attention(raised)
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"{emergency_guidance(signal)}\n\n{_TURN_FAILED_DETAIL}",
+        ) from None
 
     record = SimpleAgentSessionRecord(session_id=session_id, patient_id=current_user.id)
     _apply_session_dict_to_record(record, serialize_session(runtime.export_session(session_id)))
