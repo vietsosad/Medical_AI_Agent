@@ -1,0 +1,701 @@
+"""Nhóm MISSING_INFO, đợt 2: thiếu thông tin trong ngộ độc, bệnh do nóng lạnh, dị ứng và tiết niệu.
+
+Vẫn hai kiểu ca như ``missing.py`` (đợt 1):
+
+- thiếu thông tin chặn mọi tiêu chí -> kỳ vọng RETURN_INCOMPLETE. Câu "không biết"
+  nằm trong ``unknown``; không bao giờ được hiểu thành "không có".
+- thiếu thông tin nhưng đã có dấu hiệu đủ quyết định -> agent phải kết luận ngay,
+  không đòi thêm số đo (tag ``decisive_despite_missing``).
+
+Đợt 2 đổi kiểu "không biết" cho đa dạng: nhà không có nhiệt kế hay máy đo huyết áp,
+người kể không có mặt lúc khởi phát hoặc đang ở xa, nhãn chai không đọc được, trẻ nhỏ
+không tả được, hàng xóm kể hộ người không nói được tiếng Việt hoặc nghe kém, người
+bệnh lẫn hoặc mất ngôn ngữ, người bệnh không chịu chấm điểm đau.
+
+Quy ước riêng của tệp này:
+
+- Với ngộ độc, người kể nói rõ "không biết bao nhiêu" / "không biết chất gì" thì ghi giá
+  trị ``UNKNOWN`` của ``estimated_exposure_amount`` / ``toxic_substance_category`` trong
+  ``facts`` kèm câu trả lời riêng, như r16 và x24 của đợt 1: corpus coi "không rõ lượng",
+  "không rõ chất" là một dữ kiện lâm sàng (phải giả định trường hợp xấu), không phải dữ
+  kiện còn thiếu. Các dữ kiện khác (đường phơi nhiễm, thời điểm...) chưa biết thì vẫn nằm
+  trong ``unknown``.
+- Run rét đang diễn ra được ghi cả ở ``shivering_status`` lẫn ``chills_present`` vì
+  người bệnh sẽ trả lời "có" cho cả hai câu hỏi.
+- Ngón tay chân đổi màu do lạnh được ghi bằng ``skin_appearance``; không ghi
+  ``cyanosis_present`` là có, vì đó là đổi màu tại chỗ, không phải tím tái trung tâm.
+"""
+
+from __future__ import annotations
+
+from eval.generated_mock_v2.spec import INCOMPLETE, MISSING, P, SCREEN_HIT as HIT, SCREEN_QUIET as QUIET, Spec
+
+
+def S(key: str, family: str, title: str, profile: dict, opening: str, facts: dict, intended, **kw) -> Spec:
+    return Spec(case_id=key, family=family, group=MISSING, title=title, profile=profile,
+                opening=opening, facts=facts, intended=intended, **kw)
+
+
+SPECS = [
+    # ------------------------------------------------------------------ ngộ độc
+    S("x31", "kerosene_sip_toddler_grandma_watching", "Trẻ 2 tuổi tu phải dầu hỏa, không ai biết lượng",
+      P(2, "Male", "CHILD"),
+      "Con trai tôi 2 tuổi ở nhà với bà ngoại. Bà kể thấy cháu cầm cái chai ông đựng dầu hỏa thắp đèn tu vào miệng, "
+      "bà giằng ra thì cháu ho sặc. Tôi đi làm về thì cháu vẫn ho từng tràng, hơi thở nồng mùi dầu. "
+      "Bà không biết cháu đã nuốt vào bao nhiêu.",
+      {"toxic_exposure_present": "YES", "toxic_substance_category": "HYDROCARBON", "toxic_exposure_route": "INGESTION",
+       "exposure_intent": "ACCIDENTAL", "estimated_exposure_amount": "UNKNOWN", "cough_present": "YES",
+       "choking_relation": "YES"},
+      2, concepts=("hydrocarbon_ingestion", "cough"), screen=QUIET,
+      answers={"choking_relation": "Có, bà kể cháu sặc dầu rồi ho từ lúc đó.",
+               "toxic_substance_category": "Dầu hỏa ông dùng thắp đèn.",
+               "toxic_exposure_route": "Bà thấy cháu tu vào miệng.",
+               "exposure_intent": "Cháu nghịch, vô tình thôi.",
+               "estimated_exposure_amount": "Bà không để ý cháu tu bao nhiêu, chai vốn đã vơi từ trước nên tôi cũng không đoán được.",
+               "cough_present": "Có, cháu vẫn ho từng tràng."},
+      unknown={"symptom_duration_bucket": "Bà không nhớ cháu tu dầu lúc mấy giờ, tôi đi làm về mới biết.",
+               "coingestion_status": "Lúc đó tôi không ở nhà, không biết cháu có cho thứ gì khác vào miệng không."},
+      tags=("pediatric", "caregiver", "toxic", "collateral_history", "decisive_despite_missing"),
+      test="Trẻ nuốt dầu hỏa, người kể không có mặt lúc xảy ra và không ai biết lượng: với hydrocarbon, chính 'không rõ lượng' "
+           "đã đủ quyết định, agent không được đòi ước lượng rồi mới kết luận."),
+    S("x32", "toilet_cleaner_toddler_route_unclear", "Bé 20 tháng cầm chai tẩy bồn cầu, không rõ có nuốt",
+      P(1, "Female", "CHILD"),
+      "Bé gái nhà em 20 tháng, em vừa thấy bé ngồi trong nhà tắm cầm chai nước tẩy bồn cầu đã mở nắp, quanh miệng với "
+      "cổ áo ướt. Em không biết bé có nuốt vào không hay chỉ dính ngoài. Bé chưa nôn, vẫn khóc to.",
+      {"estimated_exposure_amount": "UNKNOWN", "toxic_exposure_present": "YES", "toxic_substance_category": "HOUSEHOLD_CHEMICAL", "exposure_intent": "ACCIDENTAL",
+       "vomiting_present": "NO", "symptom_duration_bucket": "UNDER_1_HOUR"},
+      INCOMPLETE, concepts=("chemical_exposure", "household_chemical_access"), screen=QUIET,
+      answers={"symptom_duration_bucket": "Em vừa mới thấy bé thôi, mới mấy phút.",
+"estimated_exposure_amount": "Chai dùng dở từ trước nên em không biết vơi đi bao nhiêu.",
+               "toxic_exposure_present": "Có, bé cầm chai nước tẩy bồn cầu, quanh miệng với áo ướt.",
+               "toxic_substance_category": "Nước tẩy bồn cầu.",
+               "exposure_intent": "Bé nghịch thôi ạ.",
+               "vomiting_present": "Bé chưa nôn ạ."},
+      unknown={"toxic_exposure_route": "Em không biết bé có nuốt vào không, chỉ thấy quanh miệng với áo ướt."},
+      clarification="Em nói lại cho rõ: bé nhà em 20 tháng cầm chai nước tẩy bồn cầu đã mở nắp, quanh miệng với cổ áo ướt. "
+                    "Em không biết bé có nuốt vào không hay chỉ dính ngoài. Bé chưa nôn, vẫn khóc to.",
+      review_concern="Trẻ 20 tháng có thể đã nuốt nước tẩy bồn cầu (thường là chất ăn mòn): nghi nuốt chất ăn mòn ở trẻ nhỏ là "
+                     "tình huống nguy cơ cao theo Decision Point B; corpus chỉ khớp tiêu chí hoá chất gia dụng khi đường phơi "
+                     "nhiễm đã xác định là nuốt.",
+      tags=("pediatric", "caregiver", "toxic", "null_unknown"),
+      test="Không rõ trẻ đã nuốt hay chỉ dính ngoài: tiêu chí hoá chất gia dụng cần đường nuốt, agent không được tự cho là "
+           "có nuốt hay không nuốt mà phải chuyển nhân viên y tế."),
+    S("x33", "decanted_bleach_cataract_elder", "Cụ ông mắt kém uống nhầm nước tẩy Javen, không biết mấy ngụm",
+      P(72, "Male", "PARENT", chronic=("Đục thủy tinh thể hai mắt", "Tăng huyết áp"), meds=("Amlodipin 5 mg mỗi sáng",)),
+      "Bố tôi 72 tuổi, mắt kém vì đục thủy tinh thể. Chừng hai mươi phút trước bố ngủ trưa dậy khát nước, cầm nhầm vỏ chai nước lọc mà vợ "
+      "tôi đổ tạm nước tẩy Javen vào rồi uống. Bố không biết đã uống mấy ngụm, chai vốn không đầy nên tôi cũng chịu. "
+      "Giờ bố kêu rát họng, không nôn, thở vẫn bình thường.",
+      {"toxic_exposure_present": "YES", "toxic_substance_category": "HOUSEHOLD_CHEMICAL", "toxic_exposure_route": "INGESTION",
+       "exposure_intent": "ACCIDENTAL", "estimated_exposure_amount": "UNKNOWN", "sore_throat_present": "YES",
+       "pain_present": "YES", "pain_severity": 4, "vomiting_present": "NO", "dyspnea_present": "NO",
+       "symptom_duration_bucket": "UNDER_1_HOUR"},
+      2, concepts=("chemical_ingestion",), screen=QUIET,
+      answers={"symptom_duration_bucket": "Mới chừng hai mươi phút.",
+"toxic_substance_category": "Nước tẩy Javen, vợ tôi đổ tạm sang vỏ chai nước lọc.",
+               "toxic_exposure_route": "Bố uống vào, tưởng là nước lọc.",
+               "exposure_intent": "Bố uống nhầm vì mắt kém.",
+               "estimated_exposure_amount": "Bố không biết đã uống mấy ngụm, chai vốn không đầy nên tôi không đoán được.",
+               "sore_throat_present": "Có, bố kêu rát họng.",
+               "pain_present": "Bố kêu rát ở họng.",
+               "pain_severity": "Bố bảo rát chừng 4 điểm.",
+               "dyspnea_present": "Không, bố thở vẫn bình thường."},
+      tags=("older_adult", "caregiver", "toxic", "comorbidity", "decisive_despite_missing"),
+      test="Người cao tuổi mắt kém không ước lượng được lượng chất tẩy đã nuốt: nuốt hoá chất gia dụng với lượng không rõ "
+           "đã đủ quyết định, agent không được chờ con số."),
+    S("x34", "rat_bait_rice_dementia_mother", "Cụ bà lẫn nhai cơm trộn bả chuột, không nhớ ăn bao nhiêu",
+      P(81, "Female", "PARENT", chronic=("Sa sút trí tuệ sau tai biến", "Tăng huyết áp"),
+        meds=("Amlodipin 5 mg mỗi sáng", "Aspirin 81 mg mỗi sáng")),
+      "Mẹ tôi 81 tuổi bị lẫn sau tai biến. Chiều nay tôi thấy mẹ ngồi ở góc bếp đang nhai cơm trộn bả chuột tôi đặt để "
+      "bẫy chuột, đĩa bả bị bới tung. Hỏi thì mẹ không nhớ đã ăn từ lúc nào, ăn bao nhiêu. Mẹ chưa nôn, vẫn đi lại như mọi ngày.",
+      {"estimated_exposure_amount": "UNKNOWN", "toxic_exposure_present": "YES", "toxic_substance_category": "RODENTICIDE", "toxic_exposure_route": "INGESTION",
+       "exposure_intent": "ACCIDENTAL", "vomiting_present": "NO", "functional_status": "NORMAL"},
+      2, concepts=("rodenticide_exposure",), screen=QUIET,
+      answers={"estimated_exposure_amount": "Mẹ không nhớ ăn bao nhiêu, tôi đổ bả không đong đếm gì nên cũng không biết mất đi bao nhiêu.",
+               "toxic_substance_category": "Bả chuột, tôi trộn với cơm để bẫy chuột.",
+               "toxic_exposure_route": "Tôi thấy mẹ đang nhai trong miệng.",
+               "exposure_intent": "Mẹ lẫn nên ăn nhầm.",
+               "vomiting_present": "Mẹ chưa nôn.",
+               "functional_status": "Mẹ vẫn đi lại như mọi ngày."},
+      unknown={"symptom_duration_bucket": "Mẹ không nhớ ăn từ lúc nào, lúc tôi thấy thì mẹ đang nhai rồi."},
+      tags=("older_adult", "caregiver", "toxic", "baseline_cognitive_impairment", "comorbidity", "decisive_despite_missing"),
+      test="Người bệnh sa sút trí tuệ không nhớ lượng và thời điểm: nuốt thuốc diệt chuột tự nó đã đủ quyết định, "
+           "lượng và giờ không biết không được làm chậm kết luận."),
+    S("x35", "foreign_label_bottle_workshop", "Thợ xưởng mộc uống nhầm chai nhãn chữ nước ngoài",
+      P(38, "Male", "OTHER"),
+      "Anh thợ cùng xưởng mộc với tôi chừng mười lăm phút trước tu nhầm từ một chai nhựa để cạnh bình nước. Nhãn chai toàn chữ nước ngoài, ở đây "
+      "không ai đọc được là chất gì, chai thì vốn đã vơi từ trước nên không biết anh ấy uống vào bao nhiêu. "
+      "Anh kêu chóng mặt, vẫn tỉnh, nói chuyện được.",
+      {"toxic_exposure_present": "YES", "toxic_substance_category": "UNKNOWN", "toxic_exposure_route": "INGESTION",
+       "exposure_intent": "ACCIDENTAL", "estimated_exposure_amount": "UNKNOWN", "dizziness_present": "YES",
+       "altered_mental_status_present": "NO", "symptom_duration_bucket": "UNDER_1_HOUR"},
+      2, concepts=("unknown_substance_ingestion",), screen=QUIET,
+      answers={"symptom_duration_bucket": "Mới chừng mười lăm phút trước.",
+"toxic_substance_category": "Không biết là chất gì, nhãn chữ nước ngoài, ở xưởng không ai đọc được.",
+               "toxic_exposure_route": "Anh ấy tu thẳng từ chai, tưởng là nước.",
+               "exposure_intent": "Uống nhầm thôi.",
+               "estimated_exposure_amount": "Chai vơi sẵn từ trước nên không biết anh ấy uống vào bao nhiêu.",
+               "dizziness_present": "Có, anh kêu chóng mặt.",
+               "altered_mental_status_present": "Không, anh vẫn tỉnh, nói chuyện được."},
+      unknown={"dizziness_sensation": "Anh chỉ kêu chóng mặt, tôi hỏi kiểu gì thì anh không tả được."},
+      tags=("toxic", "collateral_history", "occupational", "unreadable_label", "decisive_despite_missing"),
+      test="Không đọc được nhãn và không biết lượng: chất không rõ với lượng không rõ đã đủ quyết định ESI 2, "
+           "agent không được đòi biết tên chất."),
+    S("x36", "blurred_label_vial_lick_child", "Bé 4 tuổi liếm nắp lọ nhãn nhòe, không rõ chất",
+      P(4, "Female", "OTHER"),
+      "Cháu gái tôi 4 tuổi trèo lên lấy được cái lọ thủy tinh nhỏ trên kệ của ông, nhãn viết tay nhòe hết, tôi không biết "
+      "trong lọ là gì. Cháu bảo chỉ liếm cái nắp thôi, lọ vẫn gần đầy. Cháu vẫn chơi bình thường, chưa nôn.",
+      {"toxic_exposure_present": "YES", "toxic_substance_category": "UNKNOWN", "toxic_exposure_route": "INGESTION",
+       "exposure_intent": "ACCIDENTAL", "estimated_exposure_amount": "SMALL", "activity_level": "NORMAL",
+       "vomiting_present": "NO"},
+      INCOMPLETE, concepts=("unknown_exposure_substance",), screen=QUIET,
+      answers={"toxic_substance_category": "Nhãn nhòe hết, tôi không đọc được là chất gì.",
+               "toxic_exposure_route": "Cháu liếm cái nắp.",
+               "exposure_intent": "Cháu nghịch thôi.",
+               "estimated_exposure_amount": "Cháu bảo chỉ liếm cái nắp, lọ vẫn gần đầy.",
+               "activity_level": "Cháu vẫn chơi bình thường.",
+               "vomiting_present": "Cháu chưa nôn."},
+      unknown={"symptom_duration_bucket": "Tôi đi chợ về mới thấy cháu cầm lọ, không biết cháu liếm từ lúc nào."},
+      tags=("pediatric", "caregiver", "toxic", "unreadable_label", "null_unknown"),
+      test="Chất không rõ nhưng lượng đã biết là rất ít (khác x35 ở chỗ lượng biết được): không tiêu chí nào khớp, "
+           "agent phải chuyển nhân viên y tế chứ không được tự coi là vô hại."),
+    S("x37", "pesticide_spray_chinese_label", "Phun thuốc sâu không khẩu trang, nhãn chữ nước ngoài",
+      P(48, "Male", allergies=("Dị ứng penicilin",)),
+      "Sáng nay tôi phun thuốc sâu cho ruộng rau gần ba tiếng, không đeo khẩu trang, quần áo ướt đẫm thuốc. Chai thuốc mua "
+      "ở chợ, nhãn toàn chữ Trung Quốc nên tôi không biết là loại gì. Từ trưa tới giờ đã mấy tiếng tôi chóng mặt, buồn nôn "
+      "nhưng chưa nôn, người vã mồ hôi.",
+      {"estimated_exposure_amount": "UNKNOWN", "toxic_exposure_present": "YES", "toxic_substance_category": "PESTICIDE", "toxic_exposure_route": "MULTIPLE",
+       "exposure_intent": "ACCIDENTAL", "dizziness_present": "YES", "gastrointestinal_symptom_present": "YES",
+       "vomiting_present": "NO", "symptom_duration_bucket": "ONE_TO_24_HOURS"},
+      INCOMPLETE, concepts=("pesticide_exposure", "dizziness"), screen=QUIET,
+      answers={"symptom_duration_bucket": "Từ trưa tới giờ, mấy tiếng rồi.",
+"estimated_exposure_amount": "Phun gần ba tiếng, tôi không biết mình hít với dính vào người bao nhiêu.",
+               "toxic_substance_category": "Thuốc sâu, nhưng nhãn chữ Trung Quốc nên tôi không biết loại gì.",
+               "toxic_exposure_route": "Vừa hít phải vừa dính đầy người vì quần áo ướt đẫm thuốc.",
+               "exposure_intent": "Tôi phun cho ruộng rau, không cố ý gì.",
+               "gastrointestinal_symptom_present": "Có, tôi buồn nôn.",
+               "vomiting_present": "Chưa nôn."},
+      review_concern="Phơi nhiễm thuốc trừ sâu không rõ loại qua da và đường hô hấp kéo dài, đã có triệu chứng (vã mồ hôi, buồn "
+                     "nôn, chóng mặt) gợi ý ngộ độc kiểu cường cholinergic: theo Decision Point B đây là tình huống nguy cơ cao, "
+                     "nên xếp ESI 2; corpus chỉ có tiêu chí thuốc trừ sâu khi nuốt nên ca này không tính được mức.",
+      tags=("toxic", "occupational", "unreadable_label", "corpus_gap"),
+      test="Không đọc được nhãn, không ước được lượng, đường phơi nhiễm không phải nuốt: không tiêu chí nào khớp, "
+           "agent phải chuyển nhân viên y tế."),
+    S("x38", "remote_spouse_self_harm_message", "Vợ ở cơ quan nhận tin chồng đã uống thuốc để chết",
+      P(45, "Male", "SPOUSE", chronic=("Trầm cảm",), meds=("Sertralin 50 mg mỗi sáng",)),
+      "Chồng tôi vừa nhắn tin là đã uống thuốc để không phải sống nữa. Tôi đang ở cơ quan, cách nhà mấy chục cây số. "
+      "Hỏi anh uống thuốc gì, bao nhiêu thì anh không trả lời, gọi cũng không nghe máy. Tôi đã nhờ hàng xóm sang nhà xem.",
+      {"toxic_substance_category": "MEDICATION", "toxic_exposure_present": "YES", "toxic_exposure_route": "INGESTION", "exposure_intent": "INTENTIONAL_SELF_HARM",
+       "estimated_exposure_amount": "UNKNOWN", "self_safety_status": "RECENT_SELF_HARM_BEHAVIOR"},
+      2, concepts=("intentional_ingestion",), screen=HIT,
+      answers={"toxic_substance_category": "Anh nhắn là uống thuốc, không nói thuốc gì.",
+               "toxic_exposure_route": "Anh nhắn là đã uống.",
+               "exposure_intent": "Anh nhắn là uống để không phải sống nữa.",
+               "estimated_exposure_amount": "Anh không nói uống bao nhiêu, tôi không biết.",
+               "self_safety_status": "Anh vừa nhắn là đã uống thuốc để không phải sống nữa."},
+      unknown={"altered_mental_status_present": "Tôi không ở cạnh anh nên không biết anh còn tỉnh không.",
+               "coingestion_status": "Tôi không biết anh có uống thêm rượu hay thứ gì khác không.",
+               "symptom_duration_bucket": "Anh vừa nhắn tin, nhưng tôi không biết anh uống từ lúc nào."},
+      tags=("caregiver_remote", "mental_health", "toxic", "null_unknown", "decisive_despite_missing"),
+      test="Người kể ở xa, không biết thuốc gì, bao nhiêu và tình trạng tỉnh táo: ý định tự hại kèm lượng không rõ đã đủ quyết định, "
+           "agent phải hướng dẫn gọi cấp cứu ngay thay vì hỏi thêm."),
+    # ---------------------------------------------------------- dị ứng, côn trùng
+    S("x39", "unseen_sting_generalized_hives_girl", "Bé 5 tuổi bị con gì đốt, vài phút sau mẩn khắp người",
+      P(5, "Female", "CHILD"),
+      "Con gái tôi 5 tuổi đang chơi ngoài vườn thì khóc ré lên, chỉ vào bắp chân kêu bị con gì đốt, tôi chạy ra thì không "
+      "thấy gì. Chưa đầy mười phút sau người cháu nổi mẩn gồ lên khắp người, cháu gãi liên tục. Chuyện mới cách đây chừng "
+      "hai mươi phút. Môi mắt chưa sưng, cháu thở bình thường.",
+      {"bite_or_sting_present": "YES", "bite_source": "INSECT", "suspected_trigger_exposure_present": "YES",
+       "suspected_allergy_trigger": "INSECT_STING_OR_BITE", "exposure_to_symptom_interval": "WITHIN_MINUTES",
+       "rash_or_skin_finding_present": "YES", "skin_finding_appearance": "RAISED_WHEALS",
+       "skin_finding_distribution": "GENERALIZED", "itching_present": "YES", "swelling_present": "NO",
+       "dyspnea_present": "NO", "allergic_reaction_features": "RASH_OR_ITCHING",
+       "symptom_duration_bucket": "UNDER_1_HOUR"},
+      2, concepts=("urticaria", "insect_sting"), negated=("shortness_of_breath",), screen=QUIET,
+      answers={"bite_source": "Chắc là con côn trùng gì đó, cháu không tả được, tôi ra tới nơi thì không thấy con nào.",
+               "allergic_reaction_features": "Cháu nổi mẩn, ngứa khắp người, môi mắt không sưng.",
+               "symptom_duration_bucket": "Mới cách đây chừng hai mươi phút.",
+               "bite_or_sting_present": "Có, cháu kêu bị con gì đốt ở bắp chân.",
+               "suspected_trigger_exposure_present": "Có, cháu kêu bị đốt ở bắp chân rồi mới nổi mẩn.",
+               "suspected_allergy_trigger": "Cháu kêu bị con gì đốt.",
+               "exposure_to_symptom_interval": "Chưa đầy mười phút sau là nổi khắp người.",
+               "itching_present": "Có, cháu gãi liên tục.",
+               "swelling_present": "Môi mắt chưa sưng.",
+               "dyspnea_present": "Không, cháu thở bình thường."},
+      unknown={"itching_severity": "Cháu mới 5 tuổi, hỏi ngứa mấy điểm thì cháu không hiểu."},
+      tags=("pediatric", "caregiver", "negation", "decisive_despite_missing"),
+      test="Trẻ nhỏ không tả được con gì đốt: mề đay toàn thân trong vài phút sau khi bị đốt đã đủ quyết định, "
+           "không cần biết loài côn trùng."),
+    S("x40", "bee_sting_elder_language_neighbour", "Hàng xóm kể hộ cụ bà người dân tộc bị ong đốt, nổi mẩn",
+      P(75, "Female", "OTHER"),
+      "Bà cụ nhà bên cạnh tôi chỉ nói tiếng dân tộc, tôi hiểu lõm bõm là bà bị ong đốt ở mu bàn tay lúc đi lấy củi. "
+      "Giờ tay bà nổi mẩn gồ lên, bà gãi liên tục. Bà mặc áo dài tay kín, không cho tôi xem chỗ khác, tôi cũng không hỏi "
+      "được bà bị đốt từ lúc nào.",
+      {"bite_or_sting_present": "YES", "bite_source": "INSECT", "suspected_trigger_exposure_present": "YES",
+       "suspected_allergy_trigger": "INSECT_STING_OR_BITE", "rash_or_skin_finding_present": "YES",
+       "skin_finding_appearance": "RAISED_WHEALS", "itching_present": "YES"},
+      INCOMPLETE, concepts=("insect_sting", "urticaria"), screen=QUIET,
+      answers={"bite_or_sting_present": "Có, bà bị ong đốt ở mu bàn tay.",
+               "bite_source": "Bà ra dấu là con ong.",
+               "suspected_trigger_exposure_present": "Có, bà bị ong đốt lúc đi lấy củi.",
+               "suspected_allergy_trigger": "Bà bị ong đốt.",
+               "skin_finding_appearance": "Tay bà nổi mẩn gồ lên.",
+               "itching_present": "Có, bà gãi liên tục."},
+      unknown={"skin_finding_distribution": "Bà không cho tôi xem dưới áo nên tôi không biết chỗ khác có mẩn không.",
+               "exposure_to_symptom_interval": "Tôi không hỏi được bà bị đốt lúc nào, bao lâu thì nổi mẩn.",
+               "dyspnea_present": "Tôi không hỏi được bà có thấy khó thở không.",
+               "itching_severity": "Bà không hiểu khi tôi hỏi ngứa mấy điểm.",
+               "symptom_duration_bucket": "Tôi không hỏi được bà bị từ lúc nào."},
+      tags=("older_adult", "language_barrier", "collateral_history", "null_unknown"),
+      test="Hàng xóm kể hộ qua rào cản ngôn ngữ: không biết mẩn đã lan tới đâu và khởi phát nhanh hay chậm, "
+           "agent không được tự coi là chỉ khu trú ở tay."),
+    S("x41", "latex_balloon_party_teen", "Thiếu nữ thổi bóng bay cao su, vài phút sau mề đay khắp người",
+      P(14, "Female", "OTHER"),
+      "Tôi đang tổ chức sinh nhật cho con ở nhà. Mới cách đây chừng mười lăm phút, một bạn nữ 14 tuổi cùng lớp con tôi thổi "
+      "bóng bay cao su được vài phút thì nổi mề đay khắp người. Bố mẹ cháu đi vắng chưa gọi được nên tôi không biết cháu có "
+      "dị ứng gì từ trước. Cháu vẫn nói chuyện bình thường, không kêu khó thở.",
+      {"suspected_trigger_exposure_present": "YES", "suspected_allergy_trigger": "LATEX",
+       "exposure_to_symptom_interval": "WITHIN_MINUTES", "rash_or_skin_finding_present": "YES",
+       "skin_finding_appearance": "RAISED_WHEALS", "skin_finding_distribution": "GENERALIZED", "dyspnea_present": "NO",
+       "symptom_duration_bucket": "UNDER_1_HOUR"},
+      2, concepts=("urticaria", "latex_exposure"), negated=("shortness_of_breath",), screen=QUIET,
+      answers={"symptom_duration_bucket": "Mới chừng mười lăm phút.",
+"suspected_trigger_exposure_present": "Có, cháu thổi bóng bay cao su xong thì bị.",
+               "suspected_allergy_trigger": "Bóng bay cao su.",
+               "exposure_to_symptom_interval": "Thổi được vài phút là nổi.",
+               "dyspnea_present": "Cháu không kêu khó thở."},
+      unknown={"swelling_present": "Tôi không biết bình thường mặt cháu thế nào nên không nhận ra môi mắt có sưng hơn không."},
+      tags=("adolescent", "collateral_history", "negation", "decisive_despite_missing"),
+      test="Người kể không quen người bệnh, không biết tiền sử dị ứng và không đánh giá được sưng: mề đay toàn thân vài phút "
+           "sau tiếp xúc cao su đã đủ quyết định."),
+    S("x42", "loose_paper_wrapped_pill_hives", "Uống viên thuốc ngủ mua lẻ không tên, mười phút sau mề đay",
+      P(57, "Female", chronic=("Mất ngủ kéo dài",), allergies=("Dị ứng tôm cua",)),
+      "Tôi mất ngủ nên ra hiệu thuốc mua mấy viên thuốc gói trong giấy, không có vỏ hộp hay tên thuốc gì cả. Cách đây chừng "
+      "nửa tiếng tôi uống viên đầu, được mười phút thì nổi mề đay từ cổ xuống bụng, xuống cả hai chân, ngứa rát. Tôi không "
+      "khó thở, môi không sưng. Nhà không có máy đo huyết áp.",
+      {"suspected_trigger_exposure_present": "YES", "suspected_allergy_trigger": "MEDICATION",
+       "exposure_to_symptom_interval": "WITHIN_MINUTES", "rash_or_skin_finding_present": "YES",
+       "skin_finding_appearance": "RAISED_WHEALS", "skin_finding_distribution": "GENERALIZED", "itching_present": "YES",
+       "dyspnea_present": "NO", "swelling_present": "NO", "allergic_reaction_features": "RASH_OR_ITCHING",
+       "symptom_duration_bucket": "UNDER_1_HOUR"},
+      2, concepts=("urticaria", "medication_exposure"), negated=("shortness_of_breath", "lip_swelling"), screen=QUIET,
+      answers={"allergic_reaction_features": "Chỉ nổi mề đay, ngứa rát thôi, môi không sưng.",
+               "symptom_duration_bucket": "Uống thuốc cách đây chừng nửa tiếng.",
+"suspected_trigger_exposure_present": "Có, tôi vừa uống viên thuốc ngủ mua lẻ.",
+               "suspected_allergy_trigger": "Viên thuốc ngủ mua lẻ, gói giấy không có tên.",
+               "exposure_to_symptom_interval": "Chừng mười phút sau khi uống.",
+               "skin_finding_distribution": "Từ cổ xuống bụng, xuống cả hai chân.",
+               "itching_present": "Có, ngứa rát.",
+               "swelling_present": "Môi không sưng."},
+      unknown={"systolic_bp": "Nhà không có máy đo huyết áp."},
+      tags=("missing_vitals", "unreadable_label", "negation", "decisive_despite_missing"),
+      test="Thuốc không có tên, không có huyết áp: mề đay toàn thân trong vài phút sau uống thuốc đã đủ quyết định; "
+           "agent không được đòi tên thuốc hay số đo."),
+    # ------------------------------------------------------------- bệnh do nóng
+    S("x43", "delivery_rider_heat_no_devices", "Shipper chạy ngoài nắng cả ngày, chóng mặt, không có máy đo",
+      P(27, "Male"),
+      "Em chạy giao hàng ngoài đường từ 7h sáng tới giờ đã gần 4h chiều, trời nắng nóng như đổ lửa. Từ trưa tới giờ em chóng "
+      "mặt, mồ hôi ra như tắm, cả ngày mới đi tiểu dc 1 lần, nước tiểu vàng sẫm. Em ko có nhiệt kế, cũng ko có máy đo huyết áp.",
+      {"thermal_exposure_present": "YES", "thermal_exposure_type": "HOT_WEATHER",
+       "thermal_exposure_duration": "MORE_THAN_SIX_HOURS", "heat_exposure_present": "YES", "sweating_pattern": "INCREASED",
+       "dizziness_present": "YES", "urinary_symptom_present": "YES", "urine_appearance": "DARK",
+       "urine_output_status": "REDUCED", "urination_status": "DECREASED", "symptom_duration_bucket": "ONE_TO_24_HOURS"},
+      INCOMPLETE, concepts=("heat_exposure", "dizziness"), screen=QUIET,
+      answers={"symptom_duration_bucket": "Chóng mặt từ trưa tới giờ, mấy tiếng rồi.",
+"thermal_exposure_type": "Chạy ngoài đường cả ngày dưới trời nắng nóng.",
+               "thermal_exposure_duration": "Từ 7h sáng tới gần 4h chiều.",
+               "sweating_pattern": "Mồ hôi ra như tắm.",
+               "urinary_symptom_present": "Có, cả ngày mới tiểu 1 lần, nước tiểu vàng sẫm.",
+               "urine_appearance": "Nước tiểu vàng sẫm.",
+               "urine_output_status": "Cả ngày mới tiểu được 1 lần.",
+               "urination_status": "Đi tiểu ít hơn hẳn mọi ngày."},
+      unknown={"temperature": "Em ko có nhiệt kế.", "heart_rate": "Em ko biết bắt mạch.",
+               "systolic_bp": "Em ko có máy đo huyết áp."},
+      tags=("missing_vitals", "environmental", "occupational", "abbreviation"),
+      test="Phơi nắng nóng kéo dài, tiểu ít nhưng không có nhiệt độ, mạch, huyết áp: các tiêu chí nhiệt và tiểu ít đều cần "
+           "sinh hiệu, agent phải chuyển nhân viên y tế chứ không tự đoán."),
+    S("x44", "rice_drying_sun_bp_no_thermometer", "Cụ bà phơi lúa giữa trưa, huyết áp 84, mạch 126, không có nhiệt kế",
+      P(68, "Female", "PARENT", chronic=("Tăng huyết áp",), meds=("Amlodipin 5 mg mỗi sáng",)),
+      "Mẹ tôi 68 tuổi phơi lúa ngoài sân giữa trưa nắng gắt gần ba tiếng, vào nhà được chừng nửa tiếng thì lả đi, vã mồ hôi, "
+      "kêu chóng mặt. Tôi đo bằng máy huyết áp điện tử ở nhà được 84/52, mạch 126. Nhà không có nhiệt kế. Mẹ vẫn tỉnh, hỏi gì "
+      "trả lời đúng.",
+      {"thermal_exposure_present": "YES", "thermal_exposure_type": "DIRECT_SUN",
+       "thermal_exposure_duration": "TWO_TO_SIX_HOURS", "heat_exposure_present": "YES", "sweating_pattern": "INCREASED",
+       "dizziness_present": "YES", "functional_status": "MARKEDLY_REDUCED", "systolic_bp": 84, "diastolic_bp": 52,
+       "heart_rate": 126, "altered_mental_status_present": "NO", "symptom_duration_bucket": "UNDER_1_HOUR"},
+      2, concepts=("heat_exposure", "dizziness"), screen=QUIET,
+      answers={"symptom_duration_bucket": "Mẹ mới lả đi chừng nửa tiếng nay.",
+"thermal_exposure_type": "Phơi lúa ngoài sân giữa trưa nắng gắt.",
+               "thermal_exposure_duration": "Gần ba tiếng.",
+               "sweating_pattern": "Mẹ vã mồ hôi.",
+               "functional_status": "Mẹ lả đi, chỉ nằm thôi.",
+               "systolic_bp": "Máy đo được 84/52.",
+               "diastolic_bp": "Số dưới là 52.",
+               "heart_rate": "Máy báo mạch 126.",
+               "altered_mental_status_present": "Không, mẹ vẫn tỉnh, hỏi gì trả lời đúng."},
+      unknown={"temperature": "Nhà không có nhiệt kế nên tôi không biết mẹ bao nhiêu độ."},
+      tags=("older_adult", "caregiver", "comorbidity", "missing_vitals", "environmental", "decisive_despite_missing"),
+      test="Không có nhiệt độ nhưng nắng trực tiếp kèm huyết áp 84 và mạch 126 đã đủ quyết định; agent không được đòi đo nhiệt."),
+    S("x45", "toddler_locked_in_parked_car", "Bé 3 tuổi kẹt trong ô tô đỗ ngoài nắng, không rõ bao lâu",
+      P(3, "Female", "OTHER"),
+      "Trưa nay tôi ngủ quên, đứa cháu gái 3 tuổi tự trèo vào chiếc ô tô đỗ ngoài sân nắng rồi đóng cửa lại, không tự mở ra "
+      "được. Lúc tôi tìm thấy thì mặt cháu đỏ bừng, mồ hôi ướt đẫm, khóc to. Tôi không biết cháu ở trong xe bao lâu, nhà "
+      "cũng không có nhiệt kế.",
+      {"thermal_exposure_present": "YES", "thermal_exposure_type": "ENCLOSED_HOT_SPACE", "heat_exposure_present": "YES",
+       "sweating_pattern": "INCREASED", "skin_appearance": "RED"},
+      INCOMPLETE, concepts=("heat_exposure",), screen=QUIET,
+      answers={"thermal_exposure_type": "Cháu bị kẹt trong ô tô đỗ ngoài nắng.",
+               "sweating_pattern": "Mồ hôi ướt đẫm.",
+               "skin_appearance": "Mặt cháu đỏ bừng."},
+      unknown={"thermal_exposure_duration": "Tôi ngủ quên nên không biết cháu ở trong xe bao lâu.",
+               "temperature": "Nhà không có nhiệt kế.",
+               "symptom_duration_bucket": "Tôi ngủ quên từ trưa nên không biết cháu bị thế từ lúc nào, vừa tìm thấy cháu thôi."},
+      review_concern="Trẻ 3 tuổi kẹt trong ô tô đỗ ngoài nắng không rõ bao lâu có nguy cơ tăng thân nhiệt nặng; theo Decision "
+                     "Point B đây là tình huống nguy cơ cao cần ưu tiên, nhưng mọi tiêu chí nhiệt của corpus đều cần nhiệt độ "
+                     "hoặc sinh hiệu đo được.",
+      tags=("pediatric", "caregiver", "unknown_onset", "missing_vitals", "environmental"),
+      test="Không biết thời gian ở trong xe, không có nhiệt độ: agent phải chuyển nhân viên y tế, không được coi trẻ còn "
+           "khóc to là ổn."),
+    S("x46", "greenhouse_dry_skin_hyperthermia", "Làm nhà màng cả ngày, 39,4 độ, da khô, không đo được mạch",
+      P(45, "Male", "SPOUSE", allergies=("Dị ứng hải sản",)),
+      "Chồng tôi làm trong nhà màng trồng dưa từ 6 giờ sáng tới 4 giờ chiều, về nhà tới giờ đã mấy tiếng vẫn kêu đau đầu nhẹ, người nóng hầm hập mà "
+      "da lại khô, không thấy ra mồ hôi. Nhiệt kế đo được 39,4 độ. Nhà không có máy đo huyết áp, tôi cũng không biết bắt mạch. "
+      "Anh vẫn tỉnh, nói chuyện bình thường.",
+      {"thermal_exposure_present": "YES", "thermal_exposure_type": "ENCLOSED_HOT_SPACE",
+       "thermal_exposure_duration": "MORE_THAN_SIX_HOURS", "heat_exposure_present": "YES", "sweating_pattern": "ABSENT",
+       "temperature": 39.4, "fever_present": "YES", "headache_present": "YES", "pain_present": "YES", "pain_severity": 3,
+       "altered_mental_status_present": "NO", "symptom_duration_bucket": "ONE_TO_24_HOURS"},
+      INCOMPLETE, concepts=("heat_exposure", "headache"), screen=QUIET,
+      answers={"symptom_duration_bucket": "Từ lúc đi làm về chiều nay tới giờ, mấy tiếng rồi.",
+"thermal_exposure_type": "Làm trong nhà màng trồng dưa, trong đó rất nóng.",
+               "thermal_exposure_duration": "Từ 6 giờ sáng tới 4 giờ chiều.",
+               "sweating_pattern": "Da khô, không thấy ra mồ hôi.",
+               "fever_present": "Có, người nóng hầm hập.",
+               "headache_present": "Có, anh kêu đau đầu nhẹ.",
+               "pain_present": "Anh kêu đau đầu nhẹ.",
+               "pain_severity": "Anh bảo đau nhẹ thôi, chừng 3 điểm.",
+               "altered_mental_status_present": "Không, anh vẫn tỉnh, nói chuyện bình thường."},
+      unknown={"heart_rate": "Tôi không biết bắt mạch, nhà cũng không có máy đo.",
+               "systolic_bp": "Nhà không có máy đo huyết áp.",
+               "respiratory_rate": "Tôi không đếm nhịp thở."},
+      review_concern="Thân nhiệt 39,4 độ sau nhiều giờ làm trong nhà màng, da khô không ra mồ hôi: có thể là say nóng; theo "
+                     "Decision Point B đây là tình huống nguy cơ cao, nhưng mọi tiêu chí nhiệt của corpus đều cần thêm mạch, "
+                     "huyết áp hoặc nhịp thở.",
+      tags=("caregiver", "missing_vitals", "environmental", "occupational"),
+      test="Có nhiệt độ nhưng thiếu mạch, huyết áp, nhịp thở: agent không được tự coi sinh hiệu là bình thường, phải chuyển "
+           "nhân viên y tế."),
+    S("x47", "pregnant_garment_worker_heat", "Thai 30 tuần chóng mặt trong xưởng nóng, không để ý thai máy",
+      P(29, "Female", "OTHER"),
+      "Chị đồng nghiệp ở xưởng may của em đang mang thai 30 tuần. Xưởng mất điện, quạt không chạy từ trưa nên nóng hầm hập, "
+      "chị ấy kêu chóng mặt từ đầu giờ chiều, vã mồ hôi, phải ngồi nghỉ. Chị không đau bụng, không ra máu, nhưng bảo nãy giờ "
+      "mải làm không để ý em bé có đạp không. Ở xưởng không có máy đo gì.",
+      {"pregnancy_present": "YES", "pregnancy_status": "PREGNANT", "gestational_age_weeks": 30,
+       "vaginal_bleeding_present": "NO", "abdominal_pain_present": "NO", "thermal_exposure_present": "YES",
+       "thermal_exposure_type": "ENCLOSED_HOT_SPACE", "heat_exposure_present": "YES", "sweating_pattern": "INCREASED",
+       "dizziness_present": "YES", "functional_status": "REDUCED", "symptom_duration_bucket": "ONE_TO_24_HOURS"},
+      INCOMPLETE, concepts=("dizziness_in_pregnancy", "heat_exposure"), screen=QUIET,
+      answers={"functional_status": "Chị phải ngồi nghỉ, chưa làm tiếp được.",
+               "symptom_duration_bucket": "Chị chóng mặt từ đầu giờ chiều tới giờ.",
+"pregnancy_present": "Có, chị ấy đang mang thai.",
+               "pregnancy_status": "Chị ấy đang mang thai.",
+               "gestational_age_weeks": "Thai được 30 tuần.",
+               "vaginal_bleeding_present": "Chị không ra máu.",
+               "abdominal_pain_present": "Chị không đau bụng.",
+               "thermal_exposure_type": "Xưởng mất điện, quạt không chạy nên nóng hầm hập.",
+               "sweating_pattern": "Chị vã mồ hôi.",
+               "dizziness_present": "Có, chị kêu chóng mặt."},
+      unknown={"fetal_movement_status": "Chị ấy bảo nãy giờ mải làm nên không để ý em bé đạp thế nào.",
+               "systolic_bp": "Ở xưởng không có máy đo huyết áp.",
+               "heart_rate": "Không ai bắt mạch được.",
+               "temperature": "Ở xưởng không có nhiệt kế."},
+      clarification="Em nói lại cho rõ: chị đồng nghiệp của em mang thai 30 tuần, xưởng mất điện nên nóng hầm hập, chị kêu "
+                    "chóng mặt từ đầu giờ chiều, vã mồ hôi, phải ngồi nghỉ. Chị không đau bụng, không ra máu, nhưng không để ý em bé có đạp không. "
+                    "Ở xưởng không có máy đo gì.",
+      tags=("pregnancy", "collateral_history", "missing_vitals", "environmental", "occupational", "null_unknown"),
+      test="Thai phụ chóng mặt vì nóng, không rõ thai máy và không có sinh hiệu: 'không để ý' không được hiểu là thai đạp "
+           "bình thường; agent phải chuyển nhân viên y tế."),
+    S("x48", "teen_rice_harvest_low_intake", "Thiếu niên gặt lúa ngoài nắng, ăn uống kém, tiểu ít, chưa đo nhiệt",
+      P(15, "Male", "CHILD"),
+      "Con trai tôi 15 tuổi mấy hôm nay phụ nhà gặt lúa ngoài đồng trời nắng nóng. Hai hôm nay cháu kêu mệt, buồn nôn nhưng "
+      "không nôn, ăn uống kém hẳn, chỉ ăn được vài thìa cháo, đi tiểu cũng ít hơn. Nhà không có nhiệt kế nên tôi không biết "
+      "cháu có sốt không.",
+      {"thermal_exposure_present": "YES", "thermal_exposure_type": "HOT_WEATHER", "heat_exposure_present": "YES",
+       "functional_status": "REDUCED", "gastrointestinal_symptom_present": "YES", "vomiting_present": "NO",
+       "oral_intake_tolerance": "REDUCED", "urination_status": "DECREASED", "urine_output_status": "REDUCED",
+       "symptom_duration_bucket": "ONE_TO_7_DAYS"},
+      3, concepts=("heat_exposure", "decreased_urination"), screen=QUIET,
+      answers={"thermal_exposure_type": "Gặt lúa ngoài đồng mấy hôm trời nắng nóng.",
+               "functional_status": "Cháu mệt, vẫn đi lại được nhưng uể oải.",
+               "gastrointestinal_symptom_present": "Có, cháu buồn nôn.",
+               "vomiting_present": "Không nôn.",
+               "oral_intake_tolerance": "Ăn uống kém hẳn, chỉ được vài thìa cháo.",
+               "urination_status": "Đi tiểu ít hơn mọi ngày.",
+               "urine_output_status": "Tiểu ít hơn bình thường.",
+               "symptom_duration_bucket": "Hai hôm nay rồi."},
+      unknown={"fever_present": "Nhà không có nhiệt kế nên tôi không biết cháu có sốt không.",
+               "temperature": "Không có nhiệt kế."},
+      tags=("adolescent", "caregiver", "missing_vitals", "environmental"),
+      test="Thiếu nhiệt độ không chặn kết luận: ăn uống kém kèm tiểu ít đã khớp tiêu chí ESI 3; agent không được hạ thành "
+           "'không đủ thông tin' cũng không được tự nâng mức."),
+    # ------------------------------------------------------- lạnh, hạ thân nhiệt
+    S("x49", "boy_pulled_from_cold_pond", "Hàng xóm kéo bé 10 tuổi lên từ ao giữa trời rét, không rõ ngâm bao lâu",
+      P(10, "Male", "OTHER"),
+      "Tôi là hàng xóm, vừa kéo được thằng bé 10 tuổi nhà bên lên từ cái ao sau nhà. Trời rét đậm mà cháu ướt sũng, run cầm "
+      "cập. Bố mẹ cháu đi làm ăn xa, ông bà thì đi vắng, tôi không biết cháu ngã xuống ao từ lúc nào. Cháu vẫn tỉnh, nói được, "
+      "không ho sặc. Nhà tôi không có nhiệt kế.",
+      {"cold_exposure_present": "YES", "thermal_exposure_present": "YES", "thermal_exposure_type": "COLD_WATER",
+       "shivering_status": "PRESENT", "chills_present": "YES", "altered_mental_status_present": "NO",
+       "cough_present": "NO"},
+      INCOMPLETE, concepts=("cold_water_immersion", "shivering"), screen=QUIET,
+      answers={"cold_exposure_present": "Có, cháu ngã xuống ao giữa trời rét đậm.",
+               "thermal_exposure_type": "Cháu ngã xuống ao nước lạnh.",
+               "shivering_status": "Cháu đang run cầm cập.",
+               "chills_present": "Có, cháu run cầm cập.",
+               "altered_mental_status_present": "Không, cháu vẫn tỉnh, nói được.",
+               "cough_present": "Không ho sặc."},
+      unknown={"thermal_exposure_duration": "Tôi không biết cháu ngã xuống ao từ lúc nào, nghe tiếng kêu mới chạy ra.",
+               "temperature": "Nhà tôi không có nhiệt kế.",
+               "symptom_duration_bucket": "Tôi không biết cháu bị từ lúc nào, tôi vừa kéo cháu lên thôi."},
+      review_concern="Trẻ được kéo lên từ ao nước lạnh, không ai thấy lúc ngã và không rõ thời gian ngâm nước: có thể được xem "
+                     "là tình huống nguy cơ cao theo Decision Point B; corpus không có tiêu chí cho đuối nước, và các tiêu chí "
+                     "hạ thân nhiệt đều cần nhiệt độ đo được.",
+      tags=("pediatric", "collateral_history", "unknown_onset", "missing_vitals", "environmental"),
+      test="Người kể không chứng kiến lúc ngã, không có nhiệt kế: agent không được coi trẻ tỉnh, không ho là đủ an toàn mà "
+           "phải chuyển nhân viên y tế."),
+    S("x50", "elder_alone_cold_house_no_bp", "Cụ bà sống một mình, nhà gió lùa cả đêm, 35,6 độ, không có máy đo huyết áp",
+      P(83, "Female", "OTHER", chronic=("Suy giáp",), meds=("Levothyroxin 50 mcg mỗi sáng",)),
+      "Sáng nay tôi sang nhà bà cụ hàng xóm 83 tuổi sống một mình thì thấy bà quấn chăn ngồi run, nhà dột, gió lùa cả đêm. "
+      "Tôi lấy nhiệt kế điện tử kẹp nách cho bà, đo được 35,6 độ. Bà vẫn tỉnh, nói chuyện được, bảo chỉ thấy rét. "
+      "Tôi không có máy đo huyết áp.",
+      {"cold_exposure_present": "YES", "thermal_exposure_present": "YES", "thermal_exposure_type": "COLD_AIR",
+       "thermal_exposure_duration": "MORE_THAN_SIX_HOURS", "shivering_status": "PRESENT", "chills_present": "YES",
+       "temperature": 35.6, "altered_mental_status_present": "NO", "symptom_duration_bucket": "ONE_TO_24_HOURS"},
+      INCOMPLETE, concepts=("cold_exposure", "shivering"), screen=QUIET,
+      answers={"symptom_duration_bucket": "Bà bảo rét từ đêm qua tới giờ.",
+"cold_exposure_present": "Có, nhà bà dột, gió lùa lạnh cả đêm.",
+               "thermal_exposure_type": "Ở trong nhà dột, gió lùa lạnh.",
+               "thermal_exposure_duration": "Cả đêm qua.",
+               "shivering_status": "Bà đang ngồi run.",
+               "chills_present": "Có, bà ngồi run, bảo thấy rét.",
+               "altered_mental_status_present": "Không, bà vẫn tỉnh, nói chuyện được."},
+      unknown={"systolic_bp": "Tôi không có máy đo huyết áp.", "heart_rate": "Tôi không biết bắt mạch."},
+      tags=("older_adult", "collateral_history", "comorbidity", "missing_vitals", "environmental"),
+      test="Có nhiệt độ 35,6 nhưng thiếu huyết áp: tiêu chí hạ thân nhiệt kèm tụt huyết áp không xét được, agent không được "
+           "tự coi huyết áp là bình thường."),
+    S("x51", "dementia_night_wandering_cold", "Cụ ông Alzheimer đi lạc đêm rét, 34,2 độ, đã hết run",
+      P(79, "Male", "PARENT", chronic=("Bệnh Alzheimer", "Đái tháo đường type 2"),
+        meds=("Donepezil 5 mg mỗi tối", "Metformin 500 mg sáng và tối")),
+      "Bố tôi 79 tuổi bị Alzheimer, đêm qua tự mở cổng đi ra ngoài lúc nào cả nhà không hay. Sáng sớm mới tìm thấy bố ngồi ở "
+      "bờ ruộng, quần áo ướt sương. Lúc đầu bố run bần bật, giờ ủ chăn ở nhà thì hết run mà người vẫn lạnh ngắt. "
+      "Nhiệt kế đo được 34,2 độ.",
+      {"cold_exposure_present": "YES", "thermal_exposure_present": "YES", "thermal_exposure_type": "WET_COLD_ENVIRONMENT",
+       "shivering_status": "STOPPED_AFTER_BEING_PRESENT", "temperature": 34.2, "symptom_duration_bucket": "ONE_TO_24_HOURS"},
+      2, concepts=("hypothermia", "wandering"), screen=QUIET,
+      answers={"symptom_duration_bucket": "Từ đêm qua tới giờ, nhưng không ai biết bố ra ngoài lúc mấy giờ.",
+"cold_exposure_present": "Có, bố ở ngoài trời rét.",
+               "thermal_exposure_type": "Ngoài bờ ruộng, quần áo ướt sương, trời rét.",
+               "shivering_status": "Lúc tìm thấy bố run bần bật, giờ hết run nhưng người vẫn lạnh ngắt."},
+      unknown={"thermal_exposure_duration": "Cả nhà ngủ hết, không ai biết bố ra ngoài từ mấy giờ.",
+               "altered_mental_status_present": "Bố vốn lẫn rồi nên tôi không phân biệt được bây giờ bố có lơ mơ hơn mọi khi không.",
+               "systolic_bp": "Nhà không có máy đo huyết áp."},
+      tags=("older_adult", "caregiver", "baseline_cognitive_impairment", "comorbidity", "unknown_onset", "environmental",
+            "decisive_despite_missing"),
+      test="Không biết ở ngoài bao lâu, không đánh giá được ý thức so với nền: thân nhiệt 34,2 độ và đã hết run đủ quyết định; "
+           "agent không được hiểu 'hết run' là đang đỡ."),
+    S("x52", "mouth_siphoned_petrol_cough", "Hút xăng bằng miệng, ho, không rõ nuốt hay sặc",
+      P(33, "Male"),
+      "Hồi nãy, chừng nửa tiếng trước, tui hút xăng bằng miệng để sang can cho chiếc xe máy, lỡ bị xăng trào vô miệng. Tui "
+      "nhổ ra liền mà giờ cứ ho hoài, miệng hôi mùi xăng. Tui hông biết có nuốt hay sặc vô chút nào hông. Thở thì vẫn bình thường.",
+      {"estimated_exposure_amount": "UNKNOWN", "toxic_exposure_present": "YES", "toxic_substance_category": "HYDROCARBON", "exposure_intent": "ACCIDENTAL",
+       "cough_present": "YES", "dyspnea_present": "NO", "symptom_duration_bucket": "UNDER_1_HOUR"},
+      INCOMPLETE, concepts=("aspiration_risk", "cough"), screen=QUIET,
+      answers={"symptom_duration_bucket": "Mới chừng nửa tiếng hà.",
+"estimated_exposure_amount": "Tui hông biết được bao nhiêu.",
+               "toxic_exposure_present": "Có, xăng trào vô miệng tui.",
+               "toxic_substance_category": "Xăng xe máy.",
+               "exposure_intent": "Lỡ thôi, tui hút xăng sang can.",
+               "cough_present": "Có, ho hoài.",
+               "dyspnea_present": "Hông, thở vẫn bình thường."},
+      unknown={"toxic_exposure_route": "Xăng trào vô miệng, tui nhổ ra liền, hông biết có nuốt hay sặc vô chút nào hông."},
+      review_concern="Ho dai dẳng sau khi xăng trào vào miệng lúc hút xăng là dấu hiệu kinh điển của hít sặc hydrocarbon (nguy "
+                     "cơ viêm phổi hoá chất): theo Decision Point B đây là tình huống nguy cơ cao; tiêu chí hydrocarbon của "
+                     "corpus chỉ khớp khi đã xác định đường phơi nhiễm là nuốt nên ca này không tính được mức.",
+      tags=("toxic", "dialect", "null_unknown"),
+      test="Không rõ xăng vào đường nuốt hay đường thở: tiêu chí hydrocarbon cần đường nuốt; agent không được tự coi "
+           "'đã nhổ ra' là không phơi nhiễm (đối chiếu x31: đã biết nuốt, lượng không rõ)."),
+    S("x53", "foreign_trekker_waxy_digits", "Chủ homestay kể hộ khách nước ngoài kẹt núi đêm mưa rét, ngón trắng như sáp",
+      P(34, "Male", "OTHER"),
+      "Tôi làm homestay trên vùng núi cao. Một anh khách nước ngoài khoảng 34 tuổi đi leo núi gặp mưa rét, phải ngủ lại trên "
+      "núi cả đêm, sáng nay mới xuống tới nơi. Các đầu ngón tay, ngón chân của anh trắng bệch, cứng như sáp, người vẫn run, "
+      "môi không tím. Anh không nói được tiếng Việt, tiếng Anh tôi lại kém nên không hỏi được anh có tê hay mất cảm giác "
+      "không. Ở đây không có nhiệt kế.",
+      {"cold_exposure_present": "YES", "thermal_exposure_present": "YES", "thermal_exposure_type": "WET_COLD_ENVIRONMENT",
+       "thermal_exposure_duration": "MORE_THAN_SIX_HOURS", "thermal_injury_body_area": "MULTIPLE_AREAS",
+       "skin_appearance": "WAXY", "shivering_status": "PRESENT", "chills_present": "YES", "cyanosis_present": "NO",
+       "symptom_duration_bucket": "ONE_TO_24_HOURS"},
+      INCOMPLETE, concepts=("cold_exposure", "skin_discoloration"), screen=QUIET,
+      answers={"symptom_duration_bucket": "Từ đêm qua trên núi tới giờ.",
+"cold_exposure_present": "Có, anh ấy kẹt trên núi cả đêm trong mưa rét.",
+               "thermal_exposure_type": "Mưa rét trên núi, người ướt.",
+               "thermal_exposure_duration": "Cả đêm trên núi.",
+               "thermal_injury_body_area": "Cả đầu ngón tay lẫn đầu ngón chân.",
+               "skin_appearance": "Trắng bệch, cứng như sáp.",
+               "shivering_status": "Anh vẫn đang run.",
+               "chills_present": "Có, anh vẫn run.",
+               "cyanosis_present": "Môi không tím."},
+      unknown={"skin_sensation": "Anh không nói được tiếng Việt, tôi hỏi bằng tiếng Anh mà anh không hiểu nên không biết có tê không.",
+               "temperature": "Ở đây không có nhiệt kế."},
+      review_concern="Các đầu ngón tay, ngón chân cứng, trắng như sáp sau phơi lạnh cả đêm là dấu hiệu tổn thương lạnh sâu "
+                     "(mô có nguy cơ hoại tử, cần làm ấm lại sớm), kèm khả năng hạ thân nhiệt: theo Decision Point B nên xếp "
+                     "ESI 2; tiêu chí tổn thương lạnh của corpus cần câu trả lời về tê hay giảm cảm giác, mà ở đây không hỏi được.",
+      tags=("language_barrier", "collateral_history", "missing_vitals", "environmental"),
+      test="Rào cản ngôn ngữ chặn câu hỏi cảm giác: tiêu chí tổn thương do lạnh nhiều vùng cần biết tê hay giảm cảm giác, "
+           "agent không được tự điền mà phải chuyển nhân viên y tế."),
+    S("x54", "cold_storage_lockin_ears_nose", "Công nhân kẹt trong kho cấp đông, vành tai chóp mũi trắng như sáp, tê",
+      P(24, "Male"),
+      "Em lam o kho dong lanh, vua bi nhot trong phong cap dong gan 3 tieng moi co nguoi mo cua. Gio 2 vanh tai voi chop mui "
+      "trang bech nhu sap, so vao ko thay gi, nguoi van run. Tay deo gang day nen van cu dong binh thuong. O xuong ko co nhiet ke.",
+      {"cold_exposure_present": "YES", "thermal_exposure_present": "YES", "thermal_exposure_type": "COLD_AIR",
+       "thermal_exposure_duration": "TWO_TO_SIX_HOURS", "thermal_injury_body_area": "FACE_EARS_NOSE",
+       "skin_appearance": "WAXY", "skin_sensation": "NUMB", "shivering_status": "PRESENT", "chills_present": "YES",
+       "upper_extremity_problem_present": "NO", "symptom_duration_bucket": "ONE_TO_24_HOURS"},
+      2, concepts=("occupational_temperature_exposure", "skin_numbness"), screen=QUIET,
+      answers={"symptom_duration_bucket": "Tu luc bi nhot toi gio, gan 3 tieng.",
+"cold_exposure_present": "Co, em bi nhot trong phong cap dong.",
+               "thermal_exposure_present": "Co, trong phong cap dong lanh lam.",
+               "thermal_exposure_type": "Trong phong cap dong cua kho lanh.",
+               "thermal_exposure_duration": "Gan 3 tieng.",
+               "thermal_injury_body_area": "Hai vanh tai voi chop mui.",
+               "skin_appearance": "Trang bech nhu sap.",
+               "skin_sensation": "So vao ko thay gi.",
+               "shivering_status": "Nguoi van dang run.",
+               "chills_present": "Co, van run.",
+               "upper_extremity_problem_present": "Ko, tay van binh thuong."},
+      unknown={"temperature": "O xuong ko co nhiet ke."},
+      clarification="Em noi lai cho ro: em bi nhot trong phong cap dong gan 3 tieng, gio 2 vanh tai voi chop mui trang bech "
+                    "nhu sap, so vao ko thay gi, nguoi van run. Tay van cu dong binh thuong. O xuong ko co nhiet ke.",
+      tags=("no_diacritics", "abbreviation", "occupational", "environmental", "missing_vitals", "decisive_despite_missing"),
+      test="Không có nhiệt độ, nhưng vành tai chóp mũi trắng như sáp và mất cảm giác sau phơi lạnh đã đủ quyết định; "
+           "agent đọc được tin nhắn không dấu và không đòi đo nhiệt."),
+    # ------------------------------------------------------------------ tiết niệu
+    S("x55", "warfarin_clots_only_drops", "Cụ ông dùng warfarin tiểu ra cục máu, chỉ ra vài giọt, không có máy đo",
+      P(74, "Male", "SPOUSE", chronic=("Rung nhĩ", "Phì đại tiền liệt tuyến"), allergies=("Dị ứng ciprofloxacin",),
+        meds=("Warfarin 2 mg mỗi tối", "Tamsulosin 0,4 mg mỗi tối")),
+      "Ông nhà tôi 74 tuổi đang uống thuốc chống đông. Từ trưa ông đi tiểu ra nước đỏ lẫn cục máu, giờ rặn mãi chỉ ra được "
+      "vài giọt, tức căng ngay trên xương mu, ông bảo đau chừng 5 điểm. Nhà không có máy đo huyết áp nên tôi không biết huyết "
+      "áp ông thế nào.",
+      {"urinary_symptom_present": "YES", "urine_appearance": "BLOOD_CLOTS", "voiding_ability": "DROPS_ONLY",
+       "genitourinary_pain_present": "YES", "genitourinary_pain_location": "SUPRAPUBIC", "pain_present": "YES",
+       "pain_severity": 5, "symptom_duration_bucket": "ONE_TO_24_HOURS"},
+      2, concepts=("blood_clots_in_urine", "urinary_retention"), screen=QUIET,
+      answers={"symptom_duration_bucket": "Từ trưa tới giờ, mấy tiếng rồi.",
+"urinary_symptom_present": "Có, ông tiểu ra nước đỏ lẫn cục máu.",
+               "urine_appearance": "Nước tiểu đỏ, lẫn cục máu.",
+               "voiding_ability": "Rặn mãi chỉ ra được vài giọt.",
+               "genitourinary_pain_present": "Có, ông tức căng ngay trên xương mu.",
+               "genitourinary_pain_location": "Tức căng ngay trên xương mu.",
+               "pain_severity": "Ông bảo chừng 5 điểm."},
+      unknown={"systolic_bp": "Nhà không có máy đo huyết áp.", "heart_rate": "Tôi không biết bắt mạch."},
+      tags=("older_adult", "caregiver", "anticoagulant", "comorbidity", "missing_vitals", "decisive_despite_missing"),
+      test="Không có huyết áp và mạch: tiểu ra cục máu kèm chỉ ra vài giọt đã đủ quyết định ở người dùng warfarin; "
+           "agent không chờ sinh hiệu."),
+    S("x56", "hard_of_hearing_father_clots_call", "Bố nghe kém gọi báo tiểu ra máu cục rồi mất liên lạc",
+      P(77, "Male", "PARENT", chronic=("Nghe kém", "Phì đại tiền liệt tuyến"), meds=("Finasterid 5 mg mỗi sáng",)),
+      "Bố tôi 77 tuổi ở một mình dưới quê, tai nghe kém. Lúc nãy bố gọi lên nói được mỗi câu là đi tiểu ra máu cục thì mất "
+      "sóng, giờ tôi gọi lại mãi bố không nghe máy. Tôi ở trên thành phố nên không biết bố còn tiểu được không, có đau không.",
+      {"urinary_symptom_present": "YES", "urine_appearance": "BLOOD_CLOTS"},
+      INCOMPLETE, concepts=("blood_clots_in_urine",), screen=QUIET,
+      answers={"urinary_symptom_present": "Có, bố nói đi tiểu ra máu cục.",
+               "urine_appearance": "Bố nói đi tiểu ra máu cục."},
+      unknown={"voiding_ability": "Bố chỉ kịp nói ra máu cục, tôi không biết bố còn tiểu được không.",
+               "genitourinary_pain_present": "Bố không nói, tôi không biết bố có đau không.",
+               "heart_rate": "Tôi ở xa, không ai đo được cho bố.",
+               "symptom_duration_bucket": "Bố không kịp nói bị từ bao giờ."},
+      tags=("older_adult", "caregiver", "caregiver_remote", "hearing_barrier", "null_unknown"),
+      test="Người kể ở xa, người bệnh nghe kém và mất liên lạc: tiểu ra máu cục mà không biết còn tiểu được không, "
+           "agent phải chuyển nhân viên y tế, không đoán khả năng đi tiểu."),
+    S("x57", "dribbling_retention_pain_unscored", "Tiểu chỉ ra vài giọt từ tối qua, không chịu chấm điểm đau",
+      P(63, "Male", chronic=("Đái tháo đường type 2",), meds=("Metformin 850 mg sáng và tối",)),
+      "Tôi năm nay 63 tuổi. Từ tối qua đi tiểu cứ rặn mới ra được vài giọt, nước tiểu vẫn trong, không có máu, bụng dưới "
+      "chỗ trên xương mu căng tức. Bạn hỏi đau mấy điểm thì tôi chịu, tôi không biết chấm điểm kiểu đó.",
+      {"urinary_symptom_present": "YES", "voiding_ability": "DROPS_ONLY", "urine_appearance": "NORMAL",
+       "genitourinary_pain_present": "YES", "genitourinary_pain_location": "SUPRAPUBIC", "pain_present": "YES",
+       "symptom_duration_bucket": "ONE_TO_24_HOURS"},
+      INCOMPLETE, concepts=("urinary_retention", "suprapubic_pain"), screen=QUIET,
+      answers={"urinary_symptom_present": "Có, đi tiểu cứ rặn mới ra được vài giọt.",
+               "voiding_ability": "Rặn mới ra được vài giọt.",
+               "urine_appearance": "Nước tiểu vẫn trong, không có máu.",
+               "genitourinary_pain_present": "Có, căng tức chỗ trên xương mu.",
+               "genitourinary_pain_location": "Bụng dưới, chỗ trên xương mu.",
+               "pain_present": "Có, căng tức ở bụng dưới.",
+               "symptom_duration_bucket": "Từ tối qua đến giờ, chưa tới một ngày."},
+      unknown={"pain_severity": "Tôi không biết chấm điểm kiểu đó, đau thì cứ đau thôi."},
+      tags=("vague_answer", "null_unknown", "comorbidity"),
+      test="Chỉ ra vài giọt nhưng không có máu cục và không có điểm đau (khác x55 ở hai biến này): tiêu chí cần đau từ 7 điểm, "
+           "agent không được tự đổi 'căng tức' thành một con số."),
+    S("x58", "infant_antibiotic_hives_timing_unknown", "Bé 9 tháng nổi mề đay sau siro kháng sinh, bà không rõ bao lâu",
+      P(0, "Male", "CHILD", months=9),
+      "Em đang đi làm thì bà ở nhà gọi báo bé trai 9 tháng nhà em uống siro kháng sinh lần đầu xong thì nổi mẩn đỏ gồ lên khắp "
+      "người. Bà không để ý uống xong bao lâu thì nổi, chỉ biết là trong buổi chiều. Bà bảo bé vẫn bú được, thở bình thường.",
+      {"suspected_trigger_exposure_present": "YES", "suspected_allergy_trigger": "MEDICATION",
+       "rash_or_skin_finding_present": "YES", "skin_finding_appearance": "RAISED_WHEALS",
+       "skin_finding_distribution": "GENERALIZED", "feeding_intake_level": "NORMAL", "dyspnea_present": "NO"},
+      INCOMPLETE, concepts=("urticaria", "medication_exposure"), screen=QUIET,
+      answers={"suspected_trigger_exposure_present": "Có, bé uống siro kháng sinh lần đầu xong thì nổi.",
+               "suspected_allergy_trigger": "Siro kháng sinh bé uống lần đầu.",
+               "skin_finding_appearance": "Mẩn đỏ gồ lên.",
+               "skin_finding_distribution": "Bà bảo nổi khắp người.",
+               "feeding_intake_level": "Bà bảo bé vẫn bú được.",
+               "dyspnea_present": "Bà bảo bé thở bình thường."},
+      unknown={"exposure_to_symptom_interval": "Bà không để ý bé uống thuốc xong bao lâu thì nổi mẩn.",
+               "swelling_present": "Em không ở nhà nên không nhìn được mặt bé, bà cũng không để ý môi mắt bé có sưng không.",
+               "symptom_duration_bucket": "Bà không để ý bé nổi mẩn từ mấy giờ."},
+      tags=("pediatric", "caregiver", "caregiver_remote", "null_unknown"),
+      test="Không rõ khoảng cách từ lúc uống thuốc tới lúc nổi mẩn (khác x42 ở biến này): tiêu chí mề đay toàn thân do thuốc "
+           "cần khởi phát trong vài phút, agent không được tự giả định."),
+    S("x59", "aphasic_bedbound_dry_diaper", "Cụ bà liệt sau tai biến, bỉm khô cả ngày, không có máy đo huyết áp",
+      P(88, "Female", "OTHER", chronic=("Liệt nửa người và mất khả năng nói sau tai biến",),
+        meds=("Atorvastatin 10 mg mỗi tối",)),
+      "Bà nội tôi 88 tuổi nằm liệt một chỗ sau tai biến, không nói được. Chị giúp việc báo từ sáng tới giờ đã chiều mà bỉm của "
+      "bà vẫn khô, dù bà vẫn uống nước, ăn cháo như mọi ngày. Nhà không có máy đo huyết áp, bà không nói được nên tôi không "
+      "biết bà có đau hay buồn tiểu không.",
+      {"urine_output_status": "NONE", "urination_status": "VERY_LITTLE_OR_NONE", "oral_intake_tolerance": "NORMAL",
+       "symptom_duration_bucket": "ONE_TO_24_HOURS"},
+      INCOMPLETE, concepts=("anuria",), screen=QUIET,
+      answers={"symptom_duration_bucket": "Từ sáng tới giờ đã chiều.",
+"urine_output_status": "Từ sáng tới chiều bỉm của bà vẫn khô.",
+               "urination_status": "Từ sáng tới giờ bà gần như không tiểu, bỉm vẫn khô.",
+               "oral_intake_tolerance": "Bà vẫn uống nước, ăn cháo như mọi ngày."},
+      unknown={"systolic_bp": "Nhà không có máy đo huyết áp.",
+               "voiding_ability": "Bà không nói được nên tôi không biết bà buồn tiểu mà không tiểu ra được hay không buồn tiểu.",
+               "pain_present": "Bà không nói được, tôi không biết bà có đau ở đâu không."},
+      tags=("older_adult", "collateral_history", "communication_barrier", "missing_vitals", "null_unknown"),
+      test="Người bệnh mất ngôn ngữ, nhà không có máy đo: không tiểu cả ngày nhưng thiếu huyết áp và khả năng đi tiểu, "
+           "agent phải chuyển nhân viên y tế."),
+    S("x60", "febrile_dysuria_during_menses", "Tiểu buốt, sốt 38,4 khi đang có kinh, không biết có tiểu máu",
+      P(24, "Female", allergies=("Dị ứng cotrimoxazol",)),
+      "Em 24 tuổi, hai hôm nay đi tiểu buốt rát, tức vùng trên xương mu chừng 5 điểm, sáng nay đo nhiệt kế được 38,4 độ. "
+      "Em đang ngày cuối kỳ kinh, ra ít thôi, nên không biết nước tiểu có lẫn máu hay chỉ là máu kinh. Em không đau hông lưng.",
+      {"urinary_symptom_present": "YES", "genitourinary_pain_present": "YES", "genitourinary_pain_location": "SUPRAPUBIC",
+       "pain_present": "YES", "pain_severity": 5, "fever_present": "YES", "temperature": 38.4,
+       "infection_source_symptom_group": "URINARY", "symptom_duration_bucket": "ONE_TO_7_DAYS",
+       "pregnancy_present": "NO", "pregnancy_status": "NOT_PREGNANT", "vaginal_bleeding_present": "YES",
+       "vaginal_bleeding_amount": "LIGHT"},
+      3, concepts=("fever", "dysuria"), screen=QUIET,
+      answers={"urinary_symptom_present": "Có, em đi tiểu buốt rát.",
+               "genitourinary_pain_present": "Có, tức vùng trên xương mu.",
+               "genitourinary_pain_location": "Tức vùng trên xương mu, không đau hông lưng.",
+               "pain_severity": "Chừng 5 điểm.",
+               "fever_present": "Có, sáng nay đo được 38,4 độ.",
+               "infection_source_symptom_group": "Ngoài sốt thì chủ yếu là tiểu buốt rát.",
+               "symptom_duration_bucket": "Hai hôm nay rồi.",
+               "pregnancy_present": "Không, em đang có kinh.",
+               "pregnancy_status": "Em không có thai, đang có kinh.",
+               "vaginal_bleeding_present": "Em đang ngày cuối kỳ kinh.",
+               "vaginal_bleeding_amount": "Ra ít thôi vì là ngày cuối."},
+      unknown={"urine_appearance": "Em đang có kinh nên không phân biệt được nước tiểu có lẫn máu hay là máu kinh."},
+      clarification="Em nói lại cho rõ: hai hôm nay em đi tiểu buốt rát, tức vùng trên xương mu chừng 5 điểm, sáng nay đo "
+                    "được 38,4 độ. Em đang ngày cuối kỳ kinh nên không biết nước tiểu có lẫn máu không. Em không đau hông lưng.",
+      tags=("null_unknown", "confounded_observation"),
+      test="Máu kinh che mất màu nước tiểu: không biết có tiểu máu nhưng sốt đo được kèm đau mức vừa đã khớp tiêu chí ESI 3; "
+           "agent không được chuyển thành 'không đủ thông tin' chỉ vì một câu 'không biết' không quyết định."),
+]
