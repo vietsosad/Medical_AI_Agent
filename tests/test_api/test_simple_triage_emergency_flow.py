@@ -149,6 +149,40 @@ async def test_the_flag_survives_a_turn_the_model_fails(client, runtime, db_sess
 
 
 @pytest.mark.asyncio
+async def test_a_flagged_first_message_reaches_the_queue_when_the_model_fails(client, runtime, db_session) -> None:
+    """Outage on the very first message: the case must still reach a nurse, once."""
+    runtime.fail = True
+
+    first = await client.post("/api/v1/simple-triage/start", json={"message": "con tôi ngất xỉu"})
+    retry = await client.post("/api/v1/simple-triage/start", json={"message": "con tôi ngất xỉu"})
+
+    assert first.status_code == retry.status_code == 502
+    detail = first.json()["detail"]
+    assert detail.startswith("Lưu ý an toàn") and "ngất hoặc bất tỉnh" in detail and "115" in detail
+    items = await _queue(client)
+    # The retry of the same opening does not queue a second copy.
+    assert len(items) == 1
+    assert items[0]["attention_required"] is True
+    assert items[0]["session_status"] == "ACTIVE"
+    assert items[0]["initial_message"] == "con tôi ngất xỉu"
+    chats = (await db_session.exec(select(SimpleAgentChatSession))).all()
+    assert len(chats) == 1 and chats[0].attention_rule_id == "SA_SCREEN_SYNCOPE_V1" and chats[0].turn_count == 0
+    case = await client.get(f"/api/v1/nurse-simple/cases/{items[0]['session_id']}")
+    assert case.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_an_unflagged_first_message_that_fails_persists_nothing(client, runtime, db_session) -> None:
+    runtime.fail = True
+
+    failed = await client.post("/api/v1/simple-triage/start", json={"message": "tôi bị đau họng"})
+
+    assert failed.status_code == 502
+    assert not failed.json()["detail"].startswith("Lưu ý an toàn")
+    assert (await db_session.exec(select(SimpleAgentChatSession))).all() == []
+
+
+@pytest.mark.asyncio
 async def test_a_decisive_esi_1_outcome_is_not_given_a_second_115_preamble(client, runtime) -> None:
     runtime.next_result = {
         "message": "Hãy gọi cấp cứu 115 ngay.",
@@ -159,6 +193,36 @@ async def test_a_decisive_esi_1_outcome_is_not_given_a_second_115_preamble(clien
 
     assert response.json()["message"] == "Hãy gọi cấp cứu 115 ngay."
     assert response.json()["decision"]["safety_alert"]["rule_id"] == "SA_SCREEN_CYANOSIS_V1"
+
+
+@pytest.mark.asyncio
+async def test_the_dashboard_counts_a_flagged_case_that_is_still_being_screened(client, runtime) -> None:
+    """The queue puts a flagged ACTIVE case first; the dashboard must count the same case."""
+    flagged = await client.post("/api/v1/simple-triage/start", json={"message": "con tôi ngất xỉu"})
+    assert flagged.status_code == 200
+
+    response = await client.get("/api/v1/nurse-simple/dashboard")
+    assert response.status_code == 200
+    body = response.json()
+
+    assert body["waiting"] == len(await _queue(client)) == 1
+    assert body["attention_live"] == 1
+    assert body["in_progress_live"] == 1
+    in_progress = next(row for row in body["esi_wait_matrix"] if row["key"] == "IN_PROGRESS")
+    assert sum(cell["count"] for cell in in_progress["counts"]) == 1
+    # No agent conclusion yet, so it is not filed under any AI-proposed level.
+    assert sum(bucket["count"] for bucket in body["esi_distribution"]) == 0
+
+
+@pytest.mark.asyncio
+async def test_the_dashboard_only_accepts_the_offered_history_windows(client, runtime) -> None:
+    month = await client.get("/api/v1/nurse-simple/dashboard", params={"days": 30})
+    assert month.status_code == 200
+    assert month.json()["window_days"] == 30
+    assert len(month.json()["daily_volume"]) == 30
+    assert len(month.json()["recent_hours"]) == 24
+
+    assert (await client.get("/api/v1/nurse-simple/dashboard", params={"days": 5})).status_code == 422
 
 
 @pytest.mark.asyncio
