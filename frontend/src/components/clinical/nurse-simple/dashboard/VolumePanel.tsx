@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ChartLine, Table2, TrendingUp, type LucideIcon } from "lucide-react";
+import { ChartLine, TrendingUp } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
   CartesianGrid,
@@ -16,15 +16,14 @@ import {
   useCartesianScale,
 } from "recharts";
 
-import { DURATION, EASE_IN_OUT, EASE_OUT, layoutTransition } from "@/lib/motion";
+import { DURATION, EASE_IN_OUT, EASE_OUT } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import type { SimpleDailyPointDTO } from "@/types/simple-nurse";
 
 import { formatCount, formatDay, niceCountAxis } from "./dashboard-model";
-import { DashboardPanel, EmptyNote, SeriesSwatch } from "./primitives";
+import { type ChartView, DashboardPanel, EmptyNote, SeriesSwatch, ViewSwitch } from "./primitives";
 
 type SeriesKey = "completed" | "decided";
-type VolumeView = "chart" | "table";
 
 /** Hai chuỗi cùng đơn vị "số ca" nên nằm chung MỘT trục tung -- không bao giờ hai trục. */
 const SERIES: ReadonlyArray<{ key: SeriesKey; label: string; color: string }> = [
@@ -48,7 +47,7 @@ const END_LABEL_MIN_GAP_PX = 18;
  * đương cho người không đọc được biểu đồ.
  */
 export function VolumePanel({ points, order }: { points: SimpleDailyPointDTO[]; order: number }) {
-  const [view, setView] = useState<VolumeView>("chart");
+  const [view, setView] = useState<ChartView>("chart");
   const days = points.length;
   const totalCompleted = points.reduce((sum, point) => sum + point.completed, 0);
   const totalDecided = points.reduce((sum, point) => sum + point.decided, 0);
@@ -63,7 +62,11 @@ export function VolumePanel({ points, order }: { points: SimpleDailyPointDTO[]; 
       order={order}
       title={`Khối lượng ${days} ngày gần nhất`}
       subtitle={`${range ? `${range} · ` : ""}${formatCount(totalCompleted)} phiên sàng lọc kết thúc, ${formatCount(totalDecided)} ca được chốt`}
-      action={max > 0 ? <ViewSwitch view={view} onChange={setView} /> : undefined}
+      action={
+        max > 0 ? (
+          <ViewSwitch id="volume-view" label="Cách xem khối lượng" view={view} onChange={setView} chartIcon={ChartLine} />
+        ) : undefined
+      }
     >
       {max === 0 ? (
         <EmptyNote icon={TrendingUp}>Chưa có phiên nào kết thúc trong {days} ngày qua.</EmptyNote>
@@ -107,45 +110,6 @@ export function VolumePanel({ points, order }: { points: SimpleDailyPointDTO[]; 
         </>
       )}
     </DashboardPanel>
-  );
-}
-
-/** Biểu đồ / Bảng số liệu: nền nổi trượt sang nút được chọn (layoutId chung). */
-function ViewSwitch({ view, onChange }: { view: VolumeView; onChange: (next: VolumeView) => void }) {
-  const options: ReadonlyArray<{ value: VolumeView; label: string; icon: LucideIcon }> = [
-    { value: "chart", label: "Biểu đồ", icon: ChartLine },
-    { value: "table", label: "Bảng số liệu", icon: Table2 },
-  ];
-  return (
-    <div role="group" aria-label="Cách xem khối lượng" className="inline-flex rounded-xl bg-muted p-0.5">
-      {options.map((option) => {
-        const selected = view === option.value;
-        const Icon = option.icon;
-        return (
-          <button
-            key={option.value}
-            type="button"
-            aria-pressed={selected}
-            onClick={() => onChange(option.value)}
-            className={cn(
-              "relative inline-flex min-h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold outline-hidden transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-brand",
-              selected ? "text-foreground" : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {selected ? (
-              <motion.span
-                layoutId="volume-view-highlight"
-                transition={layoutTransition}
-                aria-hidden="true"
-                className="absolute inset-0 rounded-xl bg-card shadow-xs"
-              />
-            ) : null}
-            <Icon className="relative size-4" aria-hidden="true" />
-            <span className="relative">{option.label}</span>
-          </button>
-        );
-      })}
-    </div>
   );
 }
 

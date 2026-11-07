@@ -1,0 +1,163 @@
+{
+  "golden_30": {
+    "records": 30,
+    "categories": {
+      "esi_1": 3,
+      "esi_2": 7,
+      "esi_3": 9,
+      "esi_4": 4,
+      "esi_5": 3,
+      "guardrail": 4
+    },
+    "kinds": {
+      "triage": 26,
+      "guardrail": 4
+    },
+    "terminal_actions": {
+      "RETURN_MATCH": 29,
+      "REFUSE": 1
+    },
+    "clinical_review_status": {
+      "PENDING_CLINICAL_REVIEW": 30
+    },
+    "smoke_cases": 2,
+    "profile_age_years": {
+      "35": 30
+    },
+    "profile_age_band": {
+      "adult": 29,
+      "null": 1
+    },
+    "profile_sex": {
+      "Other": 30
+    },
+    "profile_relationship": {
+      "SELF": 30
+    },
+    "profiles_with_conditions_meds_or_allergies": 0,
+    "presentation_style": {
+      "controlled": 26,
+      "adversarial": 4
+    },
+    "contains_temporal_context": 12,
+    "openings_with_form_label_template": 0,
+    "exact_duplicate_openings": 0,
+    "triage_records_sharing_identical_facts_and_values": 0,
+    "triage_records_sharing_identical_fact_keys": 0,
+    "distinct_fact_key_sets": 26,
+    "distinct_fact_targets_valued": 70,
+    "fact_targets_total_in_corpus": 243,
+    "records_using_optional_fields": {
+      "negated_concept_ids": 0,
+      "unknown_fact_ids": 0,
+      "qualitative_observations": 0,
+      "acceptable_answer_variants": 0,
+      "forbidden_question_target_ids": 0,
+      "forbidden_atom_ids": 0
+    },
+    "default_unknown_answers_per_triage_record": {
+      "232": 6,
+      "228": 2,
+      "222": 2,
+      "227": 1,
+      "233": 1,
+      "219": 2,
+      "226": 2,
+      "229": 1,
+      "230": 1,
+      "231": 1,
+      "224": 3,
+      "225": 1,
+      "217": 1,
+      "223": 2
+    },
+    "distinct_primary_atoms": 22,
+    "opening_length_chars": {
+      "min": 33,
+      "median": 154,
+      "max": 245
+    },
+    "example_openings": [
+      "Tôi đang bị thở chậm. Nhịp thở của tôi khoảng 7 lần mỗi phút.",
+      "Tôi đang khó thở nhiều và tình trạng đột ngột nặng lên trong vài phút gần đây. Máy kẹp đầu ngón tay đo SpO2 90%, nhịp thở 32 lần mỗi phút, tôi không dùng rượu bia hay chất kích thích.",
+      "Tôi bị tụt huyết áp, máy đo ghi huyết áp 92/60 mmHg. Tôi choáng váng, mệt lả toàn thân, thở 24 lần mỗi phút, mạch 112 lần mỗi phút, hôm nay đi tiểu ít hơn bình thường nhưng vẫn uống nước được."
+    ]
+  },
+  "golden_300": {
+    "records": 300,
+    "categories": {
+      "esi_1": 20,
+      "esi_2": 150,
+      "esi_3": 50,
+      "esi_4": 35,
+      "esi_5": 35,
+      "guardrail": 10
+    },
+    "kinds": {
+      "triage": 290,
+      "guardrail": 10
+    },
+    "terminal_actions": {
+      "RETURN_MATCH": 299,
+      "REFUSE": 1
+    },
+    "clinical_review_status": {
+      "PENDING_CLINICAL_REVIEW": 300
+    },
+    "smoke_cases": 2,
+    "profile_age_years": {
+      "35": 300
+    },
+    "profile_age_band": {
+      "adult": 299,
+      "null": 1
+    },
+    "profile_sex": {
+      "Other": 293,
+      "Female": 7
+    },
+    "profile_relationship": {
+      "SELF": 300
+    },
+    "profiles_with_conditions_meds_or_allergies": 0,
+    "presentation_style": {
+      "controlled": 290,
+      "adversarial": 10
+    },
+    "contains_temporal_context": 2,
+    "openings_with_form_label_template": 121,
+    "exact_duplicate_openings": 10,
+    "triage_records_sharing_identical_facts_and_values": 6,
+    "triage_records_sharing_identical_fact_keys": 70,
+    "distinct_fact_key_sets": 249,
+    "distinct_fact_targets_valued": 119,
+    "fact_targets_total_in_corpus": 243,
+    "records_using_optional_fields": {
+      "negated_concept_ids": 0,
+      "unknown_fact_ids": 0,
+      "qualitative_observations": 0,
+      "acceptable_answer_variants": 0,
+      "forbidden_question_target_ids": 0,
+      "forbidden_atom_ids": 0
+    },
+    "default_unknown_answers_per_triage_record": {
+      "231": 136,
+      "232": 53,
+      "230": 75,
+      "229": 18,
+      "233": 3,
+      "228": 5
+    },
+    "distinct_primary_atoms": 290,
+    "opening_length_chars": {
+      "min": 16,
+      "median": 100,
+      "max": 212
+    },
+    "example_openings": [
+      "Tôi đang bị huyết áp thấp. Đặc điểm chất nôn: có máu. Huyết áp tâm thu của tôi là 69.",
+      "Tôi đang bị thở chậm. Nhịp thở của tôi khoảng 7 lần mỗi phút.",
+      "Tôi đang bị tím môi. Độ bão hòa oxy ngoại vi của tôi là 84."
+    ]
+  }
+}

@@ -693,6 +693,23 @@
   }
 }
 
+/* BẢNG TỔNG QUAN TRẠM ĐIỀU PHỐI. Ô ma trận hiện dần theo đường chéo từ góc
+   khẩn nhất; cột mọc từ đáy bằng clip-path nên góc bo 4px không bị kéo méo như
+   scaleY. Chỉ có `from`: điểm đến là chính kiểu của phần tử, nên lần làm mới số
+   liệu sau đó chỉ còn transition, không phát lại hoạt ảnh. */
+@keyframes heat-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+@keyframes col-reveal {
+  from {
+    clip-path: inset(100% 0 0 0 round 4px 4px 0 0);
+  }
+}
+
 /* TRANG CHỦ: chấm sáng đi dọc đường nối và vệt quét trong các sơ đồ minh họa.
    Mỗi lần chạy là một lần dựng lại phần tử (đổi `key`), nên chỉ cần chạy một
    lượt; nhịp lặp do đồng hồ phiên mẫu (use-demo-timeline) quyết định. */
@@ -1006,6 +1023,30 @@
     animation: bar-grow 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
+  .heat-in {
+    animation: heat-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--cell-delay, 0ms);
+  }
+
+  /* Cột của biểu đồ theo giờ: phần tô là `inset` theo chiều cao --col-h. */
+  .col-fill {
+    clip-path: inset(calc(100% - var(--col-h, 0%)) 0 0 0 round 4px 4px 0 0);
+    transition:
+      clip-path 420ms cubic-bezier(0.22, 1, 0.36, 1),
+      filter 200ms ease-out;
+  }
+
+  .col-reveal {
+    animation: col-reveal 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--col-delay, 0ms);
+  }
+
+  /* Một chấm đi dọc đường nối giữa hai bước của luồng ca, đúng một lượt, khi
+     số ca ở bước sau vừa tăng. Dùng lại keyframes của trang chủ. */
+  .flow-travel {
+    animation: lp-travel-x 900ms cubic-bezier(0.65, 0, 0.35, 1) both;
+  }
+
   .lp-travel-x {
     animation: lp-travel-x 900ms cubic-bezier(0.65, 0, 0.35, 1) both;
   }
@@ -1140,8 +1181,19 @@
   .page-enter,
   .ring-pulse,
   .fact-flash,
-  .bar-grow {
+  .bar-grow,
+  .heat-in,
+  .col-reveal {
     animation: none;
+  }
+
+  .col-fill {
+    transition: none;
+  }
+
+  .flow-travel {
+    animation: none;
+    opacity: 0;
   }
 
   .lp-travel-x,

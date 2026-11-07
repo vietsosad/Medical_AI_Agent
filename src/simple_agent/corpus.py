@@ -81,6 +81,17 @@ VITAL_SIGN_FACT_TARGET_IDS = frozenset({
     "fact_target:cyanosis_present",
 })
 
+# The patient's own answer to the self-safety question decides ESI 2 by
+# itself, like a danger-zone vital sign, so those atoms are evaluated whatever
+# the retrieval query says. Real failure (06/11/2026, generated_mock_v2 r19):
+# indirect suicidal wording was first read as a sleep problem, so a query about
+# sleep would never have surfaced the self-harm atoms even once the answer was
+# recorded. See Corpus.self_safety_decisive_atom_ids below.
+SELF_SAFETY_FACT_TARGET_IDS = frozenset({
+    "fact_target:self_safety_status",
+    "fact_target:perceptual_disturbance_type",
+})
+
 
 class CorpusError(RuntimeError):
     """The four source files or their indexes cannot be used together."""
@@ -305,6 +316,22 @@ class Corpus:
                 for requirement in (branch if isinstance(branch, list) else [branch])
             })
             and fact_ids <= VITAL_SIGN_FACT_TARGET_IDS
+        )
+        # Same for the self-harm atoms (see SELF_SAFETY_FACT_TARGET_IDS): they
+        # match only on an explicit self-safety answer, so evaluating them
+        # every turn cannot raise anyone's level on its own.
+        self.self_safety_decisive_atom_ids: frozenset[str] = frozenset(
+            atom["atom_id"]
+            for atom in self.protocol_atoms
+            if atom.get("decision_effect", {}).get("impact") == "ASSIGN_ESI"
+            and atom.get("decision_effect", {}).get("candidate_esi") in (1, 2)
+            and (fact_ids := {
+                requirement["fact_target_id"]
+                for branch in atom.get("requirements", [])
+                for requirement in (branch if isinstance(branch, list) else [branch])
+            })
+            and "fact_target:self_safety_status" in fact_ids
+            and fact_ids <= SELF_SAFETY_FACT_TARGET_IDS
         )
 
         # facts_for_concept and distinguishes_from are both derived from the same

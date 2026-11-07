@@ -11,5 +11,7 @@ export const SIMPLE_NURSE_QUERY_KEYS = {
   // different bucket.
   queue: (params: SimpleNurseQueueParams = {}) => [...SIMPLE_NURSE_QUERY_KEYS.queueAll(), params] as const,
   case: (sessionId: string) => [...SIMPLE_NURSE_QUERY_KEYS.all, "case", sessionId] as const,
+  // Prefix for `invalidateQueries`: refreshes every history window at once.
   dashboard: () => [...SIMPLE_NURSE_QUERY_KEYS.all, "dashboard"] as const,
+  dashboardWindow: (days: number) => [...SIMPLE_NURSE_QUERY_KEYS.dashboard(), days] as const,
 };

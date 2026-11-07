@@ -6,6 +6,7 @@ import type {
   SimpleDecisionPayload,
   SimpleNurseActionResponseDTO,
   SimpleNurseCaseDetailDTO,
+  SimpleDashboardWindow,
   SimpleNurseDashboardDTO,
   SimpleNurseQueueParams,
   SimpleNurseQueueResponseDTO,
@@ -91,10 +92,10 @@ export const simpleNurseService = {
   },
 
   /** `GET /nurse-simple/cases/{sessionId}` */
-  /** `GET /nurse-simple/dashboard` */
-  getDashboard: async (): Promise<SimpleNurseDashboardDTO> => {
+  /** `GET /nurse-simple/dashboard?days=` -- `days` chỉ đổi phần lịch sử, không đổi ảnh chụp hàng đợi. */
+  getDashboard: async (days: SimpleDashboardWindow): Promise<SimpleNurseDashboardDTO> => {
     try {
-      const response = await axiosClient.get("/api/v1/nurse-simple/dashboard");
+      const response = await axiosClient.get("/api/v1/nurse-simple/dashboard", { params: { days } });
       return simpleNurseDashboardSchema.parse(response.data);
     } catch (error) {
       return handlePilotApiError(error, "Không thể tải số liệu tổng quan.");

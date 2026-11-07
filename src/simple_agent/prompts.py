@@ -25,6 +25,15 @@ tell you what it means), call record_fact for it immediately, exactly like any o
 for a related concept to come up first, and do not require the patient to be asked about it directly. This \
 resolves the finding once, so a later question that depends on it isn't asked again as if the patient had never \
 mentioned it.
+- Self-harm wording: session_snapshot's "safety_screen", when not null, means a deterministic screen found wording \
+in this conversation that may express thoughts of self-harm or of not wanting to live -- often indirect ("giá mà ngủ \
+một giấc rồi không dậy nữa", "không phải sống nữa", "làm đau mình cho xong", feeling like a burden to everyone). Read \
+the patient's actual words. If they describe such thoughts, wishes or intent as current, record safety_screen's \
+fact_target (self_safety_status) right away with record_fact: CURRENT_SELF_HARM_THOUGHTS for thoughts or wishes, \
+CURRENT_SELF_HARM_INTENT for a stated plan or intent, RECENT_SELF_HARM_BEHAVIOR for something already done -- and \
+record a matching concept if search_clinical_concepts returns one. Never record this wording as a sleep, tiredness or \
+other unrelated concept instead. If their words deny it, place it in the past, or describe someone in a story or a \
+hypothetical, do not record it.
 - session_snapshot's "proactive_concepts" and "proactive_fact_targets" are computed fresh every turn from the \
 recent conversation (including this message) -- concepts/fact_targets that plausibly match what's being discussed, \
 already looked up for you. Use them the same way you would search_clinical_concepts'/search_fact_targets_for_text's \
@@ -148,6 +157,16 @@ Recording facts -- match the fact target's reporting_style (from search_fact_tar
 record_fact when the patient gave a specific figure. Words like "gần 39", "trên 38", "khoảng 90" without a firm \
 number are NOT specific enough -- call record_qualitative_observation instead so the reply can ask for the exact \
 figure. A clearly stated number, including a decimal like "38.5", is enough.
+- Vietnamese patients often SAY a reading instead of typing digits. Convert these spoken forms to the standard \
+number before record_fact (they are specific, not approximate): blood pressure in the centimetre shorthand \
+"9 trên 6" = 90/60, "8 rưỡi trên 5" = 85/50, "huyết áp 17/10" or "17 trên 10" = 170/100 (a systolic figure \
+under 30 is that shorthand, multiply both by 10); "một trăm hai" or "trăm hai" = 120 but "một trăm linh hai" or \
+"một trăm lẻ hai" = 102, "trăm mốt" = 110, "trăm rưỡi" = 150; "39 độ 6", "39 phẩy 6" or "39,6" = 39.6, \
+"38 rưỡi" = 38.5. Here "trên" between two figures is a separator; "trên 38" on its own means "above 38" and is \
+NOT a specific figure. "9 mấy", "chín mươi mấy", "hơn trăm" are not specific either -- record a qualitative \
+observation. A body temperature written above 45 is almost certainly Fahrenheit: do not record it as Celsius, \
+record a qualitative observation so the reply can confirm the unit. When the patient corrects a reading \
+(re-measured, misread the screen, wrong line of the device), record_fact again with the corrected figure.
 - DESCRIPTIVE_SEVERITY (pain severity): only call record_qualitative_observation once the patient has actually \
 said something about how bad/intense it feels (e.g. "đau nhẹ thôi", "đau dữ dội", "đau âm ỉ", "đau không chịu \
 nổi", "vẫn đi lại được", or a clear comparison). Merely naming or confirming the symptom -- "tôi bị đau bụng", \

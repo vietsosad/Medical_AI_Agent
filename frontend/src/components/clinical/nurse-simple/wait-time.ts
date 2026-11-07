@@ -16,9 +16,21 @@
 export const WAIT_WARNING_MINUTES = 30;
 export const WAIT_CRITICAL_MINUTES = 60;
 
+/**
+ * Mốc giờ từ backend, theo mili giây. Backend ghi giờ UTC không kèm hậu tố múi
+ * giờ (`get_utc_now()` là naive, ví dụ "2026-11-03T08:00:00"), mà trình duyệt
+ * đọc một chuỗi như vậy là giờ ĐỊA PHƯƠNG: ở Việt Nam mọi thời gian chờ sẽ dư
+ * đúng 7 tiếng, một ca vừa tới 10 phút hiện thành "7 giờ 10 phút". Vì vậy tự
+ * gắn "Z" khi chuỗi chưa có múi giờ -- cùng quy tắc với `parseSnapshot`.
+ */
+export function serverTimeMs(iso: string): number {
+  const hasZone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(iso);
+  return new Date(hasZone ? iso : `${iso}Z`).getTime();
+}
+
 /** Số phút đã trôi qua kể từ mốc ca sẵn sàng cho điều dưỡng. */
 export function waitingMinutes(iso: string): number {
-  return Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
+  return Math.max(0, Math.floor((Date.now() - serverTimeMs(iso)) / 60000));
 }
 
 const MINUTES_PER_DAY = 24 * 60;
