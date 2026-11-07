@@ -1,0 +1,456 @@
+{
+  "schema_version": "generated-mock-v2-dataset-manifest-v1",
+  "dataset": "generated_mock_v2",
+  "generator_version": "generated-mock-v2.3",
+  "data_origin": "SYNTHETIC",
+  "contains_real_person_data": false,
+  "clinical_review_status": "PENDING_CLINICAL_REVIEW cho cả 590 bản ghi: chưa có chuyên gia y tế nào duyệt.",
+  "record_schema": "eval.simple_runtime.schemas.GoldenCase (schema_version simple-agent-golden-v1), cùng bộ khoá với eval/cases/simple_agent_golden_300.jsonl",
+  "runner": "python -m eval.run --cases eval/generated_mock_v2/<tệp>.jsonl (mỗi tệp có <tệp>.manifest.json và một ca smoke)",
+  "files": {
+    "train": {
+      "path": "eval/generated_mock_v2/train.jsonl",
+      "runner_manifest": "eval/generated_mock_v2/train.manifest.json",
+      "records": 339,
+      "sha256": "1822f19761d373a809272fe6ba21bc8c7dd77869cf7ff778b38a04633ca1a199",
+      "smoke_case_ids": [
+        "mv2-d06ebe3d"
+      ],
+      "category_counts": {
+        "esi_1": 16,
+        "esi_2": 273,
+        "esi_3": 15,
+        "esi_4": 2,
+        "incomplete": 33
+      },
+      "role": "Ca đã kiểm chứng theo hướng dẫn; dùng để xây dựng hoặc làm ví dụ."
+    },
+    "validation": {
+      "path": "eval/generated_mock_v2/validation.jsonl",
+      "runner_manifest": "eval/generated_mock_v2/validation.manifest.json",
+      "records": 73,
+      "sha256": "b49d741aa2a78268d74936a6cfea5ea0c85b9fdd1c3478c9b7a9b08374925ec3",
+      "smoke_case_ids": [
+        "mv2-cbe4a2e8"
+      ],
+      "category_counts": {
+        "esi_1": 4,
+        "esi_2": 58,
+        "esi_3": 3,
+        "esi_5": 1,
+        "incomplete": 7
+      },
+      "role": "Ca đã kiểm chứng; dùng để chọn cấu hình, prompt, ngưỡng."
+    },
+    "test": {
+      "path": "eval/generated_mock_v2/test.jsonl",
+      "runner_manifest": "eval/generated_mock_v2/test.manifest.json",
+      "records": 74,
+      "sha256": "aabad6c8916b8aa8ae4e188af1bcf1fcfb8736eefc96f6c96ea4d95f59d3fbf4",
+      "smoke_case_ids": [
+        "mv2-c5634a11"
+      ],
+      "category_counts": {
+        "esi_1": 4,
+        "esi_2": 58,
+        "esi_3": 4,
+        "esi_5": 1,
+        "incomplete": 7
+      },
+      "role": "Ca đã kiểm chứng; chỉ dùng để báo cáo kết quả cuối. Không dùng để tinh chỉnh."
+    },
+    "needs_medical_review": {
+      "path": "eval/generated_mock_v2/needs_medical_review.jsonl",
+      "runner_manifest": "eval/generated_mock_v2/needs_medical_review.manifest.json",
+      "records": 104,
+      "sha256": "d17877ba89389a62c4238962d45e91635e638f2cc2c70e5eeabe916924f9b14e",
+      "smoke_case_ids": [
+        "mv2-b462c798"
+      ],
+      "category_counts": {
+        "esi_1": 2,
+        "esi_2": 19,
+        "esi_3": 9,
+        "esi_4": 16,
+        "esi_5": 21,
+        "incomplete": 37
+      },
+      "role": "Nhãn chưa kiểm chứng được bằng văn bản hướng dẫn; chờ chuyên gia y tế. Không dùng để huấn luyện hay chấm điểm."
+    }
+  },
+  "metadata": {
+    "path": "eval/generated_mock_v2/metadata.jsonl",
+    "records": 590,
+    "sha256": "b456dd264b1770bacb6a08e170ca4074f612c56e1ad4a78f1cde0d2c6e251d82",
+    "content": "nhóm, gia đình kịch bản, kiểu lời kể, nhãn tình huống biên, tiêu chí khớp, kết luận đối chiếu AHRQ, bộ lọc khẩn cấp, lý do cần duyệt, nguồn gốc SYNTHETIC"
+  },
+  "batches": {
+    "1": {
+      "records": 200,
+      "by_file": {
+        "needs_medical_review": 54,
+        "test": 22,
+        "train": 102,
+        "validation": 22
+      },
+      "labels": {
+        "esi_1": 9,
+        "esi_2": 111,
+        "esi_3": 16,
+        "esi_4": 14,
+        "esi_5": 18,
+        "incomplete": 32
+      },
+      "groups": {
+        "COMMON": 50,
+        "MULTI_SYMPTOM": 40,
+        "RED_FLAG": 40,
+        "MISSING_INFO": 30,
+        "CONFLICTING": 20,
+        "COMPLEX_DIALOGUE": 20
+      }
+    },
+    "2": {
+      "records": 200,
+      "by_file": {
+        "needs_medical_review": 31,
+        "test": 27,
+        "train": 116,
+        "validation": 26
+      },
+      "labels": {
+        "esi_1": 17,
+        "esi_2": 128,
+        "esi_3": 13,
+        "esi_4": 2,
+        "esi_5": 4,
+        "incomplete": 36
+      },
+      "groups": {
+        "COMMON": 50,
+        "MULTI_SYMPTOM": 40,
+        "RED_FLAG": 40,
+        "MISSING_INFO": 30,
+        "CONFLICTING": 20,
+        "COMPLEX_DIALOGUE": 20
+      }
+    },
+    "3": {
+      "records": 190,
+      "by_file": {
+        "needs_medical_review": 19,
+        "test": 25,
+        "train": 121,
+        "validation": 25
+      },
+      "labels": {
+        "esi_2": 169,
+        "esi_3": 2,
+        "esi_4": 2,
+        "esi_5": 1,
+        "incomplete": 16
+      },
+      "groups": {
+        "COMMON": 50,
+        "MULTI_SYMPTOM": 50,
+        "RED_FLAG": 45,
+        "MISSING_INFO": 20,
+        "CONFLICTING": 15,
+        "COMPLEX_DIALOGUE": 10
+      }
+    }
+  },
+  "split_lock": {
+    "path": "eval/generated_mock_v2/split_lock.json",
+    "sha256": "5892704296e136a74e16bca37e591e3ef45fb3fe00c492d3e0c9a11ec5dc9dd1",
+    "records": 590,
+    "content": "case_id -> tập, cụm, cờ smoke và sha256 của từng bản ghi thuộc các đợt đã khoá (locked_batches), cùng nhật ký các lần sửa có chủ đích"
+  },
+  "corpus": {
+    "table_counts": {
+      "simple_agent_clinical_concepts": 1132,
+      "simple_agent_concept_relations": 4260,
+      "simple_agent_protocol_atoms": 1768,
+      "simple_agent_fact_targets": 243,
+      "simple_agent_fact_target_embeddings": 243
+    },
+    "table_fingerprints": {
+      "simple_agent_clinical_concepts": "sha256:baf1e068dcfbf95f686a52a554ad785c1661190291008bb2be4515391a68cd4c",
+      "simple_agent_concept_relations": "sha256:047f846e12e703b6490fd83f447c57e59f9018e54305d2f038869453ddb79cec",
+      "simple_agent_protocol_atoms": "sha256:83ad86e2667d354d916a58805ba8c1cd951fe9d1ee43004bc346f2ed293ec193",
+      "simple_agent_fact_targets": "sha256:82d7c65979174a621e5cfb84b0e3aceb62c0b2b55b282732132d6e6157bd22c0",
+      "simple_agent_fact_target_embeddings": "sha256:4882e79602c80f348c736f005b11e97c4cdc1dd673c37c23d99486732aa13c6e"
+    }
+  },
+  "distributions": {
+    "groups": {
+      "COMMON": 150,
+      "MULTI_SYMPTOM": 130,
+      "RED_FLAG": 125,
+      "MISSING_INFO": 80,
+      "CONFLICTING": 55,
+      "COMPLEX_DIALOGUE": 50
+    },
+    "labels": {
+      "esi_1": 26,
+      "esi_2": 408,
+      "esi_3": 31,
+      "esi_4": 18,
+      "esi_5": 23,
+      "incomplete": 84
+    },
+    "ground_truth": {
+      "GUIDELINE_VERIFIED": 486,
+      "NEEDS_MEDICAL_REVIEW": 104
+    },
+    "ahrq_verdicts": {
+      "AGREE": 29,
+      "CANNOT_VERIFY": 50,
+      "CONSISTENT": 505,
+      "DISAGREE_OVER": 1,
+      "DISAGREE_UNDER": 5
+    },
+    "age_band": {
+      "preschooler": 12,
+      "adult": 466,
+      "school_age": 40,
+      "adolescent": 41,
+      "infant": 18,
+      "toddler": 10,
+      "neonate": 3
+    },
+    "sex": {
+      "Female": 278,
+      "Male": 312
+    },
+    "narrator": {
+      "CAREGIVER": 284,
+      "SELF": 306
+    }
+  },
+  "guideline_sources_by_group": {
+    "COMMON": {
+      "records": 150,
+      "label_source_documents": {
+        "doc:esi_v4": 137
+      },
+      "label_authority_scope": {
+        "CLINICAL_AUTHORITY": 137
+      },
+      "label_decision_points": {
+        "D_RESOURCE_PREDICTION": 57,
+        "B_HIGH_RISK": 76,
+        "C_DANGER_ZONE_VITALS": 4
+      },
+      "handoff_records_without_matching_criterion": 13,
+      "independent_review_document": "data/protocols/ahrq_esi_v5.draft-manifest.json (AHRQ ESI Implementation Handbook v5, bản trích)",
+      "independent_review_citations": {
+        "AHRQ-ESI-V5:b_ng_2_predicted_esi_resources_table_5_1_figure_2_2": 53,
+        "AHRQ-ESI-V5:b_ng_3_patient_presentations_and_predicting_resources_table_": 6,
+        "AHRQ-ESI-V5:b_ng_5_high_risk_vital_signs_thresholds_decision_point_d": 6,
+        "AHRQ-ESI-V5:ph_n_1_thu_t_to_n_ph_n_lu_ng_esi_esi_triage_algorithm_logic": 1
+      },
+      "ground_truth": {
+        "GUIDELINE_VERIFIED": 98,
+        "NEEDS_MEDICAL_REVIEW": 52
+      }
+    },
+    "COMPLEX_DIALOGUE": {
+      "records": 50,
+      "label_source_documents": {
+        "doc:esi_v4": 44
+      },
+      "label_authority_scope": {
+        "CLINICAL_AUTHORITY": 44
+      },
+      "label_decision_points": {
+        "B_HIGH_RISK": 30,
+        "D_RESOURCE_PREDICTION": 1,
+        "C_DANGER_ZONE_VITALS": 11,
+        "A_IMMEDIATE_LIFESAVING": 2
+      },
+      "handoff_records_without_matching_criterion": 6,
+      "independent_review_document": "data/protocols/ahrq_esi_v5.draft-manifest.json (AHRQ ESI Implementation Handbook v5, bản trích)",
+      "independent_review_citations": {
+        "AHRQ-ESI-V5:b_ng_5_high_risk_vital_signs_thresholds_decision_point_d": 10,
+        "AHRQ-ESI-V5:ph_n_1_thu_t_to_n_ph_n_lu_ng_esi_esi_triage_algorithm_logic": 7,
+        "AHRQ-ESI-V5:b_ng_2_predicted_esi_resources_table_5_1_figure_2_2": 6,
+        "AHRQ-ESI-V5:b_ng_6_pediatric_fever_considerations_red_flags_table_6_2_no": 1
+      },
+      "ground_truth": {
+        "GUIDELINE_VERIFIED": 46,
+        "NEEDS_MEDICAL_REVIEW": 4
+      }
+    },
+    "CONFLICTING": {
+      "records": 55,
+      "label_source_documents": {
+        "doc:esi_v4": 52
+      },
+      "label_authority_scope": {
+        "CLINICAL_AUTHORITY": 52
+      },
+      "label_decision_points": {
+        "C_DANGER_ZONE_VITALS": 3,
+        "B_HIGH_RISK": 43,
+        "A_IMMEDIATE_LIFESAVING": 3,
+        "D_RESOURCE_PREDICTION": 3
+      },
+      "handoff_records_without_matching_criterion": 3,
+      "independent_review_document": "data/protocols/ahrq_esi_v5.draft-manifest.json (AHRQ ESI Implementation Handbook v5, bản trích)",
+      "independent_review_citations": {
+        "AHRQ-ESI-V5:b_ng_5_high_risk_vital_signs_thresholds_decision_point_d": 7,
+        "AHRQ-ESI-V5:b_ng_2_predicted_esi_resources_table_5_1_figure_2_2": 3,
+        "AHRQ-ESI-V5:ph_n_1_thu_t_to_n_ph_n_lu_ng_esi_esi_triage_algorithm_logic": 1,
+        "AHRQ-ESI-V5:ph_n_2_gi_i_th_ch_chi_ti_t_c_c_i_m_quy_t_nh_decision_points": 1,
+        "AHRQ-ESI-V5:b_ng_1_examples_of_lifesaving_interventions_table_3_1": 1,
+        "AHRQ-ESI-V5:b_ng_6_pediatric_fever_considerations_red_flags_table_6_2_no": 1
+      },
+      "ground_truth": {
+        "GUIDELINE_VERIFIED": 50,
+        "NEEDS_MEDICAL_REVIEW": 5
+      }
+    },
+    "MISSING_INFO": {
+      "records": 80,
+      "label_source_documents": {
+        "doc:esi_v4": 31
+      },
+      "label_authority_scope": {
+        "CLINICAL_AUTHORITY": 31
+      },
+      "label_decision_points": {
+        "B_HIGH_RISK": 24,
+        "A_IMMEDIATE_LIFESAVING": 1,
+        "C_DANGER_ZONE_VITALS": 4,
+        "D_RESOURCE_PREDICTION": 2
+      },
+      "handoff_records_without_matching_criterion": 49,
+      "independent_review_document": "data/protocols/ahrq_esi_v5.draft-manifest.json (AHRQ ESI Implementation Handbook v5, bản trích)",
+      "independent_review_citations": {
+        "AHRQ-ESI-V5:b_ng_2_predicted_esi_resources_table_5_1_figure_2_2": 46,
+        "AHRQ-ESI-V5:b_ng_5_high_risk_vital_signs_thresholds_decision_point_d": 6,
+        "AHRQ-ESI-V5:b_ng_6_pediatric_fever_considerations_red_flags_table_6_2_no": 3,
+        "AHRQ-ESI-V5:b_ng_1_examples_of_lifesaving_interventions_table_3_1": 1
+      },
+      "ground_truth": {
+        "GUIDELINE_VERIFIED": 57,
+        "NEEDS_MEDICAL_REVIEW": 23
+      }
+    },
+    "MULTI_SYMPTOM": {
+      "records": 130,
+      "label_source_documents": {
+        "doc:esi_v4": 126
+      },
+      "label_authority_scope": {
+        "CLINICAL_AUTHORITY": 126
+      },
+      "label_decision_points": {
+        "B_HIGH_RISK": 86,
+        "C_DANGER_ZONE_VITALS": 29,
+        "D_RESOURCE_PREDICTION": 8,
+        "A_IMMEDIATE_LIFESAVING": 3
+      },
+      "handoff_records_without_matching_criterion": 4,
+      "independent_review_document": "data/protocols/ahrq_esi_v5.draft-manifest.json (AHRQ ESI Implementation Handbook v5, bản trích)",
+      "independent_review_citations": {
+        "AHRQ-ESI-V5:b_ng_5_high_risk_vital_signs_thresholds_decision_point_d": 63,
+        "AHRQ-ESI-V5:b_ng_2_predicted_esi_resources_table_5_1_figure_2_2": 4,
+        "AHRQ-ESI-V5:b_ng_6_pediatric_fever_considerations_red_flags_table_6_2_no": 3,
+        "AHRQ-ESI-V5:ph_n_1_thu_t_to_n_ph_n_lu_ng_esi_esi_triage_algorithm_logic": 3
+      },
+      "ground_truth": {
+        "GUIDELINE_VERIFIED": 123,
+        "NEEDS_MEDICAL_REVIEW": 7
+      }
+    },
+    "RED_FLAG": {
+      "records": 125,
+      "label_source_documents": {
+        "doc:esi_v4": 116
+      },
+      "label_authority_scope": {
+        "CLINICAL_AUTHORITY": 116
+      },
+      "label_decision_points": {
+        "B_HIGH_RISK": 95,
+        "A_IMMEDIATE_LIFESAVING": 17,
+        "C_DANGER_ZONE_VITALS": 3,
+        "D_RESOURCE_PREDICTION": 1
+      },
+      "handoff_records_without_matching_criterion": 9,
+      "independent_review_document": "data/protocols/ahrq_esi_v5.draft-manifest.json (AHRQ ESI Implementation Handbook v5, bản trích)",
+      "independent_review_citations": {
+        "AHRQ-ESI-V5:b_ng_5_high_risk_vital_signs_thresholds_decision_point_d": 20,
+        "AHRQ-ESI-V5:ph_n_1_thu_t_to_n_ph_n_lu_ng_esi_esi_triage_algorithm_logic": 9,
+        "AHRQ-ESI-V5:b_ng_6_pediatric_fever_considerations_red_flags_table_6_2_no": 5,
+        "AHRQ-ESI-V5:b_ng_2_predicted_esi_resources_table_5_1_figure_2_2": 4,
+        "AHRQ-ESI-V5:b_ng_1_examples_of_lifesaving_interventions_table_3_1": 3,
+        "AHRQ-ESI-V5:ph_n_2_gi_i_th_ch_chi_ti_t_c_c_i_m_quy_t_nh_decision_points": 2
+      },
+      "ground_truth": {
+        "GUIDELINE_VERIFIED": 112,
+        "NEEDS_MEDICAL_REVIEW": 13
+      }
+    }
+  },
+  "label_policy": [
+    "Nhãn KHÔNG do người viết gán: được tính bằng eval.simple_runtime.golden_validator.satisfied_esi trên mọi tiêu chí CLINICAL_AUTHORITY / DECISION_CRITERION / ASSIGN_ESI của corpus PostgreSQL; lấy mức ESI thấp nhất (khẩn cấp nhất) khớp được.",
+    "Thiếu dữ kiện bắt buộc thì tiêu chí không khớp (UNKNOWN khác NEGATIVE). Không tiêu chí nào khớp thì kỳ vọng là RETURN_INCOMPLETE: agent phải chuyển nhân viên y tế, không tự điền giá trị.",
+    "resource_count là dữ kiện CLINICIAN_ONLY; chỉ được đưa vào ca khi nó đổi nhãn, và phải ghi căn cứ (Table 5-2 hoặc lập luận theo Table 5-1).",
+    "Dự định của người viết được so với nhãn tính được; lệch là lỗi dựng và script dừng, không sửa nhãn cho khớp."
+  ],
+  "ground_truth_policy": [
+    "GUIDELINE_VERIFIED: nhãn tính từ corpus, đối chiếu AHRQ v5 là AGREE hoặc CONSISTENT, không dựa vào số nguồn lực ngoài 6 ca mẫu Table 5-2, không có lo ngại lâm sàng của người viết.",
+    "NEEDS_MEDICAL_REVIEW: mọi trường hợp còn lại (AHRQ CANNOT_VERIFY / DISAGREE_UNDER / DISAGREE_OVER, số nguồn lực do người viết dự đoán, hoặc lo ngại ghi trong review_concern). Nằm riêng trong needs_medical_review.jsonl.",
+    "Cả hai loại đều vẫn là PENDING_CLINICAL_REVIEW: 'đã kiểm chứng theo hướng dẫn' không có nghĩa là đã được bác sĩ duyệt."
+  ],
+  "split_policy": [
+    "Chỉ ca GUIDELINE_VERIFIED được chia train/validation/test; tỉ lệ mục tiêu 70/15/15.",
+    "Đơn vị chia là cụm: các ca cùng gia đình kịch bản (ví dụ cặp tối thiểu m09/m10, r08/m40) hoặc gần trùng (cùng bộ dữ kiện, hoặc 4-gram Jaccard của lời mở đầu >= 0.5) luôn nằm chung một tập.",
+    "Phân tầng theo mức kết cục (ESI 1, 2, 3, 4-5, chuyển nhân viên y tế); trong mỗi tầng các cụm được xen kẽ theo nhóm tình huống, cụm nhiều nhãn tình huống biên đi trước và ưu tiên vào test.",
+    "Bộ ca chỉ được nối thêm: bản ghi của các đợt đã khoá trong split_lock.json (locked_batches) giữ nguyên tập, cờ smoke và từng byte (build_dataset và validate_dataset đều kiểm tra); sửa có chủ đích đi qua --relock và được ghi nhật ký. Hạn mức 70/15/15 của mỗi tầng tính trên tổng cũ + mới, ca mới lấp phần còn thiếu; cụm có ca đã khoá đi theo tập đã khoá."
+  ],
+  "usage_policy": [
+    "Không dùng test.jsonl để chỉnh prompt, ngưỡng, mô hình hay chọn cấu hình. Dùng validation.jsonl cho việc đó.",
+    "Không dùng needs_medical_review.jsonl để huấn luyện hay báo cáo độ chính xác cho tới khi có chuyên gia y tế duyệt và ghi lại nhãn.",
+    "Mọi kết quả đo trên bộ ca này phải ghi rõ: dữ liệu tổng hợp, nhãn chưa được chuyên gia duyệt."
+  ],
+  "schema_extensions": [
+    {
+      "field": "category",
+      "new_value": "incomplete",
+      "reason": "Ca kỳ vọng RETURN_INCOMPLETE không có mức ESI nên không thể dùng esi_N; eval/run.py chỉ xử lý riêng 'guardrail', các giá trị khác là chuỗi tự do."
+    },
+    {
+      "field": "profile.age_band",
+      "new_values": [
+        "neonate",
+        "infant",
+        "toddler",
+        "preschooler",
+        "school_age",
+        "adolescent"
+      ],
+      "reason": "Bộ cũ chỉ có 'adult'. Giá trị mới theo đúng các nhóm tuổi của AHRQ Table 6-1; không có mã nào trong repo đọc trường này."
+    }
+  ],
+  "assumptions": [
+    "Nhóm tuổi: dưới 1 tháng = neonate, 1-11 tháng = infant, 1-2 tuổi = toddler, 3-4 = preschooler, 5-11 = school_age, 12-17 = adolescent, từ 18 trở lên = adult; không dùng tuổi 18 vì AHRQ để mốc này chồng lấn.",
+    "Người cao tuổi (>= 65) được đánh dấu trong metadata (older_adult); AHRQ không có nhóm tuổi riêng cho người cao tuổi.",
+    "Câu trả lời mặc định 'Tôi chưa rõ thông tin này.' cho mọi dữ kiện kịch bản không nhắc tới được giữ như bộ cũ, để agent không nhận giá trị bịa.",
+    "presentation.style giữ giá trị 'controlled' như bộ cũ; kiểu lời kể chi tiết (không dấu, viết tắt, phương ngữ...) nằm trong metadata.surface_style và edge_tags.",
+    "Tên thuốc trong hồ sơ là tên hoạt chất phổ biến, là thuốc người bệnh đang dùng, không phải chỉ định."
+  ],
+  "known_limitations": [
+    "Toàn bộ là dữ liệu tổng hợp; kịch bản do mô hình ngôn ngữ soạn theo yêu cầu của chủ dự án, chưa có chuyên gia y tế duyệt.",
+    "Mức ESI 4/5 phụ thuộc số nguồn lực (CLINICIAN_ONLY); chỉ 4 ca mẫu Table 5-2 được coi là đã kiểm chứng, các ca 4/5 khác nằm trong hàng chờ duyệt.",
+    "Bộ ca đã kiểm chứng lệch về ESI 2 vì corpus có 474 tiêu chí ESI 2 mà chỉ có 20 tiêu chí ESI 1 người bệnh tự khai được.",
+    "Bản trích AHRQ v5 dùng để đối chiếu chính nó đang NOT_READY_FOR_INGESTION / REQUIRES_CLINICAL_OWNER.",
+    "Hội thoại được mô phỏng bằng câu trả lời cố định theo dữ kiện; agent hỏi gì ngoài kịch bản sẽ nhận 'chưa rõ'."
+  ],
+  "reference": {
+    "ahrq_manifest_status": "REQUIRES_CLINICAL_OWNER"
+  }
+}
