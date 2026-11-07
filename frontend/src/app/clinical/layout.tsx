@@ -37,7 +37,10 @@ export default function ClinicalLayout({ children }: ClinicalLayoutProps) {
           <div className="min-w-0 flex-1">
             <GlobalRedFlagAlert />
             <main id="clinical-main" tabIndex={-1} className="p-4 focus:outline-none sm:p-6 lg:p-8">
-              <div className="mx-auto w-full max-w-6xl">{children}</div>
+              {/* Bề rộng đọc mặc định là 6xl. Màn nào cần cả chiều ngang (bảng
+                  tổng quan nhiều biểu đồ) tự đánh dấu `data-wide-layout` để
+                  nới khung, không màn nào khác bị kéo giãn theo. */}
+              <div className="mx-auto w-full max-w-6xl has-[[data-wide-layout]]:max-w-[100rem]">{children}</div>
             </main>
           </div>
         </div>

@@ -29,7 +29,7 @@ import {
   parseQueueTab,
 } from "@/components/clinical/nurse-simple/queue/queue-model";
 import { useNurseQueue } from "@/hooks/queries/use-clinical-hitl";
-import { IS_PILOT_AGENT_ACTIVE, nurseQueueHref } from "@/lib/agent-mode";
+import { IS_PILOT_AGENT_ACTIVE, nurseHomeHref, nurseQueueHref } from "@/lib/agent-mode";
 import { DURATION, EASE_IN_OUT } from "@/lib/motion";
 import type { ClinicalSocketStatus } from "@/lib/realtime/useClinicalSocket";
 import { cn } from "@/lib/utils";
@@ -315,7 +315,7 @@ export function ClinicalSidebar() {
       {/* ---------------------------------------------------- NHẬN DIỆN TRẠM */}
       <div className="flex items-center justify-between gap-4 p-4 lg:px-4 lg:pb-6 lg:pt-6">
         <Link
-          href={nurseQueueHref()}
+          href={nurseHomeHref()}
           className="group/brand flex min-h-11 items-center gap-2 rounded-xl pr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
         >
           <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand text-brand-foreground transition-transform duration-200 ease-out group-hover/brand:scale-105 motion-reduce:group-hover/brand:scale-100">

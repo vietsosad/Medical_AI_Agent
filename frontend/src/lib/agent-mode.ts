@@ -33,3 +33,15 @@ export function triageHistoryListHref(): string {
 export function nurseQueueHref(): string {
   return IS_PILOT_AGENT_ACTIVE ? "/clinical/queue-pilot" : "/clinical/queue";
 }
+
+/**
+ * Where a nurse lands after signing in, and where the station logo leads: the
+ * station overview first, so the shift starts from the whole picture (queue
+ * pressure, urgency × wait, who needs a nurse first). The global red-flag
+ * banner sits above every clinical page, the overview included, so an
+ * unclaimed critical case is still the first thing on screen. Production's
+ * DeepAgent flow has no overview screen, so it keeps landing on its queue.
+ */
+export function nurseHomeHref(): string {
+  return IS_PILOT_AGENT_ACTIVE ? "/clinical/dashboard-pilot" : "/clinical/queue";
+}

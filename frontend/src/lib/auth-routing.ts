@@ -1,4 +1,4 @@
-import { nurseQueueHref } from "@/lib/agent-mode";
+import { nurseHomeHref } from "@/lib/agent-mode";
 import type { UserRole } from "@/store/useAuthStore";
 
 const HOME_ROUTE_BY_ROLE = {
@@ -12,15 +12,16 @@ const HOME_ROUTE_BY_ROLE = {
 /**
  * Return a trusted internal destination after authentication.
  *
- * `CLINICAL_NURSE` is special-cased through `nurseQueueHref()` instead of
+ * `CLINICAL_NURSE` is special-cased through `nurseHomeHref()` instead of
  * `HOME_ROUTE_BY_ROLE` directly, so every caller (login, OAuth callback,
  * role-home-redirect, patient-role-guard, guest-guard) automatically lands a
- * nurse on the pilot queue when NEXT_PUBLIC_TRIAGE_PILOT_ACTIVE="YES" without
- * each call site needing its own check. `GUEST`/`PATIENT` stay untouched --
- * simple_agent has no anonymous/guest flow equivalent.
+ * nurse on the pilot's station overview when
+ * NEXT_PUBLIC_TRIAGE_PILOT_ACTIVE="YES" without each call site needing its own
+ * check. `GUEST`/`PATIENT` stay untouched -- simple_agent has no
+ * anonymous/guest flow equivalent.
  */
 export function getHomeRouteForRole(role: UserRole): string {
-  if (role === "CLINICAL_NURSE") return nurseQueueHref();
+  if (role === "CLINICAL_NURSE") return nurseHomeHref();
   return HOME_ROUTE_BY_ROLE[role];
 }
 
