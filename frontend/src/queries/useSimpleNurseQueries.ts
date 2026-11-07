@@ -1,8 +1,13 @@
 import { useCallback } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { simpleNurseService } from "@/services/simple-nurse.service";
 import { SIMPLE_NURSE_QUERY_KEYS } from "@/queries/simple-nurse-query-keys";
-import type { SimpleClaimPayload, SimpleDecisionPayload, SimpleNurseQueueParams } from "@/types/simple-nurse";
+import type {
+  SimpleClaimPayload,
+  SimpleDashboardWindow,
+  SimpleDecisionPayload,
+  SimpleNurseQueueParams,
+} from "@/types/simple-nurse";
 import { useClinicalSocket } from "@/lib/realtime/useClinicalSocket";
 
 export { SIMPLE_NURSE_QUERY_KEYS } from "@/queries/simple-nurse-query-keys";
@@ -49,13 +54,23 @@ export function useSimpleNurseQueueRealtime() {
   return useClinicalSocket({ path: "/ws/simple-clinical", onEvent });
 }
 
-/** Số liệu tổng quan trạm điều phối. `enabled` dùng chung idiom với hàng đợi. */
-export function useSimpleNurseDashboard(options: { enabled?: boolean } = {}) {
+/**
+ * Số liệu tổng quan trạm điều phối. `enabled` dùng chung idiom với hàng đợi.
+ *
+ * Mỗi cửa sổ lịch sử là một khóa riêng. Lúc đổi cửa sổ, bảng giữ nguyên số của
+ * cửa sổ cũ (`isPlaceholderData`) cho tới khi số mới về: không khung chờ, không
+ * nhảy bố cục, và phần đang tải được làm mờ thay vì biến mất.
+ */
+export function useSimpleNurseDashboard(
+  options: { days?: SimpleDashboardWindow; enabled?: boolean } = {},
+) {
+  const days = options.days ?? 14;
   return useQuery({
-    queryKey: SIMPLE_NURSE_QUERY_KEYS.dashboard(),
-    queryFn: () => simpleNurseService.getDashboard(),
+    queryKey: SIMPLE_NURSE_QUERY_KEYS.dashboardWindow(days),
+    queryFn: () => simpleNurseService.getDashboard(days),
     refetchInterval: DASHBOARD_POLL_MS,
     staleTime: 10_000,
+    placeholderData: keepPreviousData,
     enabled: options.enabled ?? true,
   });
 }
