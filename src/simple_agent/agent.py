@@ -60,6 +60,7 @@ from .preask_check import check_already_answered, content_words
 from .resource_estimate import estimate_resource_count
 from .session import Session
 from .tools import AgentToolbox
+from .emergency_screen import screen_patient_message
 from .tracing import (
     finish_trace_span,
     trace_span,
@@ -69,6 +70,29 @@ from .tracing import (
 logger = logging.getLogger(__name__)
 
 __all__ = ["SimpleTriageAgent", "CorpusError", "REPO_ROOT"]
+
+SELF_SAFETY_FACT_ID = "fact_target:self_safety_status"
+
+
+def _self_harm_signal(session: Session) -> dict[str, str] | None:
+    """The deterministic screen's self-harm hit in this conversation, if any.
+
+    Recomputed from the patient's own turns (``history`` is persisted, so a
+    restored session gets the same answer). Real failure (06/11/2026,
+    generated_mock_v2 r19, two runs out of two): "nghĩ giá mà ngủ một giấc rồi
+    không dậy nữa thì mọi người đỡ khổ" was read as drowsiness/insomnia, the
+    safety question was never asked, and the interview ran out of turns on
+    vital signs. A hit never sets an ESI -- the contract forbids keyword ->
+    ESI -- it only makes the self-safety question the next one asked; the
+    level still comes from the patient's own answer.
+    """
+    for speaker, text in session.history:
+        if speaker != "patient":
+            continue
+        signal = screen_patient_message(text)
+        if signal is not None and signal.kind == "SELF_HARM":
+            return {"rule_id": signal.rule_id, "matched_wording": signal.trigger}
+    return None
 
 
 def _is_unknown_answer(message: str) -> bool:
@@ -508,6 +532,7 @@ class SimpleTriageAgent:
             },
         ) as phase_span:
             toolbox = AgentToolbox(self.corpus, session, embed=self._embed)
+            toolbox.safety_screen = _self_harm_signal(session)
             if self._understanding_fn:
                 self._understanding_fn(toolbox, message)
                 outcome = toolbox.outcome or {"intent": "TRIAGE"}
@@ -938,6 +963,7 @@ class SimpleTriageAgent:
                 # order, and atom order breaks ranking ties further down.
                 + sorted(self.corpus.generic_fallback_atom_ids)
                 + sorted(self.corpus.vital_sign_decisive_atom_ids)
+                + sorted(self.corpus.self_safety_decisive_atom_ids)
             )
         )
         atoms = [self.corpus.atom_by_id[atom_id] for atom_id in atom_ids_in_play]
@@ -1059,10 +1085,38 @@ class SimpleTriageAgent:
         # dropped from *both* askable and ranked here (not just ranked) so
         # the quiet_turn/stale-question logic just below, which re-reads
         # askable, can't re-select something pre-ask just resolved.
+        # Self-harm wording in the patient's own turns makes the self-safety
+        # question the next one, ahead of anything retrieval ranked first (see
+        # _self_harm_signal). It goes through the pre-ask check like any other
+        # target, so a conversation that already answers it is not asked again.
+        def _safety_question_open() -> bool:
+            return (
+                SELF_SAFETY_FACT_ID in self.corpus.fact_by_id
+                and SELF_SAFETY_FACT_ID not in session.facts
+                and SELF_SAFETY_FACT_ID not in session.unknown_facts
+                and SELF_SAFETY_FACT_ID not in session.qualitative_observations
+            )
+
+        force_safety_question = (
+            not decisive_match and _self_harm_signal(session) is not None and _safety_question_open()
+        )
+        if force_safety_question:
+            ranked = [SELF_SAFETY_FACT_ID] + [fid for fid in ranked if fid != SELF_SAFETY_FACT_ID]
+            if SELF_SAFETY_FACT_ID not in askable:
+                askable = [*askable, SELF_SAFETY_FACT_ID]
+
         preask_answered = self._run_preask_checks(session, ranked)
         if preask_answered:
             askable = [fid for fid in askable if fid not in preask_answered]
             ranked = [fid for fid in ranked if fid not in preask_answered]
+            # A fact the pre-ask check just recorded can complete a decisive
+            # ESI 1/2 criterion. Settle it this turn, as the early stop above
+            # would have, instead of asking one more question first.
+            supported, atom_missing, _excluded = evaluate_atoms(atoms, session.facts)
+            if any(atom.get("decision_effect", {}).get("candidate_esi") in (1, 2) for atom in supported):
+                decisive_match = True
+                askable, ranked = [], []
+        force_safety_question = force_safety_question and not decisive_match and _safety_question_open()
         question_target = ranked[0] if ranked else None
 
         # Real failure observed live: a reply that Phase A extracted nothing
@@ -1097,6 +1151,8 @@ class SimpleTriageAgent:
             and question_target != previous_question
         ):
             question_target = previous_question
+        if force_safety_question:
+            question_target = SELF_SAFETY_FACT_ID
 
         if question_target and question_target == previous_question:
             session.stale_question_streak += 1

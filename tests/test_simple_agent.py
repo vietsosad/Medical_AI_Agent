@@ -1491,3 +1491,64 @@ def test_preask_check_disabled_by_default_makes_no_llm_call(monkeypatch) -> None
     result = agent.process_turn("test", "tôi bị bỏng nước sôi ở mu bàn tay")
 
     assert result["decision"]["action"] in {"ASK_NEXT", "ASK_CONFIRMATION", "RETURN_MATCH", "RETURN_INCOMPLETE"}
+
+
+# -- self-harm wording (generated_mock_v2 r19, 06/11/2026) -------------------
+# The live agent read "nghĩ giá mà ngủ một giấc rồi không dậy nữa thì mọi
+# người đỡ khổ" as drowsiness/insomnia twice out of two runs, never asked the
+# self-safety question, and ran out of turns on vital signs.
+
+_R19_OPENING = (
+    "Từ hồi mất việc tôi thấy mình là gánh nặng cho cả nhà. "
+    "Nhiều đêm tôi nghĩ giá mà ngủ một giấc rồi không dậy nữa thì mọi người đỡ khổ."
+)
+
+
+def test_self_harm_wording_makes_the_safety_question_next_and_reaches_phase_a() -> None:
+    seen: dict[str, object] = {}
+
+    def understanding(toolbox: AgentToolbox, _message: str) -> None:
+        seen["safety_screen"] = toolbox.get_session_state()["safety_screen"]
+        toolbox.finish_turn(intent="TRIAGE")
+
+    agent = _agent(embedder=_embed, understanding_fn=understanding, phraser=lambda kind, ctx: kind)
+    session = agent.sessions["test"]
+    session.concepts.add("concept:drowsiness")  # what Phase A recorded in the live failure
+
+    result = agent.process_turn("test", _R19_OPENING)
+
+    snapshot = seen["safety_screen"]
+    assert isinstance(snapshot, dict) and snapshot["fact_target"]["fact_target_id"] == "fact_target:self_safety_status"
+    assert result["decision"]["action"] == "ASK_NEXT"
+    assert result["decision"]["question_target_id"] == "fact_target:self_safety_status"
+
+
+def test_self_safety_answer_decides_esi_2_even_when_retrieval_found_nothing() -> None:
+    def understanding(toolbox: AgentToolbox, _message: str) -> None:
+        toolbox.record_fact(fact_target_id="fact_target:self_safety_status", value="CURRENT_SELF_HARM_THOUGHTS")
+        toolbox.finish_turn(intent="TRIAGE")
+
+    agent = _agent(embedder=_embed, understanding_fn=understanding, phraser=lambda kind, ctx: kind)
+    session = agent.sessions["test"]
+    session.concepts.add("concept:drowsiness")
+    session.remember_turn("patient", _R19_OPENING)
+    session.last_question = "fact_target:self_safety_status"
+
+    result = agent.process_turn("test", "Dạ, nhiều đêm tôi có nghĩ như vậy.")
+
+    assert result["decision"]["action"] == "RETURN_MATCH"
+    assert result["decision"]["matched_esi_levels"][0] == 2
+    assert any(a["atom_id"] == "atom:esi_2_current_self_harm_thoughts" for a in result["decision"]["matched_atoms"])
+
+
+def test_no_safety_question_without_self_harm_wording() -> None:
+    def understanding(toolbox: AgentToolbox, _message: str) -> None:
+        toolbox.finish_turn(intent="TRIAGE")
+
+    agent = _agent(embedder=_embed, understanding_fn=understanding, phraser=lambda kind, ctx: kind)
+    session = agent.sessions["test"]
+    session.concepts.add("concept:drowsiness")
+
+    result = agent.process_turn("test", "Dạo này tôi hay buồn ngủ ban ngày, đêm thì khó ngủ.")
+
+    assert result["decision"]["question_target_id"] != "fact_target:self_safety_status"

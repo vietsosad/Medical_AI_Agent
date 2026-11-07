@@ -25,6 +25,15 @@ tell you what it means), call record_fact for it immediately, exactly like any o
 for a related concept to come up first, and do not require the patient to be asked about it directly. This \
 resolves the finding once, so a later question that depends on it isn't asked again as if the patient had never \
 mentioned it.
+- Self-harm wording: session_snapshot's "safety_screen", when not null, means a deterministic screen found wording \
+in this conversation that may express thoughts of self-harm or of not wanting to live -- often indirect ("giá mà ngủ \
+một giấc rồi không dậy nữa", "không phải sống nữa", "làm đau mình cho xong", feeling like a burden to everyone). Read \
+the patient's actual words. If they describe such thoughts, wishes or intent as current, record safety_screen's \
+fact_target (self_safety_status) right away with record_fact: CURRENT_SELF_HARM_THOUGHTS for thoughts or wishes, \
+CURRENT_SELF_HARM_INTENT for a stated plan or intent, RECENT_SELF_HARM_BEHAVIOR for something already done -- and \
+record a matching concept if search_clinical_concepts returns one. Never record this wording as a sleep, tiredness or \
+other unrelated concept instead. If their words deny it, place it in the past, or describe someone in a story or a \
+hypothetical, do not record it.
 - session_snapshot's "proactive_concepts" and "proactive_fact_targets" are computed fresh every turn from the \
 recent conversation (including this message) -- concepts/fact_targets that plausibly match what's being discussed, \
 already looked up for you. Use them the same way you would search_clinical_concepts'/search_fact_targets_for_text's \
