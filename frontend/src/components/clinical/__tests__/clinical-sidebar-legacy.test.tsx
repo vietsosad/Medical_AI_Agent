@@ -12,6 +12,7 @@ const hooks = vi.hoisted(() => ({
 vi.mock("@/lib/agent-mode", () => ({
   IS_PILOT_AGENT_ACTIVE: false,
   nurseQueueHref: () => "/clinical/queue",
+  nurseHomeHref: () => "/clinical/queue",
 }));
 
 vi.mock("next/navigation", () => ({
