@@ -13,11 +13,14 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
+import pytest
+
 from src.models.db_models import SimpleAgentChatSession, SimpleAgentNurseReview
 from src.services.simple_nurse_dashboard import aggregate_dashboard
 
 NOW = datetime(2026, 9, 14, 12, 0, 0)
 NURSE_ID = "nurse-1"
+MINUTES_PER_DAY = 24 * 60
 
 
 def _chat(
@@ -38,6 +41,25 @@ def _chat(
         started_at=completed,
         completed_at=completed,
     )
+
+
+def _flagged_in_progress(session_id: str, *, flagged_minutes_ago: int) -> SimpleAgentChatSession:
+    """Phiên còn đang sàng lọc mà bộ lọc khẩn cấp đã gắn cờ: hàng đợi đã hiện nó."""
+    flagged_at = NOW - timedelta(minutes=flagged_minutes_ago)
+    return SimpleAgentChatSession(
+        session_id=session_id,
+        patient_id="patient-1",
+        status="ACTIVE",
+        initial_message="Con tôi ngất xỉu",
+        matched_esi_levels=[],
+        started_at=flagged_at - timedelta(minutes=10),
+        attention_required=True,
+        attention_raised_at=flagged_at,
+    )
+
+
+def _matrix(result) -> dict[str, dict[str, int]]:
+    return {row.key: {cell.key: cell.count for cell in row.counts} for row in result.esi_wait_matrix}
 
 
 def _review(session_id: str, **fields: object) -> SimpleAgentNurseReview:
@@ -253,3 +275,144 @@ def test_khoi_luong_luon_tra_du_14_ngay_lien_tuc_ke_ca_ngay_rong() -> None:
     assert result.daily_volume[0].date == "2026-09-01"
     assert result.daily_volume[-1].completed == 1
     assert sum(point.completed for point in result.daily_volume) == 1
+
+
+def test_khoi_luong_dai_dung_bang_cua_so_da_chon() -> None:
+    rows = [(_chat("a", esi=[3], minutes_ago=20 * MINUTES_PER_DAY), None)]
+    result = aggregate_dashboard(rows, NURSE_ID, NOW, window_days=30)
+
+    assert result.window_days == 30
+    assert len(result.daily_volume) == 30
+    assert result.daily_volume[0].date == "2026-08-16"
+    assert result.completed_in_window == 1
+    # Cùng ca đó nằm ngoài cửa sổ 14 ngày mặc định.
+    assert aggregate_dashboard(rows, NURSE_ID, NOW).completed_in_window == 0
+
+
+def test_cua_so_ngoai_danh_sach_bi_tu_choi() -> None:
+    """Giao diện chỉ có bốn nút; một cửa sổ lạ là lỗi của bên gọi, không đoán."""
+    with pytest.raises(ValueError):
+        aggregate_dashboard([], NURSE_ID, NOW, window_days=5)
+
+
+# ---------------------------------------------------------------------------
+# Cửa sổ lịch sử: ảnh chụp không đổi, phần lịch sử thì theo cửa sổ
+# ---------------------------------------------------------------------------
+
+
+def test_ca_chot_ngoai_cua_so_khong_vao_doi_chieu_nhung_van_nam_trong_tong() -> None:
+    old = NOW - timedelta(days=20)
+    rows = [
+        (
+            _chat("cu", esi=[3]),
+            _review(
+                "cu",
+                review_status="HANDED_OFF",
+                decision_type="CONFIRM_ESI",
+                final_esi=3,
+                decided_at=old,
+                decision_reason_code="MATCHES_PROTOCOL",
+            ),
+        ),
+        _decided("moi", esi=[4], decision="ADJUST_ESI", final_esi=2),
+    ]
+
+    two_weeks = aggregate_dashboard(rows, NURSE_ID, NOW)
+    assert two_weeks.decided == 2
+    assert two_weeks.decided_in_window == 1
+    assert two_weeks.agreement.decided_total == 1
+    assert two_weeks.agreement.confirmed == 0
+    assert two_weeks.agreement.escalated == 1
+    assert [(reason.code, reason.count) for reason in two_weeks.reason_codes] == [("ADDITIONAL_CLINICAL_JUDGMENT", 1)]
+
+    month = aggregate_dashboard(rows, NURSE_ID, NOW, window_days=30)
+    assert month.agreement.decided_total == 2
+    assert month.agreement.confirmed == 1
+    # Ảnh chụp không phụ thuộc cửa sổ.
+    assert month.decided == two_weeks.decided
+
+
+def test_dai_24_gio_qua_xep_dung_gio_va_bo_su_kien_cu_hon() -> None:
+    rows = [
+        (_chat("vua-xong", esi=[3], minutes_ago=5), None),
+        (_chat("hai-gio", esi=[3], minutes_ago=120), None),
+        (_chat("hom-qua", esi=[3], minutes_ago=25 * 60), None),
+        _decided("chot", esi=[3], decision="CONFIRM_ESI", final_esi=3),
+    ]
+    result = aggregate_dashboard(rows, NURSE_ID, NOW)
+
+    hours = result.recent_hours
+    assert len(hours) == 24
+    assert hours[-1].hour_start == "2026-09-14T12:00:00"
+    assert hours[0].hour_start == "2026-09-13T13:00:00"
+    by_start = {point.hour_start: point for point in hours}
+    # "vua-xong" và phiên của ca "chot" cùng kết thúc lúc 11:55.
+    assert by_start["2026-09-14T11:00:00"].completed == 2
+    assert by_start["2026-09-14T10:00:00"].completed == 1
+    # Ca được chốt đúng lúc NOW nằm ở giờ đang chạy.
+    assert by_start["2026-09-14T12:00:00"].decided == 1
+    # Phiên kết thúc 25 giờ trước nằm ngoài dải.
+    assert sum(point.completed for point in hours) == 3
+
+
+def test_gio_trong_ngay_cong_don_trong_cua_so() -> None:
+    rows = [
+        (_chat("a", esi=[3], minutes_ago=120), None),
+        (_chat("b", esi=[3], minutes_ago=MINUTES_PER_DAY + 120), None),
+        (_chat("ngoai-cua-so", esi=[3], minutes_ago=20 * MINUTES_PER_DAY + 120), None),
+    ]
+    result = aggregate_dashboard(rows, NURSE_ID, NOW)
+
+    assert [point.hour_utc for point in result.hour_of_day] == list(range(24))
+    assert result.hour_of_day[10].completed == 2
+    assert sum(point.completed for point in result.hour_of_day) == 2
+
+
+# ---------------------------------------------------------------------------
+# Ma trận mức khẩn × thời gian chờ, và phiên đã gắn cờ nhưng chưa xong
+# ---------------------------------------------------------------------------
+
+
+def test_ma_tran_dat_moi_ca_dang_mo_vao_dung_o() -> None:
+    rows = [
+        (_chat("esi1-lau", esi=[1, 3], minutes_ago=75), None),
+        (_chat("esi2-giua", esi=[2], minutes_ago=40), None),
+        (_chat("esi2-moi", esi=[2], minutes_ago=3), _review("esi2-moi", review_status="ASSIGNED", assigned_nurse_id=NURSE_ID)),
+        (_chat("thieu", esi=[], final_action="RETURN_INCOMPLETE", minutes_ago=10), None),
+        (_chat("tam-gac", esi=[1], minutes_ago=90), _review("tam-gac", review_status="PARKED")),
+    ]
+    result = aggregate_dashboard(rows, NURSE_ID, NOW)
+    matrix = _matrix(result)
+
+    assert list(matrix) == ["1", "2", "3", "4", "5", "INSUFFICIENT", "IN_PROGRESS"]
+    assert matrix["1"] == {"UNDER_WARNING": 0, "WARNING": 0, "CRITICAL": 1}
+    assert matrix["2"] == {"UNDER_WARNING": 1, "WARNING": 1, "CRITICAL": 0}
+    assert matrix["INSUFFICIENT"]["UNDER_WARNING"] == 1
+    # Ca tạm gác không nằm trên bàn của kíp trực nên không có trong ma trận.
+    total = sum(sum(row.values()) for row in matrix.values())
+    assert total == result.waiting + result.assigned_total == 4
+    # Tổng mỗi hàng trùng với phân bố mức độ.
+    by_level = {bucket.level: bucket.count for bucket in result.esi_distribution}
+    assert sum(matrix["2"].values()) == by_level[2]
+    assert sum(matrix["INSUFFICIENT"].values()) == by_level[None]
+
+
+def test_phien_dang_sang_loc_da_gan_co_duoc_dem_nhu_hang_doi_dem() -> None:
+    """Hàng đợi đưa phiên này lên đầu; bảng số liệu bỏ sót nó là thiếu đúng ca gấp nhất."""
+    rows = [
+        (_flagged_in_progress("co", flagged_minutes_ago=35), None),
+        (_chat("thuong", esi=[3], minutes_ago=5), None),
+    ]
+    result = aggregate_dashboard(rows, NURSE_ID, NOW)
+
+    assert result.waiting == 2
+    assert result.attention_live == 1
+    assert result.in_progress_live == 1
+    # Chờ tính từ lúc gắn cờ, giống `_queue_item` của hàng đợi.
+    assert result.longest_wait_minutes == 35
+    assert _matrix(result)["IN_PROGRESS"] == {"UNDER_WARNING": 0, "WARNING": 1, "CRITICAL": 0}
+    # Chưa có kết luận nào của agent: không bị xếp vào "chưa đủ dữ liệu".
+    by_level = {bucket.level: bucket.count for bucket in result.esi_distribution}
+    assert by_level[None] == 0
+    assert result.insufficient_live == 0
+    assert sum(bucket.count for bucket in result.wait_buckets) == 2

@@ -38,6 +38,9 @@ from src.models.db_models import (
     get_utc_now,
 )
 from src.services.simple_nurse_dashboard import (
+    DEFAULT_WINDOW_DAYS,
+    REVIEWABLE_CLAUSE,
+    WINDOW_DAYS_CHOICES,
     NurseDashboardDTO,
     ai_proposed_esi,
     build_nurse_dashboard,
@@ -200,10 +203,9 @@ def _is_reviewable(chat: SimpleAgentChatSession) -> bool:
     return chat.status == "COMPLETED" or (chat.status == "ACTIVE" and bool(chat.attention_required))
 
 
-_REVIEWABLE_CLAUSE = or_(
-    SimpleAgentChatSession.status == "COMPLETED",
-    (SimpleAgentChatSession.status == "ACTIVE") & (SimpleAgentChatSession.attention_required == True),  # noqa: E712
-)
+# SQL twin of `_is_reviewable`. Defined once in the dashboard service so the
+# queue and the dashboard can never count two different sets of cases.
+_REVIEWABLE_CLAUSE = REVIEWABLE_CLAUSE
 
 
 async def _get_or_create_review(session: AsyncSession, session_id: str) -> SimpleAgentNurseReview:
@@ -440,7 +442,14 @@ async def get_simple_nurse_queue(
 
 
 @router.get("/dashboard", response_model=NurseDashboardDTO, status_code=status.HTTP_200_OK)
-async def get_simple_nurse_dashboard(nurse: NurseUserDep, session: SessionDep) -> NurseDashboardDTO:
+async def get_simple_nurse_dashboard(
+    nurse: NurseUserDep,
+    session: SessionDep,
+    days: int = Query(
+        DEFAULT_WINDOW_DAYS,
+        description="Bề rộng phần lịch sử, tính bằng ngày: 7, 14, 30 hoặc 90. Ảnh chụp hàng đợi không phụ thuộc giá trị này.",
+    ),
+) -> NurseDashboardDTO:
     """Số liệu tổng quan của trạm điều phối, đọc từ đúng tập ca mà hàng đợi dùng.
 
     Chỉ đọc, không tạo dòng review lười như `GET /queue` -- xem ghi chú đầu
@@ -448,7 +457,12 @@ async def get_simple_nurse_dashboard(nurse: NurseUserDep, session: SessionDep) -
     phần "ca của tôi"; mọi con số còn lại là của cả kíp trực.
     """
     _require_enabled()
-    return await build_nurse_dashboard(session, nurse.id)
+    if days not in WINDOW_DAYS_CHOICES:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"days phải là một trong {', '.join(str(choice) for choice in WINDOW_DAYS_CHOICES)}.",
+        )
+    return await build_nurse_dashboard(session, nurse.id, window_days=days)
 
 
 @router.get("/cases/{session_id}", status_code=status.HTTP_200_OK)
