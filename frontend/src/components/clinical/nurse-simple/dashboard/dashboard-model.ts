@@ -9,8 +9,18 @@
  */
 import { CircleCheck, Clock, TriangleAlert, type LucideIcon } from "lucide-react";
 
+import { esiTheme, ESI_UNKNOWN } from "@/components/clinical/nurse-simple/esi-theme";
 import { WAIT_CRITICAL_MINUTES, WAIT_WARNING_MINUTES } from "@/components/clinical/nurse-simple/wait-time";
-import type { SimpleAgreementDTO, SimpleWaitBucketDTO, SimpleWaitBucketKey } from "@/types/simple-nurse";
+import type {
+  SimpleAgreementDTO,
+  SimpleClaimBinDTO,
+  SimpleDashboardWindow,
+  SimpleHourOfDayDTO,
+  SimpleMatrixRowKey,
+  SimpleWaitBucketDTO,
+  SimpleWaitBucketKey,
+  SimpleWeekdayHourDTO,
+} from "@/types/simple-nurse";
 
 // ============================================================================
 // MÀU BIỂU ĐỒ
@@ -28,11 +38,24 @@ import type { SimpleAgreementDTO, SimpleWaitBucketDTO, SimpleWaitBucketKey } fro
  *   AI". Mốc giữa là xám trung tính và luôn đi kèm nhãn chữ; ba giá trị này
  *   giữ nguyên ở chế độ tối (đã kiểm định trên cả hai nền).
  * - grid / axis: lưới mảnh lùi về sau và đường đáy đậm hơn một bậc.
+ * - heat-1..5: thang tuần tự MỘT sắc (teal của thương hiệu) cho ma trận mức
+ *   khẩn × thời gian chờ, nhạt = ít, đậm = nhiều. Ở chế độ tối thang lật mốc:
+ *   bậc ít nằm sát nền tối, bậc nhiều sáng nhất. Đã chạy `validate_palette.js
+ *   --ordinal`: đơn điệu, mỗi bậc cách nhau ΔL >= 0.06 ở cả hai chế độ; bậc
+ *   nhạt nhất ở chế độ sáng được phép chìm gần nền vì mỗi ô luôn in số.
+ * - heat-ink-1..5: màu chữ in trong từng bậc, chọn theo độ tương phản
+ *   (>= 4.5:1 ở mọi bậc, kiểm bằng `contrast()` của bộ kiểm định).
+ * - spark: xám lùi của đường xu hướng trong ô chỉ số; giờ đang chạy mang slot-1.
  */
 export const VIZ_TOKEN_CLASSES = [
   "[--viz-slot-1:#0D9488] [--viz-slot-2:#6250D6] dark:[--viz-slot-2:#8B5CF6]",
   "[--viz-escalated:#C2410C] [--viz-confirmed:#94A3B8] [--viz-deescalated:#0369A1]",
   "[--viz-grid:#E2E8F0] dark:[--viz-grid:#1E293B] [--viz-axis:#CBD5E1] dark:[--viz-axis:#475569]",
+  "[--viz-heat-1:#CCFBF1] [--viz-heat-2:#5EEAD4] [--viz-heat-3:#2DD4BF] [--viz-heat-4:#0D9488] [--viz-heat-5:#115E59]",
+  "dark:[--viz-heat-1:#115E59] dark:[--viz-heat-2:#0F766E] dark:[--viz-heat-3:#0D9488] dark:[--viz-heat-4:#14B8A6] dark:[--viz-heat-5:#5EEAD4]",
+  "[--viz-heat-ink-1:#0F172A] [--viz-heat-ink-2:#0F172A] [--viz-heat-ink-3:#0F172A] [--viz-heat-ink-4:#0F172A] [--viz-heat-ink-5:#FFFFFF]",
+  "dark:[--viz-heat-ink-1:#FFFFFF] dark:[--viz-heat-ink-2:#FFFFFF] dark:[--viz-heat-ink-3:#0F172A] dark:[--viz-heat-ink-4:#0F172A] dark:[--viz-heat-ink-5:#0F172A]",
+  "[--viz-spark:#64748B]",
 ].join(" ");
 
 // ============================================================================
@@ -189,6 +212,209 @@ export const REASON_LABELS: Record<string, string> = {
 
 export function reasonLabel(code: string): string {
   return REASON_LABELS[code] ?? code;
+}
+
+// ============================================================================
+// CỬA SỔ LỊCH SỬ
+// ============================================================================
+
+/** Bốn cửa sổ backend nhận (`WINDOW_DAYS_CHOICES`); thứ tự này là thứ tự nút. */
+export const DASHBOARD_WINDOWS: readonly SimpleDashboardWindow[] = [7, 14, 30, 90];
+export const DEFAULT_DASHBOARD_WINDOW: SimpleDashboardWindow = 14;
+
+// ============================================================================
+// MA TRẬN MỨC KHẨN × THỜI GIAN CHỜ
+// ============================================================================
+
+export const HEAT_STEPS = 5;
+
+/**
+ * Bậc màu 1..5 của một ô, so với ô nhiều nhất của chính ma trận; 0 = không
+ * tô. Thang tương đối nên chú giải luôn ghi rõ hai đầu (1 và số lớn nhất).
+ */
+export function heatStep(count: number, max: number): number {
+  if (count <= 0 || max <= 0) return 0;
+  return Math.min(HEAT_STEPS, Math.max(1, Math.ceil((count / max) * HEAT_STEPS)));
+}
+
+export interface MatrixRowMeta {
+  /** Tên ngắn đứng đầu hàng ("ESI 2", "Chưa đủ dữ liệu"). */
+  name: string;
+  /** Phần giải thích đi kèm ("Cấp cứu"), hoặc null. */
+  detail: string | null;
+  /** Dải màu nhận diện, cùng màu với bảng ca. */
+  rail: string;
+}
+
+/**
+ * Nhãn của một hàng ma trận. Hàng "Đang sàng lọc" mang màu đỏ của cờ "Cần xem
+ * ngay" vì nó CHỈ gồm phiên đã bị gắn cờ -- nhưng không bao giờ mang chữ
+ * "ESI": phiên chưa xong thì chưa có mức nào.
+ */
+export function matrixRowMeta(key: SimpleMatrixRowKey): MatrixRowMeta {
+  if (key === "IN_PROGRESS") {
+    return { name: "Đang sàng lọc", detail: "đã gắn cờ cần xem ngay", rail: "bg-rose-700 dark:bg-rose-500" };
+  }
+  if (key === "INSUFFICIENT") {
+    return { name: ESI_UNKNOWN.label, detail: null, rail: ESI_UNKNOWN.rail };
+  }
+  const level = Number(key);
+  const theme = esiTheme(level);
+  return { name: `ESI ${level}`, detail: theme.label, rail: theme.rail };
+}
+
+/** "ESI 2 · Cấp cứu" / "Chưa đủ dữ liệu" -- dùng trong nhãn đọc và chú thích. */
+export function matrixRowLabel(key: SimpleMatrixRowKey): string {
+  const meta = matrixRowMeta(key);
+  return meta.detail ? `${meta.name} · ${meta.detail}` : meta.name;
+}
+
+// ============================================================================
+// GIỜ TRONG NGÀY
+// ============================================================================
+
+/** Lệch giờ của máy người xem so với UTC, tính bằng phút (Việt Nam: +420). */
+export function localOffsetMinutes(): number {
+  return -new Date().getTimezoneOffset();
+}
+
+export interface LocalHourPoint {
+  hour: number;
+  completed: number;
+}
+
+/**
+ * Xoay 24 giờ UTC của backend sang 24 giờ trên máy người xem. Chỉ đúng với độ
+ * lệch tròn giờ và không đổi trong cửa sổ -- đúng với Việt Nam (UTC+7, không
+ * có giờ mùa hè). Độ lệch lẻ thì trả null để giao diện giữ nguyên nhãn UTC
+ * thay vì gán sai giờ.
+ */
+export function hourOfDayInLocalTime(
+  points: readonly SimpleHourOfDayDTO[],
+  offsetMinutes: number,
+): LocalHourPoint[] | null {
+  if (offsetMinutes % 60 !== 0) return null;
+  const shift = offsetMinutes / 60;
+  const counts = Array.from({ length: 24 }, () => 0);
+  for (const point of points) {
+    counts[(((point.hour_utc + shift) % 24) + 24) % 24] += point.completed;
+  }
+  return counts.map((completed, hour) => ({ hour, completed }));
+}
+
+/** 9 -> "09:00 – 09:59". */
+export function hourRangeLabel(hour: number): string {
+  const hh = String(hour).padStart(2, "0");
+  return `${hh}:00 – ${hh}:59`;
+}
+
+// ============================================================================
+// MỨC AI ĐỀ XUẤT × MỨC ĐIỀU DƯỠNG CHỐT
+// ============================================================================
+
+export type DecisionRelation = "kept" | "more_urgent" | "less_urgent" | "no_proposal";
+
+/**
+ * Điều dưỡng đã làm gì ở một ô của ma trận. Thang ESI chạy ngược: chốt một số
+ * NHỎ hơn mức AI đề xuất là chốt KHẨN HƠN. Trong mỗi hàng, ô bên trái ô đường
+ * chéo là khẩn hơn, ô bên phải là ít khẩn hơn.
+ */
+export function decisionRelation(rowKey: SimpleMatrixRowKey, finalEsi: number): DecisionRelation {
+  if (rowKey === "INSUFFICIENT" || rowKey === "IN_PROGRESS") return "no_proposal";
+  const proposed = Number(rowKey);
+  if (finalEsi === proposed) return "kept";
+  return finalEsi < proposed ? "more_urgent" : "less_urgent";
+}
+
+const AGREEMENT_LABEL = Object.fromEntries(AGREEMENT_SERIES.map((series) => [series.key, series.label])) as Record<
+  AgreementKey,
+  string
+>;
+
+/** Cùng chữ với khối đối chiếu (`AGREEMENT_SERIES`): một hành động, một cách gọi. */
+export const DECISION_RELATION_LABELS: Record<DecisionRelation, string> = {
+  kept: AGREEMENT_LABEL.confirmed,
+  more_urgent: AGREEMENT_LABEL.escalated,
+  less_urgent: AGREEMENT_LABEL.de_escalated,
+  no_proposal: "AI chưa đề xuất mức để so",
+};
+
+// ============================================================================
+// TỪ LÚC GẮN CỜ TỚI KHI CÓ NGƯỜI NHẬN
+// ============================================================================
+
+/** "0 – 4 phút" / "Từ 60 phút": phút là số nguyên làm tròn xuống, như bảng ca. */
+export function claimBinLabel(bin: SimpleClaimBinDTO): string {
+  if (bin.max_minutes === null) return `Từ ${bin.min_minutes} phút`;
+  return `${bin.min_minutes} – ${bin.max_minutes - 1} phút`;
+}
+
+/** Nhóm chờ của một cột, theo mốc tô màu của bảng ca (để gắn biểu tượng + nhãn). */
+export function claimBinBucket(bin: SimpleClaimBinDTO): SimpleWaitBucketKey {
+  return waitBucketOf(bin.min_minutes);
+}
+
+/** Đủ ca để nêu tỉ lệ / trung vị chưa: dưới ngưỡng thì chỉ nêu số ca. */
+export function hasEnoughCases(count: number, minCases: number): boolean {
+  return count > 0 && count >= minCases;
+}
+
+// ============================================================================
+// THỨ × GIỜ THEO GIỜ VIỆT NAM
+// ============================================================================
+
+/** Thứ theo ISO (1 = Thứ Hai ... 7 = Chủ nhật), đúng thứ tự backend trả. */
+export const WEEKDAY_LABELS: Record<number, string> = {
+  1: "Thứ Hai",
+  2: "Thứ Ba",
+  3: "Thứ Tư",
+  4: "Thứ Năm",
+  5: "Thứ Sáu",
+  6: "Thứ Bảy",
+  7: "Chủ nhật",
+};
+
+export function weekdayLabel(weekday: number): string {
+  return WEEKDAY_LABELS[weekday] ?? `Thứ ${weekday}`;
+}
+
+export interface WeekdayHourPeak {
+  weekday: number;
+  hour: number;
+  count: number;
+  /** Số khung giờ KHÁC có cùng số phiên lớn nhất. */
+  ties: number;
+}
+
+/** Khung giờ đông nhất; hòa thì lấy khung đầu tiên theo thứ rồi theo giờ và nói rõ số khung hòa. */
+export function weekdayHourPeak(panel: SimpleWeekdayHourDTO): WeekdayHourPeak | null {
+  let peak: WeekdayHourPeak | null = null;
+  for (const row of panel.rows) {
+    for (let hour = 0; hour < row.hours.length; hour += 1) {
+      const count = row.hours[hour];
+      if (count <= 0) continue;
+      if (peak === null || count > peak.count) {
+        peak = { weekday: row.weekday, hour, count, ties: 0 };
+      } else if (count === peak.count) {
+        peak.ties += 1;
+      }
+    }
+  }
+  return peak;
+}
+
+/**
+ * Cửa sổ không chia đều cho 7 thì có thứ được tính nhiều ngày hơn thứ khác:
+ * nói rõ để không ai đọc nhầm "Chủ nhật đông hơn" chỉ vì có thêm một Chủ nhật.
+ */
+export function describeWeekdayDays(panel: SimpleWeekdayHourDTO): string {
+  const counts = panel.rows.map((row) => row.days);
+  const most = Math.max(...counts);
+  const least = Math.min(...counts);
+  if (most === least) return `Mỗi thứ có ${most} ngày trong khoảng này.`;
+  const longer = panel.rows.filter((row) => row.days === most).map((row) => weekdayLabel(row.weekday));
+  const rest = least === most - 1 ? `các thứ khác có ${least} ngày` : "các thứ khác có ít ngày hơn";
+  return `${longer.join(", ")} có ${most} ngày trong khoảng này, ${rest}: so tổng giữa các thứ cần tính đến chênh lệch đó.`;
 }
 
 // ============================================================================

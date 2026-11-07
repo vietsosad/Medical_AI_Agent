@@ -24,7 +24,15 @@ const BAR_COLOR = "var(--viz-slot-1)";
  * Lý do điều dưỡng chọn khi chốt ca, đúng chữ của biểu mẫu quyết định. Backend
  * đã sắp từ nhiều tới ít. Độ dài so theo lý do nhiều nhất; số đếm ở đầu vạch.
  */
-export function ReasonsPanel({ reasons, order }: { reasons: SimpleReasonCountDTO[]; order: number }) {
+export function ReasonsPanel({
+  reasons,
+  windowDays,
+  order,
+}: {
+  reasons: SimpleReasonCountDTO[];
+  windowDays: number;
+  order: number;
+}) {
   const total = sumCounts(reasons);
   const max = reasons.reduce((peak, reason) => Math.max(peak, reason.count), 0);
   const { shownKey, markProps } = useMarkFocus(reasons.map((reason) => reason.code));
@@ -36,12 +44,14 @@ export function ReasonsPanel({ reasons, order }: { reasons: SimpleReasonCountDTO
       title="Lý do điều dưỡng ghi lại"
       subtitle={
         total > 0
-          ? `Đúng lựa chọn trong biểu mẫu quyết định, trên ${formatCount(total)} ca đã chốt có ghi lý do`
+          ? `Đúng lựa chọn trong biểu mẫu quyết định, trên ${formatCount(total)} ca đã chốt có ghi lý do trong ${windowDays} ngày qua`
           : "Đúng lựa chọn trong biểu mẫu quyết định"
       }
     >
       {reasons.length === 0 ? (
-        <EmptyNote icon={NotebookPen}>Chưa có ca nào được chốt nên chưa ghi nhận lý do nào.</EmptyNote>
+        <EmptyNote icon={NotebookPen}>
+          Chưa có ca nào được chốt trong {windowDays} ngày qua nên chưa ghi nhận lý do nào.
+        </EmptyNote>
       ) : (
         <ul role="list" aria-label="Số ca theo lý do chốt" className="flex flex-col gap-2">
           {reasons.map((reason, index) => {

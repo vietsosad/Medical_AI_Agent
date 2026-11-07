@@ -35,7 +35,15 @@ import {
  * chưa đề xuất mức không nằm trên thang "khẩn hơn / giữ nguyên / ít khẩn hơn"
  * nên được nêu riêng bên dưới, không chen vào thanh.
  */
-export function AgreementPanel({ agreement, order }: { agreement: SimpleAgreementDTO; order: number }) {
+export function AgreementPanel({
+  agreement,
+  windowDays,
+  order,
+}: {
+  agreement: SimpleAgreementDTO;
+  windowDays: number;
+  order: number;
+}) {
   const total = agreement.decided_total;
   const compared = comparedTotal(agreement);
   const without = agreement.adjusted_without_proposal;
@@ -47,7 +55,9 @@ export function AgreementPanel({ agreement, order }: { agreement: SimpleAgreemen
       title="Điều dưỡng đã làm gì với đề xuất của AI"
       subtitle={
         <>
-          <span>Trên {formatCount(total)} ca đã chốt</span>
+          <span>
+            Trên {formatCount(total)} ca đã chốt trong {windowDays} ngày qua
+          </span>
           <span aria-hidden="true"> · </span>
           <span className="sr-only">. </span>
           <span>không phải độ chính xác của AI</span>
@@ -56,8 +66,8 @@ export function AgreementPanel({ agreement, order }: { agreement: SimpleAgreemen
     >
       {total === 0 ? (
         <EmptyNote icon={ClipboardCheck}>
-          Chưa có ca nào được chốt, nên chưa có gì để đối chiếu. Khi có, khối này chỉ ghi lại quyết định của điều
-          dưỡng, không phải độ chính xác của AI, vì hệ thống không có kết luận chuẩn nào để so.
+          Chưa có ca nào được chốt trong {windowDays} ngày qua, nên chưa có gì để đối chiếu. Khi có, khối này chỉ ghi
+          lại quyết định của điều dưỡng, không phải độ chính xác của AI, vì hệ thống không có kết luận chuẩn nào để so.
         </EmptyNote>
       ) : compared === 0 ? (
         <EmptyNote icon={ClipboardCheck}>
