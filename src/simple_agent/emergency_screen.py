@@ -50,6 +50,10 @@ class _Rule:
     label: str
     accented: str
     folded: str | None = None  # explicit override where fold(accented) collides
+    # Wide patterns ("ngực ... lan ... tay", "môi ... tím") can swallow a denial
+    # inside the match itself ("đau ngực nhưng không lan ra tay", "môi không
+    # tím"); such rules reject a match that contains a negator word.
+    span_negation: bool = False
 
 
 _RULES = (
@@ -77,6 +81,7 @@ _RULES = (
         "SA_SCREEN_CHEST_PAIN_V1", "EMERGENCY", "đau ngực lan ra tay, vai, hàm hoặc kèm vã mồ hôi",
         r"đau (?:tức |thắt |bóp |nhói )?ngực[^.?!]{0,40}(?:lan|lên|xuống|sang|ra)[^.?!]{0,15}"
         r"(?:tay|vai|hàm|cằm|lưng)|đau (?:tức |thắt |bóp )?ngực[^.?!]{0,40}vã mồ hôi",
+        span_negation=True,  # "đau ngực nhưng không lan ra tay"
     ),
     _Rule(
         "SA_SCREEN_CYANOSIS_V1", "EMERGENCY", "tím tái",
@@ -97,12 +102,88 @@ _RULES = (
         "SA_SCREEN_ANAPHYLAXIS_V1", "EMERGENCY", "sưng môi, lưỡi hoặc họng kèm khó thở",
         r"sưng (?:môi|lưỡi|họng|mặt)[^.?!]{0,30}khó thở|khó thở[^.?!]{0,30}sưng (?:môi|lưỡi|họng|mặt)"
         r"|sốc phản vệ",
+        span_negation=True,  # "sưng môi nhưng không khó thở"
     ),
     _Rule(
         "SA_SCREEN_SELF_HARM_V1", "SELF_HARM", "ý định tự làm hại bản thân",
         r"tự tử|tự sát|không muốn sống nữa|tự làm hại (?:bản thân|mình)|kết thúc cuộc (?:đời|sống)",
         # "tu tu" is also "từ từ" (slowly) once accents are gone.
         folded=r"tu sat|khong muon song nua|tu lam hai (?:ban than|minh)|ket thuc cuoc (?:doi|song)",
+    ),
+    # V2 (06/11/2026): phrasings the V1 vocabulary missed on the generated_mock_v2
+    # train/validation/review openings. Each one is a CURRENT-emergency wording,
+    # not a bare symptom word; wide ones reject a denial inside the match.
+    _Rule(
+        # Indirect wording: wishing not to wake up, "no longer having to live",
+        # hurting oneself "to be done with it". A missed self-harm signal costs
+        # more than an unnecessary check-in, but hyperbole ("đau muốn chết")
+        # stays out.
+        "SA_SCREEN_SELF_HARM_V2", "SELF_HARM", "ý nghĩ tự làm hại bản thân",
+        r"ngủ(?: một giấc)?(?: rồi)? không (?:bao giờ )?(?:dậy|tỉnh) (?:nữa|lại)"
+        r"|không (?:phải|thiết) sống (?:nữa|tiếp)|chán sống|không thiết sống"
+        r"|(?:chết|biến mất) (?:đi )?cho (?:xong|rồi|nhẹ nợ|khuất mắt)"
+        r"|(?:tự )?làm đau (?:bản thân|mình) cho (?:xong|rồi)|tự làm đau (?:bản thân|mình)"
+        r"|kết thúc mọi (?:chuyện|thứ)",
+    ),
+    _Rule(
+        "SA_SCREEN_SYNCOPE_V2", "EMERGENCY", "bất tỉnh, gọi không đáp",
+        r"nằm bất động[^.?!]{0,25}(?:gọi|lay|hỏi)(?: \S+)? không (?:trả lời|thưa|đáp|tỉnh|dậy)",
+    ),
+    _Rule(
+        "SA_SCREEN_BLEEDING_GI_V2", "EMERGENCY", "nôn ra máu hoặc đi ngoài ra máu nhiều",
+        r"(?:nôn|ói|mửa)[^.?!]{0,40}bã cà phê"
+        r"|(?:nôn|ói|mửa) ra (?:cả |một |nửa )?(?:vũng|bãi|bát|chén|cốc|ca|chậu) máu"
+        r"|máu[^.?!]{0,30}(?:nửa|cả|một) (?:cốc|bát|chén|chậu|vũng)"
+        r"|đi (?:ngoài|cầu|tiêu) ra toàn máu"
+        r"|(?:máu|đỏ)(?: \S+){0,2} cả bồn cầu"
+        r"|phân đen (?:sệt )?(?:như )?(?:hắc ín|nhựa đường|bã cà phê)",
+        span_negation=True,
+    ),
+    _Rule(
+        "SA_SCREEN_HEAVY_BLEEDING_V2", "EMERGENCY", "chảy máu nhiều",
+        r"máu[^.?!]{0,15}ồ ạt|ồ ạt[^.?!]{0,10}máu"
+        r"|ướt sũng[^.?!]{0,25}(?:băng|khăn|gạc)|(?:băng|khăn|gạc)[^.?!]{0,15}ướt sũng"
+        r"|chảy máu (?:ko|k|hông|chẳng) (?:cầm|ngừng|dừng)|máu (?:chảy )?(?:ko|k|hông) (?:cầm|ngừng|dừng)",
+    ),
+    _Rule(
+        # "thắt/nặng/đè ngực" spreading to the arms, jaw or back -- V1 only knew
+        # "đau ... ngực" and a short window to the limb.
+        "SA_SCREEN_CHEST_PAIN_V2", "EMERGENCY", "đau, thắt hoặc nặng ngực lan ra tay, vai, hàm, lưng hoặc kèm vã mồ hôi",
+        r"(?:đau|tức|thắt|nặng|bóp|đè|nhói)[^.?!]{0,12}ngực[^.?!]{0,40}(?:lan|lên|xuống|sang|ra)[^.?!]{0,25}"
+        r"(?:tay|vai|hàm|cằm|lưng)"
+        r"|ngực[^.?!]{0,25}(?:thắt|bóp|đè|nặng|tức|đau)[^.?!]{0,30}(?:lan|lên|xuống|sang|ra)[^.?!]{0,25}"
+        r"(?:tay|vai|hàm|cằm|lưng)"
+        r"|(?:tức|thắt|nặng|bóp|đè)[^.?!]{0,12}ngực[^.?!]{0,40}vã mồ hôi",
+        span_negation=True,
+    ),
+    _Rule(
+        "SA_SCREEN_RESPIRATORY_V2", "EMERGENCY", "khó thở nặng",
+        r"nói (?:được )?(?:vài|mấy|dăm|một hai) (?:chữ|tiếng|từ|câu)[^.?!]{0,25}(?:ngừng|dừng|nghỉ)"
+        r"|nói không (?:hết|thành|nổi|ra) (?:được )?câu"
+        r"|(?:ngồi|nằm) (?:yên|im|nghỉ)(?: \S+){0,2} (?:khó thở|thở không nổi|hụt hơi|thở mệt)",
+        span_negation=True,
+    ),
+    _Rule(
+        "SA_SCREEN_STROKE_V2", "EMERGENCY", "dấu hiệu đột quỵ (méo miệng, yếu hoặc tê nửa người)",
+        r"(?:miệng|mặt|mép)(?: \S+){0,3} (?:xệ|méo|lệch|trễ)(?: \S+){0,3} (?:một|1) bên"
+        r"|(?:xệ|méo|lệch) (?:hẳn )?(?:sang )?(?:một|1) bên"
+        r"|(?:đột ngột|tự nhiên|bỗng nhiên|bỗng)[^.?!]{0,40}nói (?:lộn xộn|lẫn lộn|ngọng|lắp|đớ)"
+        r"|ấp úng không thành câu",
+        span_negation=True,
+    ),
+    _Rule(
+        # A limb that turns cold or white and numb, often then cannot be moved:
+        # an acute arterial occlusion. V1 only "caught" it by folding "lạnh
+        # ngắt" into "ngất".
+        "SA_SCREEN_LIMB_ISCHEMIA_V2", "EMERGENCY", "tay hoặc chân lạnh ngắt, trắng bệch kèm tê",
+        r"(?:lạnh ngắt|lạnh toát|trắng bệch|tái nhợt)[^.?!]{0,30}tê (?:bì|cứng|rần|dại)",
+        span_negation=True,
+    ),
+    _Rule(
+        "SA_SCREEN_CYANOSIS_V2", "EMERGENCY", "tím tái",
+        r"môi(?: \S+){0,2} tím",
+        folded=r"moi(?: \S+){0,2} tim(?! (?:hieu|thay|ra|kiem|duoc|cach|vien|nha))",
+        span_negation=True,
     ),
 )
 
@@ -144,7 +225,9 @@ def _is_negated(text: str, start: int, negators: frozenset[str]) -> bool:
 
 
 def _compile(pattern: str) -> re.Pattern[str]:
-    return re.compile(rf"(?:{pattern})")
+    # Matches start at a word boundary: without it "đổi màu" (colour change),
+    # folded to "doi mau", contained "oi mau" and read as "ói máu".
+    return re.compile(rf"(?<!\w)(?:{pattern})")
 
 
 _COMPILED = tuple(
@@ -153,18 +236,73 @@ _COMPILED = tuple(
 )
 
 
+def _span_negated(matched: str, negators: frozenset[str]) -> bool:
+    return any(word in negators for word in re.findall(r"\w+", matched))
+
+
 def _match_rules(accented_text: str, folded_text: str, skip_events: bool) -> EmergencySignal | None:
+    # fold() keeps one character per character of the lowercased NFC text, so
+    # the two strings align. A folded match then only counts where the patient
+    # actually typed without accents: "xìu", "nhỏ xíu" and "lạnh ngắt" fold to
+    # "xiu"/"ngat" but were typed with their own accents, so they are not
+    # "xỉu"/"ngất". If the strings ever fail to align, fall back to trusting
+    # every folded match (the pre-06/11 behaviour).
+    aligned = len(accented_text) == len(folded_text)
     for rule, accented_re, folded_re in _COMPILED:
         if skip_events and rule.kind != "SELF_HARM":
             continue
-        for text, pattern, negators in (
-            (accented_text, accented_re, _ACCENTED_NEGATORS),
-            (folded_text, folded_re, _FOLDED_NEGATORS),
+        for text, pattern, negators, is_folded in (
+            (accented_text, accented_re, _ACCENTED_NEGATORS, False),
+            (folded_text, folded_re, _FOLDED_NEGATORS, True),
         ):
             for match in pattern.finditer(text):
-                if not _is_negated(text, match.start(), negators):
-                    return EmergencySignal(rule.rule_id, rule.kind, rule.label, match.group(0))
+                if _is_negated(text, match.start(), negators):
+                    continue
+                if rule.span_negation and _span_negated(match.group(0), negators):
+                    continue
+                if is_folded and aligned and accented_text[match.start():match.end()] != match.group(0):
+                    continue
+                return EmergencySignal(rule.rule_id, rule.kind, rule.label, match.group(0))
     return None
+
+
+# A negator denies what follows it in the clause ("không khó thở", "không hít
+# khói") -- unless the denial is itself the emergency ("không thở được",
+# "không còn thở", "gọi không tỉnh").
+_NEGATOR_WORD = re.compile(r"(?<!\w)(?:không|ko|chưa|chẳng|chả|hông)(?!\w)")
+_DANGER_AFTER_NEGATOR = re.compile(
+    r"(?:còn )?(?:thở|tỉnh|bắt được mạch|đáp ứng|phản ứng|nói được|cử động|nhấc|cầm|ngừng|dừng)"
+)
+# The legacy patterns fold the text and drop punctuation, so "khó thở, máy đo"
+# reads as "thở máy". Clauses are re-joined with a word no legacy pattern
+# contains: adjacent-word patterns can no longer cross a clause break, while
+# patterns written with a wide gap ("dị ứng ... khó thở") still can.
+_LEGACY_CLAUSE_BREAK = " z "
+_LEGACY_SENTENCE_BREAK = " z z "
+
+
+def _without_denied_clauses(accented_text: str) -> str:
+    """The message for the legacy reflex: denials cut out, clause breaks kept.
+
+    Real cases: "không khó thở, máy đo oxy ở nhà 98%" read as "thở máy"
+    (life-saving intervention); "bỏng cỡ đồng xu ... không hít khói" as an
+    airway burn; "quên uống thuốc ... không khó thở" as anaphylaxis.
+    """
+    sentences: list[str] = []
+    # Decimal commas and points ("38,6", "37.8") are not breaks.
+    for sentence in re.split(r"[.!?\n](?!\d)", accented_text):
+        clauses: list[str] = []
+        for clause in re.split(r"[;:]|,(?!\d)", sentence):
+            clause = clause.strip()
+            for negator in _NEGATOR_WORD.finditer(clause):
+                if not _DANGER_AFTER_NEGATOR.match(clause[negator.end():].lstrip()):
+                    clause = clause[:negator.start()].strip()
+                    break
+            if clause:
+                clauses.append(clause)
+        if clauses:
+            sentences.append(_LEGACY_CLAUSE_BREAK.join(clauses))
+    return _LEGACY_SENTENCE_BREAK.join(sentences)
 
 
 def screen_patient_message(message: str) -> EmergencySignal | None:
@@ -172,7 +310,7 @@ def screen_patient_message(message: str) -> EmergencySignal | None:
     accented_text = _lower(message)
     if not accented_text:
         return None
-    folded_text = fold(message)
+    folded_text = fold(accented_text)
     if _has_any(_EDUCATIONAL, accented_text, folded_text):
         return None
     # "năm ngoái tôi bị ngất một lần" is history, not an emergency now --
@@ -186,8 +324,10 @@ def screen_patient_message(message: str) -> EmergencySignal | None:
         return signal
 
     # The legacy reflex adds its own vocabulary and patient-reported vitals
-    # ("spo2 78, thở 42"); only its match is used, never its ESI.
-    legacy = screen_red_flag_candidate(message)
+    # ("spo2 78, thở 42"); only its match is used, never its ESI. It ignores
+    # negation, so it only sees the clauses that do not deny something.
+    legacy_input = _without_denied_clauses(accented_text)
+    legacy = screen_red_flag_candidate(legacy_input) if legacy_input else None
     if legacy:
         rule_id = str(legacy.get("safety_rule_id") or "LEGACY_REFLEX")
         label = (

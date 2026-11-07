@@ -120,6 +120,10 @@ class AgentToolbox:
         # retrieved via _toolbox_ctx.get() on every call this turn, so
         # mutating its own attribute works correctly.
         self.real_dispatch_count = 0
+        # Set by the agent when the deterministic emergency screen found
+        # self-harm wording in the patient's turns (agent._self_harm_signal);
+        # surfaced in get_session_state as "safety_screen".
+        self.safety_screen: dict[str, str] | None = None
 
     def dispatch(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         if name not in _TOOL_METHODS:
@@ -213,6 +217,26 @@ class AgentToolbox:
                 }
             )
 
+        safety_screen = None
+        safety_target = self.corpus.fact_by_id.get("fact_target:self_safety_status")
+        if self.safety_screen and safety_target:
+            safety_id = safety_target["fact_target_id"]
+            safety_screen = {
+                "kind": "SELF_HARM",
+                "matched_wording": self.safety_screen.get("matched_wording"),
+                "fact_target": {
+                    "fact_target_id": safety_id,
+                    "name": safety_target["name"],
+                    "lay_terms": safety_target.get("lay_terms", ""),
+                    "value_schema": safety_target.get("value_schema"),
+                    "state": (
+                        "known" if safety_id in self.session.facts
+                        else "unknown" if safety_id in self.session.unknown_facts
+                        else "not_asked"
+                    ),
+                },
+            }
+
         return {
             # Who "patient_concepts"/"known_facts"/etc. below currently
             # describe: the patient themself, or one specific other person
@@ -236,6 +260,9 @@ class AgentToolbox:
             # permanently excluded from being asked again.
             "pending_question_value_schema": pending_value_schema,
             "gate_facts": gate_facts,
+            # Non-null when the deterministic screen found self-harm wording in
+            # the patient's turns; see prompts.py's "Self-harm wording".
+            "safety_screen": safety_screen,
             # Computed once per turn by prime_proactive_candidates, from
             # recent conversation context -- see that method's docstring.
             # Concepts already recorded this session are excluded (nothing
