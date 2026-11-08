@@ -73,12 +73,12 @@ jobs:
       OPENAI_API_KEY: test-key
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 1
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           # 3.11 is the floor -- src/agents/deepagent_runtime/schemas.py imports
           # datetime.UTC, absent in 3.10. 3.12 is what the repo is developed
@@ -162,7 +162,7 @@ jobs:
         run: pytest tests/ -q --tb=short --junitxml=pytest-report.xml
 
       - name: Upload test report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: pytest-report
