@@ -14,4 +14,4 @@
 # Chỉ tầng LLM-as-judge mới cần RAGAS. Phiên bản ghim theo đúng bản đã dùng cho
 # ảnh chụp kết quả trong eval/results/ (xem trường ragas_version trong
 # current_run_metadata.json).
-ragas==0.4.3
+ragas==0.4.4
